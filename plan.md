@@ -33,9 +33,9 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T2.2 | todo | P0 | 2 | 0% | |
 | T2.3 | todo | P0 | 2 | 0% | |
 | T2.6 | todo | P1 | 1 | 0% | |
-| T2.7 | todo | P0 | 2 | 0% | |
+| T2.7 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T2.10 | todo | P2 | 2 | 0% | |
-| T3.1 | todo | P0 | 3 | 0% | |
+| T3.1 | in progress | P0 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T3.2 | todo | P0 | 2 | 0% | |
 | T3.3 | todo | P0 | 3 | 0% | |
 | T3.4 | todo | P0 | 3 | 0% | |
@@ -76,7 +76,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T6.5 | todo | P1 | 3 | 0% | |
 | T6.6 | todo | P1 | 2 | 0% | |
 | T6.7 | todo | P2 | 3 | 0% | |
-| T7.1 | todo | P0 | 3 | 0% | |
+| T7.1 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T7.2 | todo | P0 | 3 | 0% | |
 | T7.3 | todo | P0 | 3 | 0% | |
 | T7.4 | todo | P0 | 3 | 0% | |
@@ -455,6 +455,8 @@ Stage: S2 · Area: infra · Depends on: T2.1 · Blocks: 1 task(s)
 
 tracing-subscriber JSON logs in ~/.aulo/logs with rotation, level from config/env, optional OTLP behind a feature. Secrets are never logged (redaction layer).
 
+Execution plan: 1. crates/aulo-telemetry: init(level, log_dir) builds a tracing-subscriber registry with an EnvFilter (AULO_LOG over the config level) and a JSON file layer through tracing-appender daily rotation with a bounded number of files, plus a human stderr layer for the CLI. 2. Redaction: a field formatter/visitor that masks fields named like secrets (token, key, password, authorization, secret) and values matching secret-handle or bearer patterns. 3. Optional `otlp` cargo feature wiring opentelemetry-otlp; off by default. 4. Tests: redaction of named fields and values, rotation file created in a temp dir, filter precedence.
+
 Done when:
 
 - a test proves a key-like value is redacted
@@ -476,6 +478,8 @@ Done when:
 Stage: S3 · Area: api · Depends on: T2.4 · Blocks: 2 task(s)
 
 proto/aulo/v1/*.proto: ChatService (Create/List/Get/Rename/Delete chats, ListMessages), SessionService (bidi Converse: client submissions, server events), VoiceService (bidi Talk: PCM frames and control in; transcripts, state, TTS audio out), ApprovalService, ConfigService (providers, models, voices, devices), McpService, PluginService, AuditService. buf.yaml with lint rules.
+
+Execution plan: 1. proto/aulo/v1/*.proto per spec §6/§7 (chat, session, voice, approval, config, mcp, plugin, audit) with common.proto for ids and events mirroring aulo-types AuloEvent. 2. buf.yaml (v2, STANDARD lint, FILE breaking) and buf.gen.yaml if needed. 3. `buf lint` and `buf build` pass. 4. No Rust codegen here (T3.2 owns aulo-proto crate wiring) unless the card requires it.
 
 Done when:
 
@@ -894,6 +898,8 @@ Done when:
 Stage: S7 · Area: speech · Depends on: T2.4 · Blocks: 11 task(s)
 
 Traits: SttEngine (push frames, partial and final transcripts), TtsEngine (stream text in, audio chunks out, voices, rate), Vad, KeywordSpotter, TurnDetector. Capabilities: streaming, languages, offline, needs network.
+
+Execution plan: 1. crates/aulo-speech: sync, allocation-aware traits SttEngine, TtsEngine, Vad, KeywordSpotter, TurnDetector with associated error types; audio frame types (16 kHz mono f32 slices, sample rate in metadata). 2. Capabilities struct (streaming, languages, offline, needs_network) and an EngineInfo for the registry. 3. Uses aulo-types (TurnId, TranscriptKind) where events overlap; no engine implementations. 4. Tests with a fake engine per trait proving object safety and the push/poll contract.
 
 Done when:
 
