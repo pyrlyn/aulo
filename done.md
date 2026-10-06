@@ -104,3 +104,16 @@ Done when:
 - unknown keys are rejected with the file name in the error
 
 Outcome: crates/aulo-config: Config { daemon, providers, voice, mcp, plugins, policy } with serde(default, deny_unknown_fields) and schemars; Config::load layers defaults < <home>/config.toml (AULO_HOME, else ~/.aulo) < <project>/.aulo.toml < AULO_* env (nested with __) < caller overrides, with per-leaf Provenance. Errors name the file or env var and the key. Committed schemas/aulo.schema.json with a stale test (AULO_UPDATE_SCHEMA=1 regenerates); nulls stripped because TOML has none. 13 tests under figment::Jail. Follow-ups: approval timeout default 60 s; cross-field checks (tier provider exists, TLS files with listen) belong to T3/T4; no upward search for .aulo.toml; move to config-schema when T1.14 lands.
+
+### T2.9. aulo-store: grants and audit tables
+
+Stage: S2 · Area: infra · Depends on: T2.8 · Blocks: 2 task(s)
+
+Tables for permission grants (subject, scope, decision, expiry) and the audit log (seq, prev_hash, hash, kind, payload).
+
+
+Done when:
+
+- migrations and CRUD tests pass
+
+Outcome: Migration 2026-10-07-000100_grants_audit: grants (subject, scope, decision, nullable expires_at; index on subject+scope) and append-only audit (seq AUTOINCREMENT, UNIQUE prev_hash so two writers cannot fork the chain, hash, kind, payload). Store gains put/list/revoke grants, list_active_grants (expiry filtered in the Diesel query), append_audit (RETURNING via diesel returning_clauses_for_sqlite_3_35), last_audit, list_audit_after. Hashing and chain verification stay in aulo-policy (T5.9). 12 tests. Follow-ups: duplicate subject+scope grants are kept (T5.x decides precedence); no DB triggers block audit UPDATE/DELETE.

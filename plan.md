@@ -34,7 +34,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T2.3 | todo | P0 | 2 | 0% | |
 | T2.6 | todo | P1 | 1 | 0% | |
 | T2.7 | todo | P0 | 2 | 0% | |
-| T2.9 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T2.10 | todo | P2 | 2 | 0% | |
 | T3.1 | todo | P0 | 3 | 0% | |
 | T3.2 | todo | P0 | 2 | 0% | |
@@ -459,18 +458,6 @@ tracing-subscriber JSON logs in ~/.aulo/logs with rotation, level from config/en
 Done when:
 
 - a test proves a key-like value is redacted
-
-### T2.9. aulo-store: grants and audit tables
-
-Stage: S2 · Area: infra · Depends on: T2.8 · Blocks: 2 task(s)
-
-Tables for permission grants (subject, scope, decision, expiry) and the audit log (seq, prev_hash, hash, kind, payload).
-
-Execution plan: 1. New migration directory in crates/aulo-store/migrations for grants (id, subject, scope, decision, expires_at, created_at; index on subject+scope) and audit (seq INTEGER PRIMARY KEY, prev_hash, hash, kind, payload, created_at). 2. schema.rs and models.rs rows. 3. Store API: put/list/revoke grants, list active grants for a subject (expiry filtered in the query), append audit row and list audit rows after seq. Hash computation is left to aulo-policy (T5.9); the store only persists. 4. Tests: migrations up/down, grant CRUD and expiry, audit append order.
-
-Done when:
-
-- migrations and CRUD tests pass
 
 ### T2.10. aulo-store: full-text search over messages
 
