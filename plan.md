@@ -32,7 +32,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.20 | todo | P2 | 3 | 0% | |
 | T2.2 | todo | P0 | 2 | 0% | |
 | T2.3 | todo | P0 | 2 | 0% | |
-| T2.4 | in progress | P0 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T2.5 | in progress | P0 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T2.6 | todo | P1 | 1 | 0% | |
 | T2.7 | todo | P0 | 2 | 0% | |
@@ -441,18 +440,6 @@ ci.yml calls pyrlyn/ci ci-rust.yml (Linux x86_64 and aarch64, macOS aarch64, Win
 Done when:
 
 - CI green on the skeleton
-
-### T2.4. aulo-types: domain contract
-
-Stage: S2 · Area: infra · Depends on: T2.1 · Blocks: 4 task(s)
-
-Ids (ULID): BotId, ChatId, TurnId, CallId, ClientId. aulo events beyond agent-loop: VoiceState, Transcript (partial/final), SpeechStarted/Ended, TtsChunk, ApprovalRequired, TakeoverRequested, Notice. No I/O dependencies.
-
-Execution plan: 1. crates/aulo-types: ULID-based BotId, ChatId, TurnId, CallId, ClientId (serde, Display, FromStr). 2. Event types beyond agent-loop: VoiceState, Transcript (partial/final), SpeechStarted/Ended, TtsChunk metadata, ApprovalRequired, TakeoverRequested, Notice. 3. No I/O dependencies (serde, ulid, thiserror only). 4. Tests: serde round-trip and id parsing; clippy, fmt, nextest.
-
-Done when:
-
-- types serialize round-trip; deps test passes
 
 ### T2.5. aulo-config: typed config with schema and layers
 

@@ -77,3 +77,16 @@ Done when:
 - migration up/down tests; CRUD tests for chats and messages
 
 Outcome: crates/aulo-store: Diesel over bundled SQLite (libsqlite3-sys 0.38 bundled), WAL, foreign keys and busy_timeout on open (the only raw SQL, PRAGMA, which the DSL cannot express), embedded migration 2026-10-07-000000_core_tables (bots, chats, messages, tool_calls, usage). Typed Store API with ULID ids, keyset pagination and cascade delete. 8 tests (migrations up/down/up, CRUD, pagination, foreign keys, cascade, WAL). Follow-ups: role/status strings become aulo-types enums; open() takes &str until aulo-config gives the path; single connection, not Sync.
+
+### T2.4. aulo-types: domain contract
+
+Stage: S2 · Area: infra · Depends on: T2.1 · Blocks: 4 task(s)
+
+Ids (ULID): BotId, ChatId, TurnId, CallId, ClientId. aulo events beyond agent-loop: VoiceState, Transcript (partial/final), SpeechStarted/Ended, TtsChunk, ApprovalRequired, TakeoverRequested, Notice. No I/O dependencies.
+
+
+Done when:
+
+- types serialize round-trip; deps test passes
+
+Outcome: crates/aulo-types: BotId, ChatId, TurnId, CallId, ClientId from one ulid_id! macro (plain 26-char ULID in Display, FromStr and serde; IdParseError names the kind and caps the echoed input), and the serde-tagged, non-exhaustive AuloEvent (VoiceState, SpeechStarted/Ended, Transcript partial/final, TtsChunk metadata, ApprovalRequired with needs_click, TakeoverRequested, Notice). No I/O dependencies. 10 tests. Follow-ups: no prefixed id form (the spec defines none); event payload fields are a first reading and may change with T3.1 protos.
