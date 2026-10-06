@@ -1,12 +1,7 @@
 # aulo — todo
 
-- T0.1. Decide the licence and how cox code is reused
-- T0.2. Decide the desktop UI toolkit
-- T0.3. Decide supported platforms and minimum OS versions
-- T0.4. Approve the new crates for rust.md
 - T0.5. Spike: sherpa-onnx on macOS arm64
 - T0.6. Spike: echo cancellation from Rust
-- T0.7. Decide how the agent loop is reused from cox
 - T1.1. Extract llm-wire: provider contract and neutral types
 - T1.2. Extract llm-http: credentials, retries, SSE framing
 - T1.3. Extract llm-openai: Chat and Responses wires
@@ -150,20 +145,27 @@
 - T11.9. Hooks
 - T11.10. Plugin management
 - T11.11. Signed plugin index
-- T12.1. aulo-desktop scaffold and connection
-- T12.2. Chat list
-- T12.3. Chat view
-- T12.4. Composer
-- T12.5. Approvals and takeover UI
-- T12.6. Voice UI
-- T12.7. Settings: providers and models
-- T12.8. Settings: voice and audio
-- T12.9. Settings: MCP servers and plugins
-- T12.10. Settings: permissions and audit
-- T12.11. Quick-talk window
-- T12.12. Agent screen viewer
-- T12.13. Multiple servers
-- T12.14. Interface languages
+- T12.1. aulo-app: UI-agnostic client core
+- T12.2. aulo-ffi: UniFFI exports and bindings
+- T12.3. macOS app scaffold (SwiftUI)
+- T12.4. macOS: chat list
+- T12.5. macOS: chat view
+- T12.6. macOS: composer
+- T12.7. macOS: approvals and takeover
+- T12.8. macOS: voice UI
+- T12.9. macOS: settings — providers and models
+- T12.10. macOS: settings — voice and audio
+- T12.11. macOS: settings — MCP servers and plugins
+- T12.12. macOS: settings — permissions and audit
+- T12.13. macOS: quick-talk panel
+- T12.14. macOS: agent screen viewer
+- T12.15. Windows app scaffold (WinUI 3)
+- T12.16. Windows: chat list, chat view and composer
+- T12.17. Windows: approvals, takeover and voice UI
+- T12.18. Windows: settings
+- T12.19. Windows: quick-talk and agent screen viewer
+- T12.20. Multiple servers
+- T12.21. Interface languages
 - T13.1. Headless server profile
 - T13.2. Several clients per chat
 - T13.3. API tokens with scopes
@@ -178,6 +180,6 @@
 - T14.6. Channel plugin example: Telegram
 - T15.1. Release of aulod and aulo CLI
 - T15.2. macOS desktop bundle
-- T15.3. Windows and Linux desktop packages
+- T15.3. Windows app and Linux packages
 - T15.4. User guide
 - T15.5. API reference

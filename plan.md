@@ -8,13 +8,8 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 
 | # | Status | Priority | Complexity | Readiness | Agent |
 | --- | --- | --- | --- | --- | --- |
-| T0.1 | todo | P0 | 1 | 0% | |
-| T0.2 | todo | P0 | 1 | 0% | |
-| T0.3 | todo | P0 | 1 | 0% | |
-| T0.4 | todo | P0 | 1 | 0% | |
 | T0.5 | todo | P0 | 2 | 0% | |
 | T0.6 | todo | P1 | 3 | 0% | |
-| T0.7 | todo | P0 | 1 | 0% | |
 | T1.1 | todo | P0 | 4 | 0% | |
 | T1.2 | todo | P0 | 3 | 0% | |
 | T1.3 | todo | P0 | 3 | 0% | |
@@ -158,20 +153,27 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T11.9 | todo | P1 | 3 | 0% | |
 | T11.10 | todo | P1 | 2 | 0% | |
 | T11.11 | todo | P3 | 3 | 0% | |
-| T12.1 | todo | P0 | 3 | 0% | |
+| T12.1 | todo | P0 | 4 | 0% | |
 | T12.2 | todo | P0 | 3 | 0% | |
-| T12.3 | todo | P0 | 4 | 0% | |
+| T12.3 | todo | P0 | 3 | 0% | |
 | T12.4 | todo | P0 | 3 | 0% | |
-| T12.5 | todo | P0 | 3 | 0% | |
-| T12.6 | todo | P1 | 3 | 0% | |
-| T12.7 | todo | P1 | 3 | 0% | |
+| T12.5 | todo | P0 | 4 | 0% | |
+| T12.6 | todo | P0 | 3 | 0% | |
+| T12.7 | todo | P0 | 3 | 0% | |
 | T12.8 | todo | P1 | 3 | 0% | |
-| T12.9 | todo | P1 | 2 | 0% | |
+| T12.9 | todo | P1 | 3 | 0% | |
 | T12.10 | todo | P1 | 3 | 0% | |
-| T12.11 | todo | P1 | 3 | 0% | |
-| T12.12 | todo | P2 | 3 | 0% | |
-| T12.13 | todo | P2 | 2 | 0% | |
-| T12.14 | todo | P2 | 2 | 0% | |
+| T12.11 | todo | P1 | 2 | 0% | |
+| T12.12 | todo | P1 | 3 | 0% | |
+| T12.13 | todo | P1 | 3 | 0% | |
+| T12.14 | todo | P2 | 3 | 0% | |
+| T12.15 | todo | P1 | 3 | 0% | |
+| T12.16 | todo | P1 | 4 | 0% | |
+| T12.17 | todo | P1 | 3 | 0% | |
+| T12.18 | todo | P1 | 4 | 0% | |
+| T12.19 | todo | P2 | 3 | 0% | |
+| T12.20 | todo | P2 | 2 | 0% | |
+| T12.21 | todo | P2 | 2 | 0% | |
 | T13.1 | todo | P0 | 2 | 0% | |
 | T13.2 | todo | P1 | 3 | 0% | |
 | T13.3 | todo | P1 | 3 | 0% | |
@@ -191,47 +193,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T15.5 | todo | P1 | 2 | 0% | |
 
 ## S0. Decisions and spikes
-
-### T0.1. Decide the licence and how cox code is reused
-
-Stage: S0 · Area: decision · Depends on: none · Blocks: 8 task(s)
-
-cox is GPL-3.0-or-later OR LicenseRef-cox-Royalty-Free, runa is MIT OR Apache-2.0. aulo reuses the provider stack, permissions, sandbox, MCP host and voice capture from cox. Options: (a) license aulo like cox and depend on extracted crates as they are; (b) license aulo MIT OR Apache-2.0 and relicense the extracted crates when they move into packages/. The creator decides; record the answer in spec.md (Decisions) and add LICENSE.
-
-Done when:
-
-- spec.md Decisions lists the licence and the reason
-- LICENSE file(s) committed
-
-### T0.2. Decide the desktop UI toolkit
-
-Stage: S0 · Area: decision · Depends on: none · Blocks: 1 task(s)
-
-Candidates: Slint (in rust.md, Rust-only, one codebase, gRPC client in-process; recommended), native SwiftUI/WinUI over UniFFI (the ketch/cox pattern, best platform feel, two codebases), Tauri (web UI, heavier). Record the choice and the reason.
-
-Done when:
-
-- spec.md Decisions names the toolkit
-
-### T0.3. Decide supported platforms and minimum OS versions
-
-Stage: S0 · Area: decision · Depends on: none · Blocks: 4 task(s)
-
-Proposal: macOS 15+ on arm64 only (background-window control, VP-IO), Windows 11 x86_64, Linux x86_64/aarch64 (X11 and Wayland). The server mode runs on Linux first.
-
-Done when:
-
-- spec.md Decisions lists targets and minimum versions
-
-### T0.4. Approve the new crates for rust.md
-
-Stage: S0 · Area: decision · Depends on: none · Blocks: 0 task(s)
-
-New crates the plan needs that rust.md does not list yet: tonic, tonic-build, prost, tonic-health, tonic-reflection, sherpa-onnx, earshot, rodio, ringbuf, webrtc-audio-processing, chromiumoxide, xcap, enigo, objc2-application-services, objc2-avf-audio, atspi, uiautomation, handy-keys, tokio-tungstenite (already listed as dev). The creator approves the list; each crate gets its rust.md and toolchain.md rows in the task that wires it in.
-
-Done when:
-
-- approved list recorded in spec.md Decisions
 
 ### T0.5. Spike: sherpa-onnx on macOS arm64
 
@@ -253,16 +214,6 @@ Compare macOS Voice Processing I/O (AVAudioEngine setVoiceProcessingEnabled via 
 Done when:
 
 - docs/spikes/aec.md with a recommendation per OS
-
-### T0.7. Decide how the agent loop is reused from cox
-
-Stage: S0 · Area: decision · Depends on: none · Blocks: 2 task(s)
-
-cox-core is a coding-oriented state machine (Submission in, Event out, tools, approvals, interrupts, compaction). Options: (a) extract a neutral agent-loop crate from cox-core into packages/ and build aulo on it (recommended, satisfies the no-duplication rule); (b) depend on cox-core as a whole; (c) write a new loop. Record the decision.
-
-Done when:
-
-- spec.md Decisions records the agent-loop choice
 
 ## S1. Shared crates in packages/
 
@@ -696,7 +647,7 @@ Done when:
 
 ### T4.4. Model catalog and per-chat model switching
 
-Stage: S4 · Area: providers · Depends on: T4.1, T1.5, T3.5 · Blocks: 2 task(s)
+Stage: S4 · Area: providers · Depends on: T4.1, T1.5, T3.5 · Blocks: 3 task(s)
 
 ConfigService lists providers and models (catalog plus served overlay). A chat stores its provider/model; SwitchModel works mid-chat.
 
@@ -736,7 +687,7 @@ Done when:
 
 ### T4.8. Converse RPC and chat persistence
 
-Stage: S4 · Area: agent · Depends on: T4.6, T3.5 · Blocks: 8 task(s)
+Stage: S4 · Area: agent · Depends on: T4.6, T3.5 · Blocks: 9 task(s)
 
 SessionService.Converse drives aulo-agent; every turn, tool call and usage row is persisted; a chat resumes after a daemon restart.
 
@@ -808,7 +759,7 @@ Done when:
 
 ### T5.3. Approval flow and grants
 
-Stage: S5 · Area: safety · Depends on: T5.1, T4.8, T2.9 · Blocks: 10 task(s)
+Stage: S5 · Area: safety · Depends on: T5.1, T4.8, T2.9 · Blocks: 11 task(s)
 
 ApprovalRequired event; any attached client answers once / always for this chat / always / never; grants are persisted with scope and expiry; no answer before the timeout means deny.
 
@@ -868,7 +819,7 @@ Done when:
 
 ### T5.9. Tamper-evident audit log
 
-Stage: S5 · Area: safety · Depends on: T2.9, T5.3 · Blocks: 1 task(s)
+Stage: S5 · Area: safety · Depends on: T2.9, T5.3 · Blocks: 2 task(s)
 
 Append-only, hash-chained rows for every tool call, approval, egress and plugin load. aulo audit verify and aulo audit export.
 
@@ -1002,7 +953,7 @@ Done when:
 
 ### T7.2. Engine registry and runtime switching
 
-Stage: S7 · Area: speech · Depends on: T7.1, T2.5 · Blocks: 4 task(s)
+Stage: S7 · Area: speech · Depends on: T7.1, T2.5 · Blocks: 5 task(s)
 
 Engines register by id (built-in and plugin-provided). [voice.stt] and [voice.tts] select engine, model and voice; a chat or bot can override; switching through gRPC, CLI (aulo voice use) or voice command takes effect on the next utterance without restart. A failing engine is skipped for the next one in the fallback list (fail open).
 
@@ -1184,7 +1135,7 @@ Done when:
 
 ### T8.4. VoiceService over gRPC
 
-Stage: S8 · Area: voice · Depends on: T8.1, T3.4 · Blocks: 3 task(s)
+Stage: S8 · Area: voice · Depends on: T8.1, T3.4 · Blocks: 4 task(s)
 
 Bidi Talk stream: clients send PCM (or Opus) frames and control; the server runs the pipeline and streams state, transcripts and TTS audio back. Lets the desktop app and remote clients use the server-side pipeline; local mode uses the daemon's own devices.
 
@@ -1466,7 +1417,7 @@ Done when:
 
 ### T9.15. Screenshots with normalized coordinates
 
-Stage: S9 · Area: control · Depends on: T5.1 · Blocks: 3 task(s)
+Stage: S9 · Area: control · Depends on: T5.1 · Blocks: 4 task(s)
 
 xcap screenshots per screen or window, downscaled for the model, coordinates normalized to 0-999 so they do not depend on resolution or Retina scale.
 
@@ -1558,7 +1509,7 @@ Done when:
 
 ### T10.4. MCP server management
 
-Stage: S10 · Area: mcp · Depends on: T10.1, T3.5 · Blocks: 1 task(s)
+Stage: S10 · Area: mcp · Depends on: T10.1, T3.5 · Blocks: 2 task(s)
 
 McpService: list servers, status, tools, enable/disable, restart, recent stderr.
 
@@ -1718,143 +1669,214 @@ Done when:
 
 - bad signature is refused
 
-## S12. Desktop app
+## S12. Desktop apps (SwiftUI and WinUI)
 
-### T12.1. aulo-desktop scaffold and connection
+### T12.1. aulo-app: UI-agnostic client core
 
-Stage: S12 · Area: desktop · Depends on: T0.2, T3.7 · Blocks: 8 task(s)
+Stage: S12 · Area: desktop · Depends on: T0.2, T3.7 · Blocks: 2 task(s)
 
-App per T0.2 (Slint assumed). Connects to the local aulod over the socket (starts it if not running) or to a remote server by URL, token and pin. Menu bar / tray icon.
-
-Done when:
-
-- headless UI test connects to a test daemon
-
-### T12.2. Chat list
-
-Stage: S12 · Area: desktop · Depends on: T12.1 · Blocks: 1 task(s)
-
-Sidebar with chats: create, rename, delete, search; grouped by bot.
+Rust core the native apps drive, modelled on cox-app: a tonic client of aulod (local socket or remote URL with token and pin, starts the local daemon when absent), a Timeline fold (events in, keyed block patches out), a Controller that coalesces patches to at most one batch per 16 ms frame, chat list and inbox (approvals, takeovers, finished turns), one Intent enum dispatched to submissions. No UI toolkit in its dependency tree.
 
 Done when:
 
-- headless UI tests
+- scenario tests: a replayed event log folds to the same patches as the live run
+- deps test: no UI or CLI crate in aulo-app's tree
 
-### T12.3. Chat view
+### T12.2. aulo-ffi: UniFFI exports and bindings
 
-Stage: S12 · Area: desktop · Depends on: T12.2, T4.8 · Blocks: 4 task(s)
+Stage: S12 · Area: desktop · Depends on: T12.1 · Blocks: 2 task(s)
 
-Streamed markdown messages, collapsible tool-call cards with output, screenshots inline, copy actions, stop button.
+Forward-only UniFFI exports over aulo-app (cox-ffi rule: every exported body is one expression, logic stays in aulo-app, enforced by a syn test). Swift bindings via uniffi-bindgen, C# bindings via uniffi-bindgen-cs. Host callbacks for notifications, URLs and secrets. Records fixtures for the app tests.
 
 Done when:
 
-- headless UI tests with a scripted provider
+- forward-only test passes; Swift and C# bindings generate in CI
 
-### T12.4. Composer
+### T12.3. macOS app scaffold (SwiftUI)
+
+Stage: S12 · Area: desktop · Depends on: T12.2 · Blocks: 7 task(s)
+
+desktop/macos Xcode project on the aulo-ffi package: window plus menu bar extra, connection to the local daemon or a remote server, login item for aulod.
+
+Done when:
+
+- app builds in CI; launches and connects to a test daemon
+
+### T12.4. macOS: chat list
 
 Stage: S12 · Area: desktop · Depends on: T12.3 · Blocks: 1 task(s)
+
+Sidebar with chats grouped by bot: create, rename, delete, search.
+
+Done when:
+
+- UI test on recorded fixtures
+
+### T12.5. macOS: chat view
+
+Stage: S12 · Area: desktop · Depends on: T12.4, T4.8 · Blocks: 3 task(s)
+
+Streamed markdown messages from Timeline patches, collapsible tool-call cards with output, inline screenshots, copy, stop.
+
+Done when:
+
+- UI test on recorded fixtures
+
+### T12.6. macOS: composer
+
+Stage: S12 · Area: desktop · Depends on: T12.5 · Blocks: 1 task(s)
 
 Text input, file and image attachments, push-to-talk mic button, model picker for the chat.
 
 Done when:
 
-- headless UI tests
+- UI test
 
-### T12.5. Approvals and takeover UI
+### T12.7. macOS: approvals and takeover
 
-Stage: S12 · Area: desktop · Depends on: T12.3, T5.3 · Blocks: 0 task(s)
+Stage: S12 · Area: desktop · Depends on: T12.5, T5.3 · Blocks: 0 task(s)
 
-Inline approval cards (action, risk, why, once/always/never), takeover banner, and system notifications when the window is hidden.
-
-Done when:
-
-- headless UI tests
-
-### T12.6. Voice UI
-
-Stage: S12 · Area: desktop · Depends on: T12.4, T8.4 · Blocks: 1 task(s)
-
-Listening/thinking/speaking indicator, live partial transcript, wake-word toggle, barge-in feedback. Audio goes to the daemon over VoiceService.
+Inline approval cards (action, risk, why, once/always/never), takeover banner, user notifications when the window is hidden.
 
 Done when:
 
-- headless UI test with a fake voice stream
+- UI test; notification callback covered by a fixture
 
-### T12.7. Settings: providers and models
+### T12.8. macOS: voice UI
 
-Stage: S12 · Area: desktop · Depends on: T12.1, T4.4 · Blocks: 0 task(s)
+Stage: S12 · Area: desktop · Depends on: T12.6, T8.4 · Blocks: 1 task(s)
 
-Add providers, store keys (sent to the daemon, kept in the keychain), pick default models per tier.
-
-Done when:
-
-- headless UI tests
-
-### T12.8. Settings: voice and audio
-
-Stage: S12 · Area: desktop · Depends on: T12.1, T7.2, T6.3 · Blocks: 0 task(s)
-
-STT and TTS engine and voice pickers with a preview button, model downloads with progress, audio devices, hotkeys, wake words.
+Listening/thinking/speaking indicator, live partial transcript, wake-word toggle, barge-in feedback.
 
 Done when:
 
-- headless UI tests
+- UI test with a fake voice stream
 
-### T12.9. Settings: MCP servers and plugins
+### T12.9. macOS: settings — providers and models
 
-Stage: S12 · Area: desktop · Depends on: T12.1, T10.4, T11.10 · Blocks: 0 task(s)
+Stage: S12 · Area: desktop · Depends on: T12.3, T4.4 · Blocks: 0 task(s)
 
-List, add, enable/disable MCP servers and plugins with status and errors.
-
-Done when:
-
-- headless UI tests
-
-### T12.10. Settings: permissions and audit
-
-Stage: S12 · Area: desktop · Depends on: T12.1, T5.9 · Blocks: 0 task(s)
-
-Rule editor, grants list with revoke, blocklist, audit log viewer with verify.
+Add providers, store keys (sent to the daemon, kept in the keychain), default models per tier.
 
 Done when:
 
-- headless UI tests
+- UI test
 
-### T12.11. Quick-talk window
+### T12.10. macOS: settings — voice and audio
 
-Stage: S12 · Area: desktop · Depends on: T12.6 · Blocks: 0 task(s)
+Stage: S12 · Area: desktop · Depends on: T12.3, T7.2, T6.3 · Blocks: 0 task(s)
 
-Global hotkey opens a small Spotlight-like window for one voice or text request.
-
-Done when:
-
-- manual check; headless test for the window state
-
-### T12.12. Agent screen viewer
-
-Stage: S12 · Area: desktop · Depends on: T12.3, T9.15 · Blocks: 0 task(s)
-
-Live view of what the agent does in the browser or desktop (screenshot stream) with Take over and Stop buttons.
+STT and TTS engine and voice pickers with preview, model downloads with progress, audio devices, hotkeys, wake words.
 
 Done when:
 
-- headless UI test with fake frames
+- UI test
 
-### T12.13. Multiple servers
+### T12.11. macOS: settings — MCP servers and plugins
+
+Stage: S12 · Area: desktop · Depends on: T12.3, T10.4, T11.10 · Blocks: 0 task(s)
+
+List, add, enable and disable MCP servers and plugins with status and errors.
+
+Done when:
+
+- UI test
+
+### T12.12. macOS: settings — permissions and audit
+
+Stage: S12 · Area: desktop · Depends on: T12.3, T5.9 · Blocks: 0 task(s)
+
+Rule editor, grants with revoke, blocklist, audit viewer with verify.
+
+Done when:
+
+- UI test
+
+### T12.13. macOS: quick-talk panel
+
+Stage: S12 · Area: desktop · Depends on: T12.8 · Blocks: 0 task(s)
+
+Global hotkey opens a small floating panel for one voice or text request.
+
+Done when:
+
+- UI test for the panel state
+
+### T12.14. macOS: agent screen viewer
+
+Stage: S12 · Area: desktop · Depends on: T12.5, T9.15 · Blocks: 0 task(s)
+
+Live view of the agent's browser or desktop actions (screenshot stream) with Take over and Stop.
+
+Done when:
+
+- UI test with fake frames
+
+### T12.15. Windows app scaffold (WinUI 3)
+
+Stage: S12 · Area: desktop · Depends on: T12.2 · Blocks: 4 task(s)
+
+desktop/windows WinUI 3 (C#) project on the aulo-ffi C# bindings: window, tray icon, connection, startup entry for aulod.
+
+Done when:
+
+- app builds on the Windows runner; connects to a test daemon
+
+### T12.16. Windows: chat list, chat view and composer
+
+Stage: S12 · Area: desktop · Depends on: T12.15, T4.8 · Blocks: 1 task(s)
+
+Parity with T12.4–T12.6 on WinUI.
+
+Done when:
+
+- UI tests on recorded fixtures
+
+### T12.17. Windows: approvals, takeover and voice UI
+
+Stage: S12 · Area: desktop · Depends on: T12.16, T5.3, T8.4 · Blocks: 1 task(s)
+
+Parity with T12.7 and T12.8; toast notifications for approvals.
+
+Done when:
+
+- UI tests
+
+### T12.18. Windows: settings
+
+Stage: S12 · Area: desktop · Depends on: T12.15, T4.4, T7.2, T10.4, T5.9 · Blocks: 0 task(s)
+
+Parity with T12.9–T12.12.
+
+Done when:
+
+- UI tests
+
+### T12.19. Windows: quick-talk and agent screen viewer
+
+Stage: S12 · Area: desktop · Depends on: T12.17, T9.15 · Blocks: 0 task(s)
+
+Parity with T12.13 and T12.14.
+
+Done when:
+
+- UI tests
+
+### T12.20. Multiple servers
 
 Stage: S12 · Area: desktop · Depends on: T12.1 · Blocks: 0 task(s)
 
-Connection manager for the local daemon and remote servers; switch between them.
+aulo-app keeps a list of connections (local daemon, remote servers) and switches between them; both apps expose it.
 
 Done when:
 
-- headless UI test
+- aulo-app test switches servers
 
-### T12.14. Interface languages
+### T12.21. Interface languages
 
-Stage: S12 · Area: desktop · Depends on: T12.3 · Blocks: 0 task(s)
+Stage: S12 · Area: desktop · Depends on: T12.3, T12.15 · Blocks: 0 task(s)
 
-English and Russian UI strings via gettext (cox-i18n pattern).
+English and Russian strings in both apps (String Catalogs on macOS, .resw on Windows).
 
 Done when:
 
@@ -1998,7 +2020,7 @@ Done when:
 
 ### T15.2. macOS desktop bundle
 
-Stage: S15 · Area: release · Depends on: T12.1 · Blocks: 0 task(s)
+Stage: S15 · Area: release · Depends on: T12.3 · Blocks: 0 task(s)
 
 App bundle with mic, Accessibility and Apple Events usage strings, signing, notarization and DMG.
 
@@ -2006,11 +2028,11 @@ Done when:
 
 - notarized DMG from CI
 
-### T15.3. Windows and Linux desktop packages
+### T15.3. Windows app and Linux packages
 
-Stage: S15 · Area: release · Depends on: T12.1 · Blocks: 0 task(s)
+Stage: S15 · Area: release · Depends on: T12.15 · Blocks: 0 task(s)
 
-MSI for Windows, AppImage and deb for Linux.
+MSIX for the Windows app; deb and AppImage for aulod and the CLI on Linux.
 
 Done when:
 

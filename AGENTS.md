@@ -1,6 +1,6 @@
 # aulo — instructions for agents
 
-**What this is.** A local-first voice agent that controls the computer: speech in and out with switchable engines, shell/app/browser/desktop control, MCP client and server, plugins, local and remote models. One daemon (`aulod`) serves a gRPC API to the desktop chat app, the CLI and remote clients.
+**What this is.** A local-first voice agent that controls the computer: speech in and out with switchable engines, shell/app/browser/desktop control, MCP client and server, plugins, local and remote models. One daemon (`aulod`) serves a gRPC API to the native desktop apps (SwiftUI, WinUI), the CLI and remote clients.
 
 If an `AGENTS.md` or `CLAUDE.md` exists higher in the tree, follow it too; on conflict, ask the creator.
 
@@ -8,7 +8,7 @@ If an `AGENTS.md` or `CLAUDE.md` exists higher in the tree, follow it too; on co
 
 - `spec.md` — the specification. Section numbers are stable; tasks cite them.
 - `research.md` — sources for every external fact and the reuse map of the workspace (Part 6).
-- `plan.md` — active tasks. S0 decisions (T0.1–T0.7) block most work; ask the creator, do not decide them yourself.
+- `plan.md` — active tasks; `done.md` — settled decisions (D1–D5) and finished work. Never decide an open question in `spec.md` §17 yourself; ask the creator.
 
 ## Hard rules
 
@@ -25,6 +25,7 @@ If an `AGENTS.md` or `CLAUDE.md` exists higher in the tree, follow it too; on co
 ## Layout
 
 - `crates/` — the Cargo workspace members (`aulo-<role>`), created by S2+ tasks.
+- `desktop/macos` (SwiftUI) and `desktop/windows` (WinUI 3) — native apps over `aulo-ffi` (T12.3, T12.15).
 - `proto/aulo/v1/` — gRPC service definitions (T3.1).
 - `plugins/` — plugin SDK examples (T11.5).
 - `docs/` — guides, threat model, spike reports (`docs/spikes/`).
