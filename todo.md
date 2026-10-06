@@ -1,0 +1,183 @@
+# aulo — todo
+
+- T0.1. Decide the licence and how cox code is reused
+- T0.2. Decide the desktop UI toolkit
+- T0.3. Decide supported platforms and minimum OS versions
+- T0.4. Approve the new crates for rust.md
+- T0.5. Spike: sherpa-onnx on macOS arm64
+- T0.6. Spike: echo cancellation from Rust
+- T0.7. Decide how the agent loop is reused from cox
+- T1.1. Extract llm-wire: provider contract and neutral types
+- T1.2. Extract llm-http: credentials, retries, SSE framing
+- T1.3. Extract llm-openai: Chat and Responses wires
+- T1.4. Extract llm-anthropic: Messages wire
+- T1.5. Extract llm-catalog: model catalog and prices
+- T1.6. Switch cox to the extracted llm crates
+- T1.7. llm-router: one provider per tier
+- T1.8. Extract perm-rules: permission rule engine
+- T1.9. Extract proc-sandbox: Seatbelt, bwrap, Landlock+seccomp
+- T1.10. Extract shell-classify: bash risk classifier
+- T1.11. Extract text-sanitize: terminal and bidi guard
+- T1.12. Extract mcp-host: MCP client with discovery and OAuth
+- T1.13. Extract speech-capture: microphone capture and resampling
+- T1.14. Extract config-schema: schema-checked config helpers
+- T1.15. Extract agent-loop: neutral turn state machine
+- T1.16. Switch cox to agent-loop
+- T1.17. Extract agent-ext: skills and shell hooks
+- T1.18. Extract agent-host-config: register MCP servers in agent hosts
+- T1.19. runa: stream tokens as they are generated
+- T1.20. runa: library target for in-process local inference
+- T2.1. Cargo workspace skeleton
+- T2.2. Dependency-graph test
+- T2.3. CI workflows
+- T2.4. aulo-types: domain contract
+- T2.5. aulo-config: typed config with schema and layers
+- T2.6. Embedded default config
+- T2.7. aulo-telemetry: logs and traces
+- T2.8. aulo-store: Diesel SQLite with chats and messages
+- T2.9. aulo-store: grants and audit tables
+- T2.10. aulo-store: full-text search over messages
+- T3.1. aulo-proto: v1 service definitions
+- T3.2. aulo-proto: code generation and breaking-change check
+- T3.3. aulo-server: tonic server scaffold
+- T3.4. aulo-server: authentication
+- T3.5. aulo-server: ChatService
+- T3.6. aulod binary
+- T3.7. aulo CLI: text chat client
+- T3.8. aulo-server: TLS for TCP listeners
+- T3.9. Run aulod as a user service
+- T4.1. aulo-providers: build providers from config
+- T4.2. Credentials in the OS keychain
+- T4.3. Local server presets and auto-detection
+- T4.4. Model catalog and per-chat model switching
+- T4.5. Tiers and job routing
+- T4.6. aulo-agent: session on agent-loop
+- T4.7. Tool registry and deferred tools
+- T4.8. Converse RPC and chat persistence
+- T4.9. Scripted-provider test harness
+- T4.10. Context compaction and chat titles
+- T4.11. Persona and spoken-answer prompting
+- T4.12. Usage and cost ledger
+- T5.1. aulo-policy: rule engine for every tool call
+- T5.2. Shell risk classification
+- T5.3. Approval flow and grants
+- T5.4. Sandbox profiles for commands
+- T5.5. Kill switch
+- T5.6. Per-app and per-site grants with a default blocklist
+- T5.7. Unattended mode is read-only
+- T5.8. Sentinel reviewer for consequential actions
+- T5.9. Tamper-evident audit log
+- T5.10. Secrets vault the model cannot read
+- T5.11. Human takeover
+- T5.12. Untrusted-content guards
+- T5.13. Threat model
+- T6.1. aulo-audio: capture
+- T6.2. aulo-audio: playback
+- T6.3. Device list, selection and hot-plug
+- T6.4. Echo cancellation on macOS (Voice Processing I/O)
+- T6.5. Echo cancellation elsewhere (webrtc-audio-processing)
+- T6.6. Microphone permission handling
+- T6.7. Opus for remote audio streams
+- T7.1. aulo-speech: engine contracts
+- T7.2. Engine registry and runtime switching
+- T7.3. Model manager
+- T7.4. STT: sherpa-onnx (Parakeet TDT v3, Moonshine)
+- T7.5. STT: whisper.cpp via whisper-rs
+- T7.6. STT: OpenAI-compatible transcription endpoint
+- T7.7. STT: Deepgram streaming
+- T7.8. STT: Apple SpeechAnalyzer (macOS 26+)
+- T7.9. TTS: sherpa-onnx (Kokoro, Matcha, VITS)
+- T7.10. TTS: macOS system voices
+- T7.11. TTS: Windows system voices
+- T7.12. TTS: Linux speech-dispatcher / espeak-ng
+- T7.13. TTS: OpenAI speech endpoint
+- T7.14. TTS: ElevenLabs streaming
+- T7.15. Speakable-text normalizer
+- T7.16. Speech benchmarks
+- T8.1. aulo-voice: conversation pipeline
+- T8.2. VAD backends
+- T8.3. Push-to-talk
+- T8.4. VoiceService over gRPC
+- T8.5. Barge-in
+- T8.6. Wake word
+- T8.7. End-of-turn detection
+- T8.8. Progress fillers and earcons
+- T8.9. Voice approvals with limits
+- T8.10. aulo-realtime: OpenAI realtime voice client
+- T8.11. Two-brain mode: realtime front consults the agent
+- T8.12. Realtime: Gemini Live adapter
+- T8.13. Realtime: xAI Voice Agent adapter
+- T8.14. Local voice commands
+- T8.15. Keep talking while the agent works
+- T8.16. End-to-end voice test with fixtures
+- T8.17. Latency budget and measurement
+- T9.1. Shell tool
+- T9.2. Interactive PTY sessions
+- T9.3. App control on macOS
+- T9.4. App control on Windows
+- T9.5. App control on Linux
+- T9.6. Browser: managed Chromium over CDP
+- T9.7. Browser: act on elements
+- T9.8. Browser: tabs, downloads, uploads
+- T9.9. Browser via Playwright MCP (alternative)
+- T9.10. Attach to the user's own browser
+- T9.11. Desktop accessibility tree on macOS
+- T9.12. Desktop accessibility actions on macOS
+- T9.13. Desktop accessibility on Windows (UIA)
+- T9.14. Desktop accessibility on Linux (AT-SPI)
+- T9.15. Screenshots with normalized coordinates
+- T9.16. Synthetic input
+- T9.17. macOS permission onboarding
+- T9.18. Control ladder and computer tool facade
+- T9.19. Clipboard tools
+- T9.20. Isolated agent session (separate OS user or VM)
+- T10.1. MCP client
+- T10.2. MCP client: OAuth for remote servers
+- T10.3. MCP client: resources, prompts, elicitation
+- T10.4. MCP server management
+- T10.5. aulo as an MCP server (stdio)
+- T10.6. MCP server over streamable HTTP
+- T10.7. Register aulo in agent hosts
+- T10.8. cox tools through cox mcp
+- T11.1. Plugin manifest
+- T11.2. Plugin host: discovery and grants
+- T11.3. Process plugins over MCP stdio
+- T11.4. Streaming plugins over gRPC (speech engines, providers)
+- T11.5. aulo-plugin-sdk for Rust
+- T11.6. Piper TTS as an external plugin
+- T11.7. WASM plugins
+- T11.8. Skills
+- T11.9. Hooks
+- T11.10. Plugin management
+- T11.11. Signed plugin index
+- T12.1. aulo-desktop scaffold and connection
+- T12.2. Chat list
+- T12.3. Chat view
+- T12.4. Composer
+- T12.5. Approvals and takeover UI
+- T12.6. Voice UI
+- T12.7. Settings: providers and models
+- T12.8. Settings: voice and audio
+- T12.9. Settings: MCP servers and plugins
+- T12.10. Settings: permissions and audit
+- T12.11. Quick-talk window
+- T12.12. Agent screen viewer
+- T12.13. Multiple servers
+- T12.14. Interface languages
+- T13.1. Headless server profile
+- T13.2. Several clients per chat
+- T13.3. API tokens with scopes
+- T13.4. Rate limits and quotas
+- T13.5. Container image (agent computer)
+- T13.6. Client examples from the protos
+- T14.1. Bots (named teammates)
+- T14.2. Background turns
+- T14.3. Routines
+- T14.4. Long-term memory
+- T14.5. Teach a task
+- T14.6. Channel plugin example: Telegram
+- T15.1. Release of aulod and aulo CLI
+- T15.2. macOS desktop bundle
+- T15.3. Windows and Linux desktop packages
+- T15.4. User guide
+- T15.5. API reference
