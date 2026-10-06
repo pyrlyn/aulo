@@ -18,9 +18,11 @@ Only what the project uses today. Crates are added by the task that wires each o
 | --- | --- | --- | --- |
 | diesel | local | https://github.com/diesel-rs/diesel | Typed SQLite access in `aulo-store` (no raw SQL) |
 | diesel_migrations | local | https://github.com/diesel-rs/diesel | Embedded, filename-keyed schema migrations |
+| figment | local | https://github.com/SergioBenitez/Figment | Layered config with per-key provenance |
 | libsqlite3-sys | local | https://github.com/rusqlite/rusqlite | Bundled SQLite for Diesel |
+| schemars | local | https://github.com/GREsau/schemars | JSON Schema generated from the config types |
 | serde | local | https://github.com/serde-rs/serde | Serialization of ids, events and config |
-| serde_json | local (dev) | https://github.com/serde-rs/json | Round-trip tests for ids and events |
+| serde_json | local | https://github.com/serde-rs/json | Config schema output and overrides; round-trip tests |
 | thiserror | local | https://github.com/dtolnay/thiserror | Typed errors in library crates |
 | ulid | local | https://github.com/dylanhart/ulid-rs | Sortable ids for bots, chats, turns, calls and stored rows |
-| tempfile | local | https://github.com/Stebalien/tempfile | Temporary databases in tests |
+| tempfile | local (dev) | https://github.com/Stebalien/tempfile | Temporary databases and directories in tests |

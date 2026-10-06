@@ -1,0 +1,359 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Config",
+  "description": "Root of `config.toml` and `.aulo.toml`.",
+  "type": "object",
+  "properties": {
+    "daemon": {
+      "$ref": "#/$defs/DaemonConfig",
+      "default": {}
+    },
+    "mcp": {
+      "$ref": "#/$defs/McpConfig",
+      "default": {
+        "servers": {}
+      }
+    },
+    "plugins": {
+      "$ref": "#/$defs/PluginsConfig",
+      "default": {
+        "dirs": [],
+        "disabled": []
+      }
+    },
+    "policy": {
+      "$ref": "#/$defs/PolicyConfig",
+      "default": {
+        "allow": [],
+        "approval_timeout_secs": 60,
+        "ask": [],
+        "deny": []
+      }
+    },
+    "providers": {
+      "$ref": "#/$defs/ProvidersConfig",
+      "default": {
+        "endpoints": {},
+        "tiers": {}
+      }
+    },
+    "voice": {
+      "$ref": "#/$defs/VoiceConfig",
+      "default": {
+        "barge_in": "interrupt",
+        "listen": "push-to-talk",
+        "stt": {
+          "fallback": []
+        },
+        "tts": {
+          "fallback": []
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "BargeIn": {
+      "description": "What speaking over aulo does to the turn in progress.",
+      "oneOf": [
+        {
+          "description": "Stop playback and cancel the turn.",
+          "type": "string",
+          "const": "interrupt"
+        },
+        {
+          "description": "Stop playback; the turn keeps running.",
+          "type": "string",
+          "const": "continue"
+        }
+      ]
+    },
+    "DaemonConfig": {
+      "description": "`aulod` transport.",
+      "type": "object",
+      "properties": {
+        "listen": {
+          "description": "TCP address for remote clients. Unset: the owner-only local socket only.",
+          "type": "string"
+        },
+        "tls_cert": {
+          "description": "Certificate for `listen`. TLS is required whenever `listen` is set.",
+          "type": "string"
+        },
+        "tls_key": {
+          "description": "Private key for `tls_cert`.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "EngineConfig": {
+      "description": "Shape shared by `[voice.stt]` and `[voice.tts]`.",
+      "type": "object",
+      "properties": {
+        "engine": {
+          "type": "string"
+        },
+        "fallback": {
+          "description": "Engines tried in order when the chosen one fails.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          }
+        },
+        "model": {
+          "type": "string"
+        },
+        "rate": {
+          "type": "number",
+          "format": "float"
+        },
+        "voice": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ListenMode": {
+      "type": "string",
+      "enum": [
+        "push-to-talk",
+        "wake-word"
+      ]
+    },
+    "McpConfig": {
+      "type": "object",
+      "properties": {
+        "servers": {
+          "description": "MCP servers aulo connects to, by name.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/McpServer"
+          },
+          "default": {}
+        }
+      },
+      "additionalProperties": false
+    },
+    "McpServer": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "args": {
+              "type": "array",
+              "default": [],
+              "items": {
+                "type": "string"
+              }
+            },
+            "command": {
+              "type": "string"
+            },
+            "transport": {
+              "type": "string",
+              "const": "stdio"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "transport",
+            "command"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "transport": {
+              "type": "string",
+              "const": "http"
+            },
+            "url": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "transport",
+            "url"
+          ]
+        }
+      ]
+    },
+    "PluginsConfig": {
+      "type": "object",
+      "properties": {
+        "dirs": {
+          "description": "Extra directories scanned for plugins.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          }
+        },
+        "disabled": {
+          "description": "Plugin ids that are never loaded.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "PolicyConfig": {
+      "type": "object",
+      "properties": {
+        "allow": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          }
+        },
+        "approval_timeout_secs": {
+          "description": "An approval request nobody answers within this time is denied.",
+          "type": "integer",
+          "format": "uint64",
+          "default": 60,
+          "minimum": 1
+        },
+        "ask": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          }
+        },
+        "deny": {
+          "description": "Rules in the perm-rules grammar. Evaluation order is deny, allow, ask.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "ProviderConfig": {
+      "type": "object",
+      "properties": {
+        "base_url": {
+          "description": "Overrides the provider's default endpoint; required for `openai-compatible`.",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/ProviderKind"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ]
+    },
+    "ProviderKind": {
+      "type": "string",
+      "enum": [
+        "runa",
+        "ollama",
+        "lm-studio",
+        "llama-cpp",
+        "openai",
+        "anthropic",
+        "gemini",
+        "xai",
+        "openrouter",
+        "deepseek",
+        "openai-compatible"
+      ]
+    },
+    "ProvidersConfig": {
+      "description": "Model providers and the tiers that route to them. API keys are not\nconfiguration: they live in the OS keychain.",
+      "type": "object",
+      "properties": {
+        "endpoints": {
+          "description": "Named provider endpoints that tiers refer to.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ProviderConfig"
+          },
+          "default": {}
+        },
+        "tiers": {
+          "$ref": "#/$defs/TiersConfig",
+          "default": {}
+        }
+      },
+      "additionalProperties": false
+    },
+    "TierConfig": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": "string"
+        },
+        "provider": {
+          "description": "Name of an entry in `providers.endpoints`.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "model"
+      ]
+    },
+    "TiersConfig": {
+      "description": "One provider and model per tier; an unset tier is not configured.",
+      "type": "object",
+      "properties": {
+        "cheap": {
+          "description": "Titles and summaries.",
+          "$ref": "#/$defs/TierConfig"
+        },
+        "main": {
+          "description": "Tool use.",
+          "$ref": "#/$defs/TierConfig"
+        },
+        "sentinel": {
+          "description": "The reviewer of consequential actions.",
+          "$ref": "#/$defs/TierConfig"
+        },
+        "voice": {
+          "description": "Fast short answers, or the realtime front.",
+          "$ref": "#/$defs/TierConfig"
+        }
+      },
+      "additionalProperties": false
+    },
+    "VoiceConfig": {
+      "type": "object",
+      "properties": {
+        "barge_in": {
+          "$ref": "#/$defs/BargeIn",
+          "default": "interrupt"
+        },
+        "listen": {
+          "$ref": "#/$defs/ListenMode",
+          "default": "push-to-talk"
+        },
+        "stt": {
+          "$ref": "#/$defs/EngineConfig",
+          "default": {
+            "fallback": []
+          }
+        },
+        "tts": {
+          "$ref": "#/$defs/EngineConfig",
+          "default": {
+            "fallback": []
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
