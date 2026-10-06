@@ -24,7 +24,6 @@
 - T1.20. runa: library target for in-process local inference
 - T2.2. Dependency-graph test
 - T2.3. CI workflows
-- T2.5. aulo-config: typed config with schema and layers
 - T2.6. Embedded default config
 - T2.7. aulo-telemetry: logs and traces
 - T2.9. aulo-store: grants and audit tables

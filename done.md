@@ -90,3 +90,17 @@ Done when:
 - types serialize round-trip; deps test passes
 
 Outcome: crates/aulo-types: BotId, ChatId, TurnId, CallId, ClientId from one ulid_id! macro (plain 26-char ULID in Display, FromStr and serde; IdParseError names the kind and caps the echoed input), and the serde-tagged, non-exhaustive AuloEvent (VoiceState, SpeechStarted/Ended, Transcript partial/final, TtsChunk metadata, ApprovalRequired with needs_click, TakeoverRequested, Notice). No I/O dependencies. 10 tests. Follow-ups: no prefixed id form (the spec defines none); event payload fields are a first reading and may change with T3.1 protos.
+
+### T2.5. aulo-config: typed config with schema and layers
+
+Stage: S2 · Area: infra · Depends on: T2.1 · Blocks: 5 task(s)
+
+Config types with schemars; committed schemas/aulo.schema.json with a stale test; figment layers default < ~/.aulo/config.toml < project .aulo.toml < AULO_* env < flags, with per-key provenance. The only crate that touches toml/toml_edit/figment. Use config-schema when T1.14 lands.
+
+
+Done when:
+
+- schema test fails when types change without regenerating
+- unknown keys are rejected with the file name in the error
+
+Outcome: crates/aulo-config: Config { daemon, providers, voice, mcp, plugins, policy } with serde(default, deny_unknown_fields) and schemars; Config::load layers defaults < <home>/config.toml (AULO_HOME, else ~/.aulo) < <project>/.aulo.toml < AULO_* env (nested with __) < caller overrides, with per-leaf Provenance. Errors name the file or env var and the key. Committed schemas/aulo.schema.json with a stale test (AULO_UPDATE_SCHEMA=1 regenerates); nulls stripped because TOML has none. 13 tests under figment::Jail. Follow-ups: approval timeout default 60 s; cross-field checks (tier provider exists, TLS files with listen) belong to T3/T4; no upward search for .aulo.toml; move to config-schema when T1.14 lands.

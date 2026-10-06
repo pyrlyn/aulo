@@ -32,7 +32,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.20 | todo | P2 | 3 | 0% | |
 | T2.2 | todo | P0 | 2 | 0% | |
 | T2.3 | todo | P0 | 2 | 0% | |
-| T2.5 | in progress | P0 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T2.6 | todo | P1 | 1 | 0% | |
 | T2.7 | todo | P0 | 2 | 0% | |
 | T2.9 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
@@ -440,19 +439,6 @@ ci.yml calls pyrlyn/ci ci-rust.yml (Linux x86_64 and aarch64, macOS aarch64, Win
 Done when:
 
 - CI green on the skeleton
-
-### T2.5. aulo-config: typed config with schema and layers
-
-Stage: S2 · Area: infra · Depends on: T2.1 · Blocks: 5 task(s)
-
-Config types with schemars; committed schemas/aulo.schema.json with a stale test; figment layers default < ~/.aulo/config.toml < project .aulo.toml < AULO_* env < flags, with per-key provenance. The only crate that touches toml/toml_edit/figment. Use config-schema when T1.14 lands.
-
-Execution plan: 1. crates/aulo-config: Config types (deny_unknown_fields, schemars) for daemon, providers, voice, mcp, plugins, policy sections at the level the spec defines. 2. figment layers: defaults < ~/.aulo/config.toml (AULO_HOME override) < project .aulo.toml < AULO_* env < overrides from the caller, with per-key provenance. 3. schemas/aulo.schema.json committed plus a test that fails when it is stale (AULO_UPDATE_SCHEMA=1 regenerates). 4. Errors name the file. 5. Tests for layering, provenance, unknown keys, schema.
-
-Done when:
-
-- schema test fails when types change without regenerating
-- unknown keys are rejected with the file name in the error
 
 ### T2.6. Embedded default config
 
