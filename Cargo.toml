@@ -22,6 +22,8 @@ clap = { version = "4.6.7", features = ["derive"] }
 diesel = { version = "2.3.13", default-features = false }
 # embedded schema migrations
 diesel_migrations = "2.3.2"
+# bundled SQLite so the daemon never depends on a system libsqlite3; range matches diesel 2.3.13
+libsqlite3-sys = { version = "0.38.2", features = ["bundled"] }
 # layered config with per-key provenance
 figment = "0.10.19"
 # JSON Schema for config files
