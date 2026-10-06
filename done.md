@@ -64,3 +64,16 @@ Done when:
 - cargo check, clippy and fmt --check pass on an empty workspace
 
 Outcome: root `Cargo.toml` (virtual workspace, resolver 3, edition 2024, rust-version 1.99, D1 licence, shared dependencies with reasons, lints denying unwrap/expect/panic/todo outside tests, `dist` profile), `clippy.toml`, `rustfmt.toml`, `mise.toml` (Rust 1.99.0, just), `justfile`, and `crates/aulo` with the `aulo` and `aulod` binaries printing their version. `cargo check`, `clippy -D warnings` and `fmt --check` pass.
+
+### T2.8. aulo-store: Diesel SQLite with chats and messages
+
+Stage: S2 · Area: infra · Depends on: T2.1 · Blocks: 3 task(s)
+
+~/.aulo/aulo.db, bundled SQLite, WAL, filename-keyed migrations. Tables: bots, chats, messages, tool_calls, usage. Typed Diesel DSL only.
+
+
+Done when:
+
+- migration up/down tests; CRUD tests for chats and messages
+
+Outcome: crates/aulo-store: Diesel over bundled SQLite (libsqlite3-sys 0.38 bundled), WAL, foreign keys and busy_timeout on open (the only raw SQL, PRAGMA, which the DSL cannot express), embedded migration 2026-10-07-000000_core_tables (bots, chats, messages, tool_calls, usage). Typed Store API with ULID ids, keyset pagination and cascade delete. 8 tests (migrations up/down/up, CRUD, pagination, foreign keys, cascade, WAL). Follow-ups: role/status strings become aulo-types enums; open() takes &str until aulo-config gives the path; single connection, not Sync.

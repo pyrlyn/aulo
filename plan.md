@@ -36,7 +36,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T2.5 | in progress | P0 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T2.6 | todo | P1 | 1 | 0% | |
 | T2.7 | todo | P0 | 2 | 0% | |
-| T2.8 | in progress | P0 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T2.9 | todo | P0 | 2 | 0% | |
 | T2.10 | todo | P2 | 2 | 0% | |
 | T3.1 | todo | P0 | 3 | 0% | |
@@ -487,18 +486,6 @@ tracing-subscriber JSON logs in ~/.aulo/logs with rotation, level from config/en
 Done when:
 
 - a test proves a key-like value is redacted
-
-### T2.8. aulo-store: Diesel SQLite with chats and messages
-
-Stage: S2 · Area: infra · Depends on: T2.1 · Blocks: 3 task(s)
-
-~/.aulo/aulo.db, bundled SQLite, WAL, filename-keyed migrations. Tables: bots, chats, messages, tool_calls, usage. Typed Diesel DSL only.
-
-Execution plan: 1. crates/aulo-store: Diesel 2.x with bundled SQLite, embedded migrations (diesel_migrations), WAL and foreign keys on open. 2. Migration 0001: bots, chats, messages, tool_calls, usage with indexes. 3. Typed Store API (no raw SQL): create/list/get/rename/delete chats, append/list messages with pagination, record tool calls and usage. 4. Tests on a temp DB: migrations up/down, CRUD, pagination, cascade delete.
-
-Done when:
-
-- migration up/down tests; CRUD tests for chats and messages
 
 ### T2.9. aulo-store: grants and audit tables
 
