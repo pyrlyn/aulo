@@ -1,6 +1,6 @@
 [package]
 name = "aulo-store"
-description = "aulo SQLite storage: bots, chats, messages, tool calls and usage"
+description = "aulo SQLite storage: bots, chats, messages, tool calls, usage, grants and audit"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,7 +9,7 @@ repository.workspace = true
 publish.workspace = true
 
 [dependencies]
-diesel = { workspace = true, features = ["sqlite"] }
+diesel = { workspace = true, features = ["sqlite", "returning_clauses_for_sqlite_3_35"] }
 diesel_migrations = { workspace = true }
 libsqlite3-sys = { workspace = true }
 thiserror = { workspace = true }

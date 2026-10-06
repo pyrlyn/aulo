@@ -53,9 +53,33 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    grants (id) {
+        id -> Text,
+        subject -> Text,
+        scope -> Text,
+        decision -> Text,
+        expires_at -> Nullable<BigInt>,
+        created_at -> BigInt,
+    }
+}
+
+diesel::table! {
+    audit (seq) {
+        seq -> BigInt,
+        prev_hash -> Text,
+        hash -> Text,
+        kind -> Text,
+        payload -> Text,
+        created_at -> BigInt,
+    }
+}
+
 diesel::joinable!(chats -> bots (bot_id));
 diesel::joinable!(messages -> chats (chat_id));
 diesel::joinable!(tool_calls -> messages (message_id));
 diesel::joinable!(usage -> chats (chat_id));
 
-diesel::allow_tables_to_appear_in_same_query!(bots, chats, messages, tool_calls, usage);
+diesel::allow_tables_to_appear_in_same_query!(
+    audit, bots, chats, grants, messages, tool_calls, usage
+);

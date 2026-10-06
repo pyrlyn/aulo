@@ -1,7 +1,8 @@
 //! SQLite storage for aulo (`~/.aulo/aulo.db`): bots, chats, messages, tool
-//! calls and usage. This is the only crate that names Diesel.
+//! calls, usage, grants and the audit log. This is the only crate that names Diesel.
 
 mod models;
+mod safety;
 mod schema;
 
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -12,7 +13,7 @@ use diesel::sqlite::SqliteConnection;
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use ulid::Generator;
 
-pub use models::{Bot, Chat, Message, ToolCall, Usage};
+pub use models::{AuditRow, Bot, Chat, Grant, Message, ToolCall, Usage};
 
 use schema::{bots, chats, messages, tool_calls, usage};
 

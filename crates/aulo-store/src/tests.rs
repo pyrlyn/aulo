@@ -2,6 +2,7 @@ use diesel_migrations::MigrationHarness;
 use tempfile::TempDir;
 
 use super::*;
+use crate::schema::{audit, grants};
 
 fn open() -> (TempDir, Store) {
     let dir = TempDir::new().unwrap();
@@ -19,14 +20,25 @@ fn migrations_apply_revert_and_reapply() {
     );
 
     let reverted = s.conn.revert_all_migrations(MIGRATIONS).unwrap();
-    assert_eq!(reverted.len(), 1);
+    assert_eq!(reverted.len(), 2);
     // The DSL cannot inspect sqlite_master; a failing query proves the table is gone.
     assert!(chats::table.count().get_result::<i64>(&mut s.conn).is_err());
     assert!(usage::table.count().get_result::<i64>(&mut s.conn).is_err());
+    assert!(
+        grants::table
+            .count()
+            .get_result::<i64>(&mut s.conn)
+            .is_err()
+    );
+    assert!(audit::table.count().get_result::<i64>(&mut s.conn).is_err());
 
     s.conn.run_pending_migrations(MIGRATIONS).unwrap();
     assert_eq!(
         bots::table.count().get_result::<i64>(&mut s.conn).unwrap(),
+        0
+    );
+    assert_eq!(
+        audit::table.count().get_result::<i64>(&mut s.conn).unwrap(),
         0
     );
 }
@@ -154,4 +166,71 @@ fn database_runs_in_wal_mode() {
     let (dir, _store) = open();
     // The `-wal` sidecar only exists while a WAL-mode connection is open.
     assert!(dir.path().join("aulo.db-wal").exists());
+}
+
+#[test]
+fn grants_put_list_and_revoke() {
+    let (_dir, mut s) = open();
+    let a = s.put_grant("app:Safari", "browse", "allow", None).unwrap();
+    let b = s.put_grant("app:Mail", "send", "deny", None).unwrap();
+    assert_eq!(s.list_grants().unwrap(), vec![a.clone(), b.clone()]);
+
+    assert!(s.revoke_grant(&a.id).unwrap());
+    assert!(!s.revoke_grant(&a.id).unwrap());
+    assert_eq!(s.list_grants().unwrap(), vec![b]);
+}
+
+#[test]
+fn active_grants_filter_by_subject_and_expiry() {
+    let (_dir, mut s) = open();
+    let now = now_ms();
+    let forever = s.put_grant("app:Safari", "browse", "allow", None).unwrap();
+    let future = s
+        .put_grant("app:Safari", "read", "allow", Some(now + 60_000))
+        .unwrap();
+    s.put_grant("app:Safari", "old", "allow", Some(now - 1))
+        .unwrap();
+    s.put_grant("app:Mail", "send", "allow", None).unwrap();
+
+    assert_eq!(
+        s.list_active_grants("app:Safari").unwrap(),
+        vec![forever, future]
+    );
+    assert_eq!(s.list_grants().unwrap().len(), 4);
+    assert!(s.list_active_grants("app:Unknown").unwrap().is_empty());
+}
+
+#[test]
+fn audit_appends_in_seq_order_and_pages() {
+    let (_dir, mut s) = open();
+    assert_eq!(s.last_audit().unwrap(), None);
+
+    let mut prev = String::from("genesis");
+    let rows: Vec<_> = (0..5)
+        .map(|i| {
+            let hash = format!("h{i}");
+            let row = s
+                .append_audit(&prev, &hash, "tool_call", &format!("{{\"n\":{i}}}"))
+                .unwrap();
+            prev = hash;
+            row
+        })
+        .collect();
+    let seqs: Vec<_> = rows.iter().map(|r| r.seq).collect();
+    assert!(seqs.windows(2).all(|w| w[0] < w[1]));
+    assert_eq!(s.last_audit().unwrap().as_ref(), rows.last());
+
+    assert_eq!(s.list_audit_after(0, 10).unwrap(), rows);
+    let page = s.list_audit_after(rows[1].seq, 2).unwrap();
+    assert_eq!(page, rows[2..4]);
+    assert!(s.list_audit_after(rows[4].seq, 10).unwrap().is_empty());
+}
+
+#[test]
+fn audit_rejects_a_forked_chain() {
+    let (_dir, mut s) = open();
+    s.append_audit("genesis", "h0", "k", "{}").unwrap();
+    // A second writer that read the same head must not be able to fork the chain.
+    assert!(s.append_audit("genesis", "h0b", "k", "{}").is_err());
+    assert_eq!(s.list_audit_after(0, 10).unwrap().len(), 1);
 }
