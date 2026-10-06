@@ -1,0 +1,21 @@
+[package]
+name = "aulo-types"
+description = "Shared I/O-free ids and events for aulo"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde.workspace = true
+thiserror.workspace = true
+# The serde feature gives ids their canonical 26-character string form.
+ulid = { workspace = true, features = ["serde"] }
+
+[dev-dependencies]
+serde_json.workspace = true
+
+[lints]
+workspace = true
