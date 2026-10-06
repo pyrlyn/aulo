@@ -1,0 +1,20 @@
+[package]
+name = "aulo"
+description = "aulo CLI and daemon entry points"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "aulo"
+path = "src/main.rs"
+
+[[bin]]
+name = "aulod"
+path = "src/bin/aulod.rs"
+
+[lints]
+workspace = true

@@ -1,0 +1,66 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+default-members = ["crates/aulo"]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.99"
+license = "GPL-3.0-or-later OR LicenseRef-aulo-Royalty-Free"
+repository = "https://github.com/pyrlyn/aulo"
+publish = false
+
+# One version per dependency for the whole workspace; members opt in with
+# `dep.workspace = true` and add features locally.
+[workspace.dependencies]
+# error context in the binaries only
+anyhow = "1.0.104"
+# CLI parsing for `aulo` and `aulod`
+clap = { version = "4.6.7", features = ["derive"] }
+# typed SQLite access in aulo-store (no raw SQL)
+diesel = { version = "2.3.13", default-features = false }
+# embedded schema migrations
+diesel_migrations = "2.3.2"
+# layered config with per-key provenance
+figment = "0.10.19"
+# JSON Schema for config files
+schemars = "1.2.2"
+# serialization of config, events and stored rows
+serde = { version = "1.0.229", features = ["derive"] }
+# JSON for schemas, MCP and stored payloads
+serde_json = "1.0.151"
+# temporary dirs in tests
+tempfile = "3.27.0"
+# typed errors in library crates
+thiserror = "2.0.21"
+# async runtime for the daemon
+tokio = "1.53.2"
+# config file format
+toml = "1.1.6"
+# structured logs
+tracing = "0.1.44"
+# sortable ids for bots, chats, turns and calls
+ulid = "3.0.0"
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+missing_debug_implementations = "warn"
+
+# Tests may unwrap; library and binary code returns errors instead.
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+dbg_macro = "deny"
+
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dist]
+inherits = "release"
+lto = "fat"
+codegen-units = 1
+strip = true
