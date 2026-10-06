@@ -8,8 +8,8 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 
 | # | Status | Priority | Complexity | Readiness | Agent |
 | --- | --- | --- | --- | --- | --- |
-| T0.5 | todo | P0 | 2 | 0% | |
-| T0.6 | todo | P1 | 3 | 0% | |
+| T0.5 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
+| T0.6 | in progress | P1 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T1.1 | todo | P0 | 4 | 0% | |
 | T1.2 | todo | P0 | 3 | 0% | |
 | T1.3 | todo | P0 | 3 | 0% | |
@@ -30,14 +30,14 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.18 | todo | P2 | 2 | 0% | |
 | T1.19 | todo | P1 | 3 | 0% | |
 | T1.20 | todo | P2 | 3 | 0% | |
-| T2.1 | todo | P0 | 2 | 0% | |
+| T2.1 | in progress | P0 | 2 | 0% | Claude Code / claude-opus-5-5 |
 | T2.2 | todo | P0 | 2 | 0% | |
 | T2.3 | todo | P0 | 2 | 0% | |
-| T2.4 | todo | P0 | 3 | 0% | |
-| T2.5 | todo | P0 | 3 | 0% | |
+| T2.4 | in progress | P0 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
+| T2.5 | in progress | P0 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T2.6 | todo | P1 | 1 | 0% | |
 | T2.7 | todo | P0 | 2 | 0% | |
-| T2.8 | todo | P0 | 3 | 0% | |
+| T2.8 | in progress | P0 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T2.9 | todo | P0 | 2 | 0% | |
 | T2.10 | todo | P2 | 2 | 0% | |
 | T3.1 | todo | P0 | 3 | 0% | |
@@ -200,6 +200,8 @@ Stage: S0 · Area: spike · Depends on: T0.3 · Blocks: 2 task(s)
 
 Build the official sherpa-onnx Rust crate (1.13.x) and run its examples for Parakeet TDT v3 STT, Silero VAD, keyword spotting and Kokoro TTS. Measure build time, binary size, model sizes, real-time factor and time to first audio. Write docs/spikes/sherpa-onnx.md with numbers and sources.
 
+Execution plan: 1. Scratch Cargo project outside the workspace (scratchpad) depending on the official sherpa-onnx crate. 2. Run Silero VAD, Parakeet TDT v3 offline STT on en and ru WAVs, keyword spotting, Kokoro TTS, following the crate examples; download models from the official release URLs. 3. Measure cold build time, release binary size, model sizes, RTF, time to first audio, peak RSS. 4. Write docs/spikes/sherpa-onnx.md with numbers, versions, sources and a go/no-go.
+
 Done when:
 
 - docs/spikes/sherpa-onnx.md with measured numbers
@@ -210,6 +212,8 @@ Done when:
 Stage: S0 · Area: spike · Depends on: T0.3 · Blocks: 2 task(s)
 
 Compare macOS Voice Processing I/O (AVAudioEngine setVoiceProcessingEnabled via objc2-avf-audio) with webrtc-audio-processing 2.x (AEC3). Play TTS through speakers while capturing; measure residual echo and false barge-ins. Write docs/spikes/aec.md.
+
+Execution plan: 1. Scratch project: macOS Voice Processing I/O via objc2-avf-audio (AVAudioEngine, setVoiceProcessingEnabled on input and output nodes). 2. Second scratch: webrtc-audio-processing 2.x AEC3 with the playback stream as far-end reference. 3. Play a speech WAV through the speakers while recording; measure residual echo energy (dB) and VAD false triggers for both, plus build complexity. 4. Write docs/spikes/aec.md with a recommendation per OS.
 
 Done when:
 
@@ -426,6 +430,8 @@ Stage: S2 · Area: infra · Depends on: T0.1 · Blocks: 6 task(s)
 
 Virtual manifest (members = crates/*, resolver 3, edition 2024), workspace.package, workspace.dependencies with one-line reasons, workspace.lints (no unwrap/expect/panic outside tests), dev and dist profiles, mise.toml pinning Rust, justfile, .gitignore.
 
+Execution plan: 1. Root Cargo.toml: virtual workspace, members crates/*, resolver 3, edition 2024, rust-version 1.99, license expression from D1, workspace.lints (deny unwrap_used, expect_used, panic, todo outside tests), dev profile line-tables-only, dist profile (fat LTO, codegen-units 1, strip). 2. crates/aulo: the surface crate with `aulo` and `aulod` bin targets printing their version, so the workspace has a default member. 3. mise.toml pinning Rust 1.99.0 with rustfmt and clippy; justfile (check, test, lint, fmt); rustfmt.toml. 4. Verify: `mise exec -- cargo check --workspace`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo fmt --check`, run both binaries. 5. toolchain.md rows for rustc, cargo, mise, just.
+
 Done when:
 
 - cargo check, clippy and fmt --check pass on an empty workspace
@@ -456,6 +462,8 @@ Stage: S2 · Area: infra · Depends on: T2.1 · Blocks: 4 task(s)
 
 Ids (ULID): BotId, ChatId, TurnId, CallId, ClientId. aulo events beyond agent-loop: VoiceState, Transcript (partial/final), SpeechStarted/Ended, TtsChunk, ApprovalRequired, TakeoverRequested, Notice. No I/O dependencies.
 
+Execution plan: 1. crates/aulo-types: ULID-based BotId, ChatId, TurnId, CallId, ClientId (serde, Display, FromStr). 2. Event types beyond agent-loop: VoiceState, Transcript (partial/final), SpeechStarted/Ended, TtsChunk metadata, ApprovalRequired, TakeoverRequested, Notice. 3. No I/O dependencies (serde, ulid, thiserror only). 4. Tests: serde round-trip and id parsing; clippy, fmt, nextest.
+
 Done when:
 
 - types serialize round-trip; deps test passes
@@ -465,6 +473,8 @@ Done when:
 Stage: S2 · Area: infra · Depends on: T2.1 · Blocks: 5 task(s)
 
 Config types with schemars; committed schemas/aulo.schema.json with a stale test; figment layers default < ~/.aulo/config.toml < project .aulo.toml < AULO_* env < flags, with per-key provenance. The only crate that touches toml/toml_edit/figment. Use config-schema when T1.14 lands.
+
+Execution plan: 1. crates/aulo-config: Config types (deny_unknown_fields, schemars) for daemon, providers, voice, mcp, plugins, policy sections at the level the spec defines. 2. figment layers: defaults < ~/.aulo/config.toml (AULO_HOME override) < project .aulo.toml < AULO_* env < overrides from the caller, with per-key provenance. 3. schemas/aulo.schema.json committed plus a test that fails when it is stale (AULO_UPDATE_SCHEMA=1 regenerates). 4. Errors name the file. 5. Tests for layering, provenance, unknown keys, schema.
 
 Done when:
 
@@ -496,6 +506,8 @@ Done when:
 Stage: S2 · Area: infra · Depends on: T2.1 · Blocks: 3 task(s)
 
 ~/.aulo/aulo.db, bundled SQLite, WAL, filename-keyed migrations. Tables: bots, chats, messages, tool_calls, usage. Typed Diesel DSL only.
+
+Execution plan: 1. crates/aulo-store: Diesel 2.x with bundled SQLite, embedded migrations (diesel_migrations), WAL and foreign keys on open. 2. Migration 0001: bots, chats, messages, tool_calls, usage with indexes. 3. Typed Store API (no raw SQL): create/list/get/rename/delete chats, append/list messages with pagination, record tool calls and usage. 4. Tests on a temp DB: migrations up/down, CRUD, pagination, cascade delete.
 
 Done when:
 
