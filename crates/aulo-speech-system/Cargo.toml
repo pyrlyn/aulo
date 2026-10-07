@@ -10,6 +10,8 @@ publish.workspace = true
 
 [dependencies]
 aulo-speech = { path = "../aulo-speech" }
+hound = { workspace = true }
+ringbuf = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 block2 = { workspace = true }
@@ -32,7 +34,9 @@ objc2-foundation = { workspace = true, features = [
     "NSString",
     "NSValue",
 ] }
-ringbuf = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dev-dependencies]
 aulo-voice = { path = "../aulo-voice" }

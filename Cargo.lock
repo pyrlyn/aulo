@@ -454,10 +454,12 @@ dependencies = [
  "aulo-speech",
  "aulo-voice",
  "block2",
+ "hound",
  "objc2",
  "objc2-avf-audio",
  "objc2-foundation",
  "ringbuf",
+ "tempfile",
 ]
 
 [[package]]

@@ -3,6 +3,10 @@
 //! on a desktop. Each platform lives in its own module behind a `cfg`, and a
 //! build for any other target compiles this crate to nothing.
 //!
+//! Linux has no system synthesizer API, so its `system` engine is an
+//! `espeak-ng` subprocess ([`espeak`]). That module compiles on every
+//! platform, so its process handling is tested on macOS too.
+//!
 //! Audio never goes to the speaker from here: engines hand PCM to the
 //! pipeline through [`aulo_speech::TtsEngine::poll`], so playback runs through
 //! aulo-audio, where barge-in and echo cancellation see every sample
@@ -18,8 +22,13 @@
 //! audio arrives, and the first `poll` after a few seconds reports
 //! [`aulo_speech::SpeechError::Unavailable`] so the registry falls back.
 
+pub mod espeak;
+
 #[cfg(target_os = "macos")]
 mod macos;
 
 #[cfg(target_os = "macos")]
 pub use macos::{ENGINE_ID, SystemTts, factory};
+
+#[cfg(target_os = "linux")]
+pub use espeak::{ENGINE_ID, EspeakTts as SystemTts, factory};
