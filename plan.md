@@ -30,7 +30,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.20 | todo | P2 | 3 | 0% | |
 | T2.3 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T3.7 | todo | P0 | 3 | 0% | |
-| T3.8 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T3.9 | in progress | P2 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T4.1 | todo | P0 | 3 | 0% | |
 | T4.2 | todo | P0 | 2 | 0% | |
@@ -398,18 +397,6 @@ aulo chat (rustyline REPL over Converse), aulo chats ls/rm, aulo status. Renders
 Done when:
 
 - trycmd fixtures against a test daemon with a scripted provider
-
-### T3.8. aulo-server: TLS for TCP listeners
-
-Stage: S3 · Area: api · Depends on: T3.4 · Blocks: 1 task(s)
-
-Execution plan: 1. TLS on aulo-server TCP listeners through tonic's rustls support: a configured certificate and key, or a self-signed one generated on first start and kept under the aulo home (0600). 2. Expose the SHA-256 certificate fingerprint and a client-side pinning verifier that accepts only that fingerprint. 3. Plain TCP stays refused off loopback until TLS is on; wire the `remote_auth_configured` gate to TLS plus token. 4. Tests: right pin connects, wrong pin is refused, expired or mismatched key is an error. 5. toolchain.md rows; verify clippy, fmt, workspace tests.
-
-rustls; user-provided certificate or a generated self-signed one with fingerprint pinning in clients (`aulo connect --pin`).
-
-Done when:
-
-- test: client with wrong pin is refused
 
 ### T3.9. Run aulod as a user service
 

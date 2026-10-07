@@ -378,3 +378,16 @@ Done when:
 - manual check; voice-list test behind a macOS cfg
 
 Outcome: New adapter crate aulo-speech-system (macOS only): AVSpeechSynthesizer write(_:toBufferCallback:) on a dedicated worker thread, buffers pushed by try_lock into a fixed 1M-sample ringbuf with overflow counted, a generation fence for cancel, linear resampling only on rate mismatch, voice choice by tag then primary subtag then quality. The buffer callback fires only on the main dispatch queue, so hosts (aulod, aulo-ffi) must keep the main run loop running and run tokio elsewhere; without it the engine reports Unavailable after 5 s. unsafe is allowed only in src/macos with SAFETY comments. Manual WAV check, no speaker playback.
+
+### T3.8. aulo-server: TLS for TCP listeners
+
+Stage: S3 · Area: api · Depends on: T3.4 · Blocks: 1 task(s)
+
+
+rustls; user-provided certificate or a generated self-signed one with fingerprint pinning in clients (`aulo connect --pin`).
+
+Done when:
+
+- test: client with wrong pin is refused
+
+Outcome: aulo_server::tls: TlsIdentity from user PEM files or a self-signed rcgen identity kept 0700/0600 under a given directory (never regenerated over a lone certificate), CertFingerprint (SHA-256, openssl form), PinnedServerVerifier and pinned_client_config for clients. TcpListen carries Option<TlsIdentity> instead of remote_auth_configured: off loopback needs TLS and a token. tonic tls-aws-lc with one process-wide aws-lc-rs provider and a 10 s handshake timeout. Not checked: certificate expiry and permissions of user-provided keys; aulod still passes tls: None and the client connector lives only in tests.
