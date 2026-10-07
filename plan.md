@@ -30,7 +30,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.20 | todo | P2 | 3 | 0% | |
 | T2.3 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T3.7 | todo | P0 | 3 | 0% | |
-| T3.9 | in progress | P2 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T4.1 | todo | P0 | 3 | 0% | |
 | T4.2 | todo | P0 | 2 | 0% | |
 | T4.3 | todo | P1 | 2 | 0% | |
@@ -396,18 +395,6 @@ aulo chat (rustyline REPL over Converse), aulo chats ls/rm, aulo status. Renders
 Done when:
 
 - trycmd fixtures against a test daemon with a scripted provider
-
-### T3.9. Run aulod as a user service
-
-Stage: S3 · Area: api · Depends on: T3.6 · Blocks: 0 task(s)
-
-Execution plan: 1. `aulod service install|uninstall|status` subcommands in crates/aulo behind a ServiceManager trait. 2. Backends: launchd LaunchAgent plist via launchctl bootstrap/bootout on macOS, systemd user unit via systemctl --user on Linux, Task Scheduler logon task via schtasks on Windows; files rendered from templates with the resolved binary path and AULO_HOME. 3. Idempotent install and uninstall, checked with a fake manager that records commands and files. 4. Verify clippy, fmt, workspace tests.
-
-aulod service install/uninstall: launchd agent on macOS, systemd user unit on Linux, Task Scheduler entry on Windows.
-
-Done when:
-
-- install and uninstall are idempotent (tested with a fake service manager)
 
 ## S4. Models, providers and agent loop
 

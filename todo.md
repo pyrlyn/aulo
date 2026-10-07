@@ -22,7 +22,6 @@
 - T1.20. runa: library target for in-process local inference
 - T2.3. CI workflows
 - T3.7. aulo CLI: text chat client
-- T3.9. Run aulod as a user service
 - T4.1. aulo-providers: build providers from config
 - T4.2. Credentials in the OS keychain
 - T4.3. Local server presets and auto-detection

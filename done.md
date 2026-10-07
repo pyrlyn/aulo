@@ -404,3 +404,16 @@ Done when:
 - WER test on fixture WAVs under the threshold from the spike
 
 Outcome: New adapter crate aulo-speech-sherpa (sherpa-onnx =1.13.8): ParakeetFactory validates the catalog model files (id, sizes, ONNX header, token table, UTF-8 paths) before sherpa sees them and loads the model once per factory; ParakeetStt decodes VAD segments on one worker thread with a bounded job queue, preallocated utterance buffer, cancel, 25-language check and transcript cap; PARAKEET_ATTRIBUTION carries the CC-BY-4.0 notice. WER 0.000 on 5 fixture clips (en, ru) with a gated test and MAX_WER 0.10. Moonshine left out (offline-only in 1.13.8, no verified bundle); offline builds via SHERPA_ONNX_ARCHIVE_DIR or SHERPA_ONNX_LIB_DIR. Follow-ups in ideas.md.
+
+### T3.9. Run aulod as a user service
+
+Stage: S3 · Area: api · Depends on: T3.6 · Blocks: 0 task(s)
+
+
+aulod service install/uninstall: launchd agent on macOS, systemd user unit on Linux, Task Scheduler entry on Windows.
+
+Done when:
+
+- install and uninstall are idempotent (tested with a fake service manager)
+
+Outcome: aulod service install|uninstall|status over a ServiceManager trait (std fs and Command, no shell) with launchd (dev.aulo.aulod LaunchAgent, bootstrap/bootout), systemd user unit (daemon-reload only on change, enable --now, restart on update) and schtasks ONLOGON backends; Fresh/Updated/Unchanged results, uninstall of nothing runs no command. Per-format quoting (XML, systemd, Windows CRT), control characters and non-UTF-8 paths refused. AULO_HOME goes in the unit environment, or as a hidden --home flag on Windows. 17 unit tests with a stateful fake manager plus trycmd fixtures.
