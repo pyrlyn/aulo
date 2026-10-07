@@ -1,27 +1,22 @@
 //! What every cloud engine shares: endpoint validation, the bearer header, the
 //! HTTP client rules and the mapping from failures to fallback categories.
 
-use std::net::IpAddr;
 use std::time::Duration;
 
 use aulo_speech::SpeechError;
 use reqwest::header::HeaderValue;
-use reqwest::{Client, StatusCode, Url, redirect};
+use reqwest::{Client, StatusCode, redirect};
 
-use crate::config::ApiKey;
+use aulo_types::{ApiKey, checked_endpoint};
 
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 
-/// A validated endpoint and whether it is on this machine.
-pub(crate) struct Endpoint {
-    pub(crate) url: Url,
-    pub(crate) local: bool,
-}
+pub(crate) use aulo_types::Endpoint;
 
 /// `base_url` goes up to and including the version segment.
 pub(crate) fn endpoint(base_url: &str, path: &str, has_key: bool) -> Result<Endpoint, SpeechError> {
-    checked(base_url, path, has_key, ("https", "http"))
-        .map_err(|()| SpeechError::invalid("base url", "https, or http only to localhost"))
+    checked_endpoint(base_url, path, has_key, ("https", "http"))
+        .ok_or_else(|| SpeechError::invalid("base url", "https, or http only to localhost"))
 }
 
 /// The WebSocket form of [`endpoint`]: `wss`, or `ws` only to this machine.
@@ -30,35 +25,8 @@ pub(crate) fn ws_endpoint(
     path: &str,
     has_key: bool,
 ) -> Result<Endpoint, SpeechError> {
-    checked(base_url, path, has_key, ("wss", "ws"))
-        .map_err(|()| SpeechError::invalid("base url", "wss, or ws only to localhost"))
-}
-
-fn checked(
-    base_url: &str,
-    path: &str,
-    has_key: bool,
-    (secure_scheme, plain_scheme): (&str, &str),
-) -> Result<Endpoint, ()> {
-    let url = Url::parse(&format!("{}{path}", base_url.trim_end_matches('/'))).map_err(|_| ())?;
-    let local = is_loopback(&url);
-    // A key over an unencrypted connection to another host is readable on the path.
-    let scheme = url.scheme();
-    if scheme == secure_scheme || (scheme == plain_scheme && (local || !has_key)) {
-        Ok(Endpoint { url, local })
-    } else {
-        Err(())
-    }
-}
-
-fn is_loopback(url: &Url) -> bool {
-    url.host_str().is_some_and(|host| {
-        host.eq_ignore_ascii_case("localhost")
-            || host
-                .trim_matches(['[', ']'])
-                .parse::<IpAddr>()
-                .is_ok_and(|ip| ip.is_loopback())
-    })
+    checked_endpoint(base_url, path, has_key, ("wss", "ws"))
+        .ok_or_else(|| SpeechError::invalid("base url", "wss, or ws only to localhost"))
 }
 
 pub(crate) fn bearer(key: Option<&ApiKey>) -> Result<Option<HeaderValue>, SpeechError> {

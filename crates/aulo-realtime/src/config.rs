@@ -1,10 +1,10 @@
-use std::fmt;
-use std::net::IpAddr;
-use std::time::Duration;
-
 use serde_json::Value;
+use std::time::Duration;
 use tokio_tungstenite::tungstenite::http::HeaderValue;
 use url::Url;
+
+pub use aulo_types::ApiKey;
+use aulo_types::checked_endpoint;
 
 use crate::RealtimeError;
 
@@ -13,27 +13,6 @@ pub const DEFAULT_REST_URL: &str = "https://api.openai.com/v1";
 /// The only PCM rate the Realtime API takes; GPT-Live also takes 16 kHz.
 pub const SAMPLE_RATE_HZ: u32 = 24_000;
 const MAX_NAME_CHARS: usize = 128;
-
-/// A secret resolved from the caller's handle. `Debug` never prints it, so a
-/// config logged or dumped in a panic cannot leak it.
-#[derive(Clone)]
-pub struct ApiKey(String);
-
-impl ApiKey {
-    pub fn new(value: impl Into<String>) -> Self {
-        Self(value.into())
-    }
-
-    pub(crate) fn expose(&self) -> &str {
-        &self.0
-    }
-}
-
-impl fmt::Debug for ApiKey {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("ApiKey(<redacted>)")
-    }
-}
 
 /// The two OpenAI voice protocols. They share the socket and the audio
 /// encoding but not the event names.
@@ -129,28 +108,18 @@ impl RealtimeConfig {
     }
 }
 
-/// `base_url` plus `path`, on the secure scheme or the plain one to this machine
-/// only: a key over an unencrypted connection to another host is readable on the path.
 pub(crate) fn endpoint(
     base_url: &str,
     path: &str,
-    (secure, plain): (&str, &str),
+    schemes: (&str, &str),
 ) -> Result<Url, RealtimeError> {
-    let bad = || RealtimeError::invalid("base url", "https/wss, or http/ws only to localhost");
-    let url =
-        Url::parse(&format!("{}{path}", base_url.trim_end_matches('/'))).map_err(|_| bad())?;
-    let local = url.host_str().is_some_and(|host| {
-        host.eq_ignore_ascii_case("localhost")
-            || host
-                .trim_matches(['[', ']'])
-                .parse::<IpAddr>()
-                .is_ok_and(|ip| ip.is_loopback())
-    });
-    if url.scheme() == secure || (url.scheme() == plain && local) {
-        Ok(url)
-    } else {
-        Err(bad())
-    }
+    // The key is always sent, so plain schemes are for this machine only.
+    checked_endpoint(base_url, path, true, schemes)
+        .map(|endpoint| endpoint.url)
+        .ok_or(RealtimeError::invalid(
+            "base url",
+            "https/wss, or http/ws only to localhost",
+        ))
 }
 
 pub(crate) fn bearer(key: &ApiKey) -> Result<HeaderValue, RealtimeError> {

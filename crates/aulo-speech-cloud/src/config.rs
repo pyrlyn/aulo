@@ -1,7 +1,7 @@
-use std::fmt;
 use std::time::Duration;
 
 use aulo_speech::{SpeechError, Voice};
+pub use aulo_types::ApiKey;
 
 /// Longest utterance the engine buffers. A 10 minute 16 kHz mono WAV is about
 /// 19 MB, under OpenAI's 25 MB upload limit, and bounds memory per engine.
@@ -9,27 +9,6 @@ pub const MAX_UTTERANCE_LIMIT: Duration = Duration::from_secs(600);
 
 const DEFAULT_MAX_UTTERANCE: Duration = Duration::from_secs(30);
 const DEFAULT_REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
-
-/// A secret resolved from the caller's handle. `Debug` never prints it, so a
-/// config logged or dumped in a panic cannot leak it.
-#[derive(Clone)]
-pub struct ApiKey(String);
-
-impl ApiKey {
-    pub fn new(value: impl Into<String>) -> Self {
-        Self(value.into())
-    }
-
-    pub(crate) fn expose(&self) -> &str {
-        &self.0
-    }
-}
-
-impl fmt::Debug for ApiKey {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("ApiKey(<redacted>)")
-    }
-}
 
 /// How the server is asked to answer.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

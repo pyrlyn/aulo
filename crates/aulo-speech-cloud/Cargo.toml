@@ -10,6 +10,7 @@ publish.workspace = true
 
 [dependencies]
 aulo-speech = { path = "../aulo-speech" }
+aulo-types = { path = "../aulo-types" }
 base64.workspace = true
 futures-util.workspace = true
 hound.workspace = true

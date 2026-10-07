@@ -80,6 +80,6 @@ Only what the project uses today. Crates are added by the task that wires each o
 | tracing-subscriber | local | https://github.com/tokio-rs/tracing | EnvFilter, JSON and human log formatters |
 | trycmd | local (dev) | https://github.com/assert-rs/snapbox | Full command-output fixtures for the `aulo` CLI and `aulod` (`crates/aulo/tests/cmd/`, `crates/aulo/tests/aulod/`) |
 | ulid | local | https://github.com/dylanhart/ulid-rs | Sortable ids for bots, chats, turns, calls and stored rows |
-| url | local | https://github.com/servo/rust-url | Host of a URL for the speakable-text normalizer (`aulo-voice`); the realtime socket and REST endpoints, with the loopback check, in `aulo-realtime` |
+| url | local | https://github.com/servo/rust-url | Host of a URL for the speakable-text normalizer (`aulo-voice`); the endpoint check (`checked_endpoint`: TLS, or plain only to this machine) that `aulo-speech-cloud` and `aulo-realtime` share, in `aulo-types` |
 | windows | local (Windows) | https://github.com/microsoft/windows-rs | WinRT `SpeechSynthesizer` and `DataReader` bindings for the Windows system voices (`aulo-speech-system`); only the `Media_SpeechSynthesis` family of features |
 | wiremock | local (dev) | https://github.com/LukeMathWalker/wiremock-rs | Local HTTP fixture server for the `aulo-models` downloader and `aulo-speech-cloud` transcription and speech tests and the `aulo-realtime` client secret tests |

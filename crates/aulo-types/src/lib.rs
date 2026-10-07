@@ -4,6 +4,8 @@
 
 mod events;
 mod ids;
+mod net;
 
 pub use events::{AuloEvent, NoticeLevel, TakeoverReason, TranscriptKind, TtsChunk, VoiceState};
 pub use ids::{BotId, CallId, ChatId, ClientId, IdParseError, TurnId};
+pub use net::{ApiKey, Endpoint, checked_endpoint};

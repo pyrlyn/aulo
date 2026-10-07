@@ -13,6 +13,8 @@ serde.workspace = true
 thiserror.workspace = true
 # The serde feature gives ids their canonical 26-character string form.
 ulid = { workspace = true, features = ["serde"] }
+# Endpoint parsing for the network adapters; pure, no I/O.
+url.workspace = true
 
 [dev-dependencies]
 serde_json.workspace = true
