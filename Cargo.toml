@@ -24,6 +24,16 @@ diesel = { version = "2.3.13", default-features = false }
 diesel_migrations = "2.3.2"
 # bundled SQLite so the daemon never depends on a system libsqlite3; range matches diesel 2.3.13
 libsqlite3-sys = { version = "0.38.2", features = ["bundled"] }
+# protobuf messages for the gRPC API; owned by aulo-proto
+prost = "0.14.4"
+# well-known protobuf types (Timestamp) used by the generated code
+prost-types = "0.14.4"
+# gRPC server and client runtime; owned by aulo-proto
+tonic = "0.14.6"
+# prost codec for tonic
+tonic-prost = "0.14.6"
+# build-time code generation from proto/aulo/v1
+tonic-prost-build = "0.14.6"
 # layered config with per-key provenance
 figment = "0.10.19"
 # JSON Schema for config files

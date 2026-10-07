@@ -1,0 +1,21 @@
+[package]
+name = "aulo-proto"
+description = "Generated gRPC server and client code for the aulo.v1 API"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+prost.workspace = true
+prost-types.workspace = true
+tonic.workspace = true
+tonic-prost.workspace = true
+
+[build-dependencies]
+tonic-prost-build.workspace = true

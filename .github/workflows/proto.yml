@@ -1,0 +1,31 @@
+name: proto
+
+on:
+  pull_request:
+    paths:
+      - "proto/**"
+      - ".github/workflows/proto.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  buf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # lint, format and breaking are on by default for pull requests; breaking
+      # compares against the PR's base branch, so a renumbered or removed field
+      # fails the build.
+      - uses: bufbuild/buf-action@85aebf73123b5c15fd5528aaecbf9129cddf7fa7 # v1.6.0
+        with:
+          input: proto
+          lint: true
+          format: true
+          breaking: true
+          # Reporting only through the job status: comments need a token write
+          # scope this check does not otherwise want.
+          pr_comment: false
+          # No BSR push or archive: the protos are not published there.
+          push: false
+          archive: false
