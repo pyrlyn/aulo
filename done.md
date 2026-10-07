@@ -352,3 +352,16 @@ Done when:
 - search test finds a message by a word
 
 Outcome: Migration 000200_message_search: external-content FTS5 table over messages.content (unicode61, remove_diacritics 2) with insert/update/delete triggers and a rebuild of existing rows. Store::search_messages runs one bound-parameter sql_query ordered by bm25 then id with keyset cursor; user text becomes ANDed quoted phrases (1 KiB, 32 words), so FTS syntax is plain text. ChatService.SearchMessages wired with s1.<rank>.<id> tokens. Proto has no bot filter or snippet field; the index keys on the implicit rowid, so a future VACUUM needs a rebuild.
+
+### T7.13. TTS: OpenAI speech endpoint
+
+Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 0 task(s)
+
+
+OpenAI-compatible /v1/audio/speech with streaming PCM; voice list from config.
+
+Done when:
+
+- wiremock test
+
+Outcome: CloudTts in aulo-speech-cloud over POST /v1/audio/speech with response_format pcm (24 kHz s16le mono, layout unverified from the OpenAPI spec): one request per pushed sentence in order, 100 ms chunks through a bounded queue of 8 so a slow consumer slows the server, text queue of 64 with Overflow, abort on cancel or begin, total audio cap, idle timeout; voice from request, spec or config default within a configured list. Shared endpoint, auth, client and error mapping moved into a private net module used by STT too. Speed comes from TtsRequest.rate; EngineSpec.rate is ignored.

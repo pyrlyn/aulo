@@ -72,7 +72,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T7.10 | in progress | P1 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T7.11 | todo | P2 | 3 | 0% | |
 | T7.12 | todo | P2 | 2 | 0% | |
-| T7.13 | in progress | P1 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T7.14 | todo | P2 | 2 | 0% | |
 | T7.16 | todo | P2 | 2 | 0% | |
 | T8.1 | todo | P0 | 4 | 0% | |
@@ -834,18 +833,6 @@ Speech-dispatcher (SSIP) or espeak-ng subprocess as the zero-download fallback v
 Done when:
 
 - test on the Linux runner with espeak-ng installed
-
-### T7.13. TTS: OpenAI speech endpoint
-
-Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 0 task(s)
-
-Execution plan: 1. In aulo-speech-cloud, a TtsEngine over OpenAI-compatible POST /v1/audio/speech with streaming PCM, reusing the T7.6 client, key, redirect and cap rules. 2. Voice list from config. 3. wiremock tests for streaming, errors and cancel. 4. Verify clippy, fmt, workspace tests.
-
-OpenAI-compatible /v1/audio/speech with streaming PCM; voice list from config.
-
-Done when:
-
-- wiremock test
 
 ### T7.14. TTS: ElevenLabs streaming
 

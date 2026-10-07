@@ -64,7 +64,6 @@
 - T7.10. TTS: macOS system voices
 - T7.11. TTS: Windows system voices
 - T7.12. TTS: Linux speech-dispatcher / espeak-ng
-- T7.13. TTS: OpenAI speech endpoint
 - T7.14. TTS: ElevenLabs streaming
 - T7.16. Speech benchmarks
 - T8.1. aulo-voice: conversation pipeline
