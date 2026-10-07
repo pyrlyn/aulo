@@ -339,3 +339,16 @@ Done when:
 - wiremock tests for both shapes
 
 Outcome: New adapter crate aulo-speech-cloud: CloudStt over POST /v1/audio/transcriptions (multipart WAV via hound), JSON and SSE (sse-core) shapes chosen by reply Content-Type, preallocated utterance buffer with Overflow, abort on cancel, no retries, no redirects, key never sent over plain http off loopback, error bodies never read, transcript and reply caps; 401/403/429/connect map to Unavailable for registry fallback. Registration under engine ids and [voice.stt] keys for timeouts left to the assembly task.
+
+### T2.10. aulo-store: full-text search over messages
+
+Stage: S2 · Area: infra · Depends on: T2.8 · Blocks: 1 task(s)
+
+
+FTS5 virtual table over message text. Raw SQL stays in the storage crate with a comment that Diesel cannot model FTS5.
+
+Done when:
+
+- search test finds a message by a word
+
+Outcome: Migration 000200_message_search: external-content FTS5 table over messages.content (unicode61, remove_diacritics 2) with insert/update/delete triggers and a rebuild of existing rows. Store::search_messages runs one bound-parameter sql_query ordered by bm25 then id with keyset cursor; user text becomes ANDed quoted phrases (1 KiB, 32 words), so FTS syntax is plain text. ChatService.SearchMessages wired with s1.<rank>.<id> tokens. Proto has no bot filter or snippet field; the index keys on the implicit rowid, so a future VACUUM needs a rebuild.

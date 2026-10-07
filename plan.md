@@ -29,7 +29,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.19 | todo | P1 | 3 | 0% | |
 | T1.20 | todo | P2 | 3 | 0% | |
 | T2.3 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
-| T2.10 | in progress | P2 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T3.7 | todo | P0 | 3 | 0% | |
 | T3.8 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T3.9 | todo | P2 | 3 | 0% | |
@@ -389,18 +388,6 @@ Status note: ci.yml (pyrlyn/ci ci-rust.yml at f880dee, shared matrix without Int
 Done when:
 
 - CI green on the skeleton
-
-### T2.10. aulo-store: full-text search over messages
-
-Stage: S2 · Area: infra · Depends on: T2.8 · Blocks: 1 task(s)
-
-Execution plan: 1. Migration with an external-content FTS5 table over messages.text plus insert, update and delete triggers (raw SQL with a comment that Diesel cannot model FTS5). 2. A store search function with a sanitized MATCH query, keyset paging and a bot or chat filter. 3. Wire ChatService.SearchMessages to it. 4. Tests: find a message by a word, deleted messages vanish, hostile query syntax is not an error. 5. Verify clippy, fmt, workspace tests.
-
-FTS5 virtual table over message text. Raw SQL stays in the storage crate with a comment that Diesel cannot model FTS5.
-
-Done when:
-
-- search test finds a message by a word
 
 ## S3. gRPC API and daemon
 
