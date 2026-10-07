@@ -28,7 +28,7 @@ pub mod espeak;
 mod macos;
 
 #[cfg(target_os = "macos")]
-pub use macos::{ENGINE_ID, SystemTts, factory};
+pub use macos::{ENGINE_ID, MAX_TRANSCRIPT_BYTES, SystemStt, SystemTts, factory, stt_factory};
 
 #[cfg(target_os = "linux")]
 pub use espeak::{ENGINE_ID, EspeakTts as SystemTts, factory};

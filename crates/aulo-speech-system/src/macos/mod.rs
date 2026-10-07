@@ -4,6 +4,8 @@
 //! - `worker` owns the synthesizer on its own thread and turns buffers from
 //!   the main-queue callback into samples in a fixed-size ring.
 //! - `voices` reads the installed voices and picks one for a language.
+//! - `stt` is the [`aulo_speech::SttEngine`] over `SFSpeechRecognizer`, and
+//!   `recognizer` its probe and worker thread.
 //! - `convert` holds the pure sample math, so it is tested without
 //!   AVFoundation.
 
@@ -14,7 +16,10 @@
 
 mod convert;
 mod engine;
+mod recognizer;
+mod stt;
 mod voices;
 mod worker;
 
 pub use engine::{ENGINE_ID, SystemTts, factory};
+pub use stt::{MAX_TRANSCRIPT_BYTES, SystemStt, stt_factory};

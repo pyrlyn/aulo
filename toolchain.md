@@ -30,14 +30,15 @@ Only what the project uses today. Crates are added by the task that wires each o
 | figment | local | https://github.com/SergioBenitez/Figment | Layered config with per-key provenance |
 | futures-util | local | https://github.com/rust-lang/futures-rs | Splits the ElevenLabs and Deepgram WebSockets into read and write halves (`StreamExt`, `SinkExt`) in `aulo-speech-cloud`, so a slow audio consumer never stalls the text sent and results are read while audio is written |
 | getrandom | local | https://github.com/rust-random/getrandom | OS randomness for the 256-bit `aulod` API token (`aulo-server`) |
-| hound | local | https://github.com/ruuda/hound | Encodes the buffered utterance as 16-bit PCM WAV for the upload in `aulo-speech-cloud`; decodes the WAV stream of `espeak-ng --stdout` in `aulo-speech-system` |
+| hound | local | https://github.com/ruuda/hound | Encodes the buffered utterance as 16-bit PCM WAV for the upload in `aulo-speech-cloud`; decodes the WAV stream of `espeak-ng --stdout` in `aulo-speech-system`; reads fixture WAVs in the `aulo-speech-sherpa` and `aulo-speech-system` tests |
 | hyper-util | local (dev) | https://github.com/hyperium/hyper-util | `TokioIo` adapter for the gRPC client over a Unix socket in `aulo-server` tests |
 | insta | local (dev) | https://github.com/mitsuhiko/insta | Snapshot tests of the speakable-text normalizer (`aulo-voice`) |
 | keyring | local | https://github.com/open-source-cooperative/keyring-rs | OS keychain that holds the `aulod` API token (`aulo-server`) |
 | libsqlite3-sys | local | https://github.com/rusqlite/rusqlite | Bundled SQLite for Diesel |
 | objc2 | local (macOS) | https://github.com/madsmtm/objc2 | Objective-C runtime (`Retained`, downcasts) for the macOS system voices (`aulo-speech-system`) |
 | objc2-avf-audio | local (macOS) | https://github.com/madsmtm/objc2 | `AVSpeechSynthesizer`, `AVSpeechSynthesisVoice` and `AVAudioPCMBuffer` bindings (`aulo-speech-system`) |
-| objc2-foundation | local (macOS) | https://github.com/madsmtm/objc2 | `NSString`, `NSArray`, `NSNumber` for AVFoundation calls; `NSRunLoop` in the synthesis test (`aulo-speech-system`) |
+| objc2-foundation | local (macOS) | https://github.com/madsmtm/objc2 | `NSString`, `NSArray`, `NSNumber` for AVFoundation calls; `NSLocale`, `NSOperationQueue` and `NSError` for speech recognition; `NSRunLoop` in the synthesis test (`aulo-speech-system`) |
+| objc2-speech | local (macOS) | https://github.com/madsmtm/objc2 | `SFSpeechRecognizer` forced on-device for the macOS system STT (`aulo-speech-system`); `SpeechAnalyzer` is Swift-only |
 | opentelemetry | local | https://github.com/open-telemetry/opentelemetry-rust | OTel API for the optional OTLP trace export in `aulo-telemetry` (`otlp` feature) |
 | opentelemetry-otlp | local | https://github.com/open-telemetry/opentelemetry-rust | OTLP/HTTP span exporter, `otlp` feature only |
 | opentelemetry_sdk | local | https://github.com/open-telemetry/opentelemetry-rust | Tracer provider and batch span processor, `otlp` feature only |

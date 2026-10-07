@@ -458,6 +458,7 @@ dependencies = [
  "objc2",
  "objc2-avf-audio",
  "objc2-foundation",
+ "objc2-speech",
  "ringbuf",
  "tempfile",
 ]
@@ -2394,6 +2395,18 @@ checksum = "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272"
 dependencies = [
  "bitflags",
  "objc2",
+]
+
+[[package]]
+name = "objc2-speech"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f9eb609f9d2a25e0f8b76954f3acaa58348ce2a91285fe867643b2224ac4d263"
+dependencies = [
+ "block2",
+ "objc2",
+ "objc2-avf-audio",
+ "objc2-foundation",
 ]
 
 [[package]]

@@ -30,9 +30,25 @@ objc2-foundation = { workspace = true, features = [
     "NSArray",
     "NSDictionary",
     "NSEnumerator",
+    "NSLocale",
+    "NSOperation",
+    "NSSet",
+    "NSError",
     "NSObject",
     "NSString",
     "NSValue",
+] }
+objc2-speech = { workspace = true, features = [
+    "std",
+    "block2",
+    "objc2-avf-audio",
+    "SFErrors",
+    "SFSpeechRecognitionRequest",
+    "SFSpeechRecognitionResult",
+    "SFSpeechRecognitionTask",
+    "SFSpeechRecognitionTaskHint",
+    "SFSpeechRecognizer",
+    "SFTranscription",
 ] }
 
 [dev-dependencies]
@@ -44,7 +60,8 @@ aulo-voice = { path = "../aulo-voice" }
 objc2-foundation = { workspace = true, features = ["NSDate", "NSRunLoop"] }
 
 # libtest runs tests off the main thread and parks it, so AVSpeechSynthesizer's
-# main-queue callbacks would never fire; this test drives the main run loop itself.
+# main-queue callbacks would never fire; this test drives the main run loop itself
+# (and runs the gated SFSpeechRecognizer check the same way, as a host would).
 [[test]]
 name = "macos"
 harness = false

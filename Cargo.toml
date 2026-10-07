@@ -62,6 +62,8 @@ objc2 = "0.6.5"
 objc2-avf-audio = { version = "0.3.2", default-features = false }
 # NSString, NSArray and NSNumber for the AVFoundation calls; members pick features
 objc2-foundation = { version = "0.3.2", default-features = false }
+# SFSpeechRecognizer bindings for on-device macOS speech recognition; SpeechAnalyzer is Swift-only
+objc2-speech = { version = "0.3.2", default-features = false }
 # Objective-C blocks for AVSpeechSynthesizer's buffer callback
 block2 = "0.6.2"
 # fixed-size lock-free SPSC rings between platform audio callbacks and engine polls (spec §5.3)

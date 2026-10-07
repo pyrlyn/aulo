@@ -77,17 +77,28 @@ fn sample_rate(voice: &AVSpeechSynthesisVoice) -> u32 {
 /// primary subtag (`en` serves `en-GB`), then the highest quality, then the
 /// first listed, so the choice is stable across calls.
 pub(super) fn choose(voices: &[Voice], meta: &[VoiceMeta], language: &str) -> Option<usize> {
+    let candidates = voices.iter().zip(meta);
+    best_match(
+        candidates.map(|(voice, meta)| (voice.language.as_deref(), meta.quality)),
+        language,
+    )
+}
+
+/// The same rule over any `(tag, rank)` list, so the recognizer picks its
+/// locale exactly as the synthesizer picks its voice.
+pub(super) fn best_match<'a>(
+    candidates: impl Iterator<Item = (Option<&'a str>, isize)>,
+    language: &str,
+) -> Option<usize> {
     let wanted = primary(language);
-    voices
-        .iter()
-        .zip(meta)
+    candidates
         .enumerate()
-        .filter_map(|(index, (voice, meta))| {
-            let tag = voice.language.as_deref()?;
+        .filter_map(|(index, (tag, rank))| {
+            let tag = tag?;
             let exact = tag.eq_ignore_ascii_case(language);
             let close = exact || primary(tag).eq_ignore_ascii_case(wanted);
             // Lower index wins a tie, hence the reversed index in the key.
-            close.then_some((exact, meta.quality, Reverse(index)))
+            close.then_some((exact, rank, Reverse(index)))
         })
         .max()
         .map(|(_, _, Reverse(index))| index)

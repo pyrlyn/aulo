@@ -6,6 +6,11 @@
 //!
 //! Set `AULO_SYSTEM_TTS_WAV=/path/out.wav` to also save the synthesized
 //! phrase for listening; nothing is ever played through the speakers.
+//!
+//! Set `AULO_SYSTEM_STT=1` to also transcribe the sherpa fixture WAVs with
+//! the on-device recognizer. It needs speech recognition access, which only
+//! an app bundle with a usage description can ask for, so it is off by
+//! default and fails, rather than skips, when asked for without access.
 
 // Test code may unwrap and assert (the workspace rule), but without libtest's
 // `#[test]` clippy cannot tell this binary is a test, so it is said here.
@@ -26,8 +31,11 @@ mod macos {
     use std::thread;
     use std::time::{Duration, Instant};
 
-    use aulo_speech::{AudioFormat, SpeechRate, TtsEngine, TtsPoll, TtsRequest, TurnId};
-    use aulo_speech_system::SystemTts;
+    use aulo_speech::{
+        AudioFormat, AudioFrame, SpeechRate, SttEngine, SttPoll, Transcript, TranscriptKind,
+        TtsEngine, TtsPoll, TtsRequest, TurnId,
+    };
+    use aulo_speech_system::{SystemStt, SystemTts};
     use objc2_foundation::{NSDate, NSRunLoop};
 
     const TIMEOUT: Duration = Duration::from_secs(20);
@@ -44,6 +52,32 @@ mod macos {
     /// "Done." takes well under this; the cancelled sentence takes far longer.
     const MAX_AFTER_CANCEL_SECONDS: f32 = 2.0;
     const WAV_ENV: &str = "AULO_SYSTEM_TTS_WAV";
+    const STT_ENV: &str = "AULO_SYSTEM_STT";
+    const FIXTURE_DIR: &str = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../aulo-speech-sherpa/tests/fixtures"
+    );
+    const FRAME: usize = 320;
+    /// File, language hint, what was said (macOS `say`, 16 kHz mono 16-bit).
+    const FIXTURES: &[(&str, &str, &str)] = &[
+        (
+            "en_browser.wav",
+            "en-US",
+            "Open the browser and play some music.",
+        ),
+        (
+            "en_weather.wav",
+            "en-US",
+            "What is the weather like in London tomorrow?",
+        ),
+        (
+            "en_email.wav",
+            "en-US",
+            "Please read my latest email out loud.",
+        ),
+        ("ru_browser.wav", "ru-RU", "Открой браузер и включи музыку."),
+        ("ru_weather.wav", "ru-RU", "Какая завтра погода в Москве?"),
+    ];
 
     pub fn main() {
         let done = Arc::new(AtomicBool::new(false));
@@ -52,6 +86,11 @@ mod macos {
             run("voices_are_listed", voices_are_listed);
             run("phrase_yields_speech", phrase_yields_speech);
             run("cancel_ends_the_reply", cancel_ends_the_reply);
+            if std::env::var_os(STT_ENV).is_some() {
+                run("fixtures_are_transcribed", fixtures_are_transcribed);
+            } else {
+                println!("test fixtures_are_transcribed ... skipped (set {STT_ENV}=1)");
+            }
             flag.store(true, Ordering::SeqCst);
         });
         while !done.load(Ordering::SeqCst) && !checks.is_finished() {
@@ -144,6 +183,41 @@ mod macos {
             seconds < MAX_AFTER_CANCEL_SECONDS,
             "{seconds} s: audio of the cancelled reply leaked"
         );
+    }
+
+    fn fixtures_are_transcribed() {
+        let mut stt = SystemStt::new().unwrap();
+        for (file, language, said) in FIXTURES {
+            if !stt.info().capabilities.languages.supports(language) {
+                println!("  {file}: no on-device model for {language}");
+                continue;
+            }
+            let reader = hound::WavReader::open(format!("{FIXTURE_DIR}/{file}")).unwrap();
+            let samples: Vec<f32> = reader
+                .into_samples::<i16>()
+                .map(|s| f32::from(s.unwrap()) / 32_768.0)
+                .collect();
+            let turn = TurnId::new();
+            let mut out = Transcript::with_capacity(turn, 256);
+            stt.begin(turn, Some(language)).unwrap();
+            for (i, chunk) in samples.chunks(FRAME).enumerate() {
+                let at = (i * FRAME) as u64;
+                stt.push(AudioFrame::new(chunk, AudioFormat::PIPELINE, at).unwrap())
+                    .unwrap();
+            }
+            stt.finish().unwrap();
+            let started = Instant::now();
+            while out.kind != TranscriptKind::Final {
+                if stt.poll(&mut out).unwrap() == SttPoll::Pending {
+                    thread::sleep(IDLE);
+                }
+                assert!(started.elapsed() < TIMEOUT, "no final within {TIMEOUT:?}");
+            }
+            println!("  {file}: said {said:?}, heard {:?}", out.text);
+            assert!(!out.text.is_empty(), "{file} gave an empty transcript");
+            assert_eq!(stt.poll(&mut out).unwrap(), SttPoll::Done);
+        }
+        assert_eq!(stt.dropped_samples(), 0);
     }
 
     /// 16-bit PCM WAV, enough for a listening check.
