@@ -44,6 +44,10 @@ opentelemetry = "0.33.0"
 opentelemetry-otlp = { version = "0.33.0", default-features = false }
 # tracer provider and batch span processor, only built with the aulo-telemetry `otlp` feature
 opentelemetry_sdk = "0.33.0"
+# snapshot tests (golden speech text per language)
+insta = "1.49.0"
+# markdown to plain text for the speakable-text normalizer
+pulldown-cmark = { version = "0.13.4", default-features = false }
 # secret patterns for the log redaction layer
 regex = "1.13.1"
 # serialization of config, events and stored rows
@@ -68,6 +72,8 @@ tracing-appender = "0.2.5"
 tracing-opentelemetry = "0.34.0"
 # EnvFilter, JSON and human formatters for the log subscriber
 tracing-subscriber = "0.3.23"
+# host of a URL, so the normalizer speaks the site and not the whole address
+url = "2.5.8"
 # sortable ids for bots, chats, turns and calls
 ulid = "3.0.0"
 

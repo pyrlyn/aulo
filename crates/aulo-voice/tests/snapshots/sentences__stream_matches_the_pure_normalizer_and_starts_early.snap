@@ -1,0 +1,9 @@
+---
+source: crates/aulo-voice/tests/sentences.rs
+expression: "sentences.join(\"\\n\")"
+---
+Result.
+I ran the tests.
+All 42 passed.
+It's on the screen.
+See example.com for details.

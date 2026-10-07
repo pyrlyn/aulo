@@ -1,0 +1,39 @@
+---
+source: crates/aulo-voice/tests/speakable.rs
+expression: "render(EN, Language::En)"
+---
+"# Plan\n\nI **fixed** the _build_ and ~~broke~~ nothing."
+=> "Plan. I fixed the build and broke nothing."
+
+"- first item\n- second item\n\n1. step one\n2. step two"
+=> "first item. second item. step one. step two."
+
+"Run this:\n\n```sh\ncargo test --workspace\n```\n\nThen look at the result."
+=> "Run this: It's on the screen. Then look at the result."
+
+"```\none\n```\n\n```\ntwo\n```"
+=> "It's on the screen."
+
+"    indented code\n\nDone"
+=> "It's on the screen. Done."
+
+"| a | b |\n|---|---|\n| 1 | 2 |\n\nThat is the table."
+=> "It's on the screen. That is the table."
+
+"See [the docs](https://docs.example.com/guide?x=1#top) or <https://www.rust-lang.org/learn>."
+=> "See the docs or rust-lang.org."
+
+"Open https://github.com/rust-lang/rust/issues/1, then https://[bad."
+=> "Open github.com, then link."
+
+"It took 3.14 seconds, 42% of 1,234 users used 5 km, 2.5 GB and 1 MB at 100MHz."
+=> "It took 3 point 1 4 seconds, 42 percent of 1234 users used 5 kilometers, 2 point 5 gigabytes and 1 megabyte at 100 megahertz."
+
+"Version 1.2.3 shipped on 2024-05-01 at 12:30 from 192.168.0.1; utf8 and v2 stay."
+=> "Version 1.2.3 shipped on 2024-05-01 at 12:30 from 192.168.0.1; utf8 and v2 stay."
+
+"He said <b>hi</b>\u{202e}there\u{200b}\u{7} <!-- note --> and left."
+=> "He said hithere and left."
+
+""
+=> ""

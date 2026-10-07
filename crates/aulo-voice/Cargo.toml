@@ -1,0 +1,20 @@
+[package]
+name = "aulo-voice"
+description = "aulo conversation pipeline: speakable-text normalizer and streaming sentence splitter"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+# Markdown is parsed without the HTML renderer: only the event stream is used.
+pulldown-cmark = { workspace = true }
+url = { workspace = true }
+
+[dev-dependencies]
+insta = { workspace = true }
+
+[lints]
+workspace = true
