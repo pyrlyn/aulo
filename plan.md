@@ -157,7 +157,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T15.3 | todo | P2 | 3 | 0% | |
 | T15.4 | todo | P1 | 2 | 0% | |
 | T15.5 | in progress | P1 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
-| T16.4 | todo | P2 | 2 | 0% | |
 | T16.5 | todo | P2 | 3 | 0% | |
 | T16.6 | todo | P3 | 2 | 0% | |
 | T16.7 | todo | P3 | 1 | 0% | |
@@ -1752,10 +1751,6 @@ Done when:
 ### T16. Audit fixes (2026-10-07)
 
 Findings from a code audit on 2026-10-07. Verified-clean areas worth noting: strict input caps, constant-time token compare, pinned SHA-256 model downloads, XML/systemd/schtasks escaping, secret redaction at every sink, endpoint and model-path validation. T16.1 (daemon.listen without a token) is closed in `done.md`.
-
-### T16.4. A stale partial can overwrite a newer held transcript
-
-`crates/aulo-speech-system/src/macos/stt.rs:261-267`: a final arriving before `finish` is held, but pending items in the older `partials` queue are not cleared; the next poll (`stt.rs:278-284`) delivers an older partial over the newer cumulative text until `finish` releases the held final. Done means: holding an outcome clears the partials queue, with a test.
 
 ### T16.5. Windows named pipe admits any writing client as `LocalOwner`
 
