@@ -144,3 +144,16 @@ Done when:
 - go/no-go for sherpa-onnx as the default local speech backend
 
 Outcome: docs/spikes/sherpa-onnx.md: sherpa-onnx 1.13.8 on M3 Max, GO. Prebuilt static lib (16 s cold build, 19.6 MB stripped binary). Parakeet TDT v3 int8 RTF 0.07 at 4 threads (640 MiB, 1.2-1.4 GB RSS); Kokoro fp32 RTF 0.23, first audio 0.24-0.64 s (int8 is 3x slower); KWS RTF 0.015, English only; Silero VAD RTF 0.003. Risks: the prebuilt lib links espeak-ng (GPL-3.0), which conflicts with the plugin-process rule (open question for the creator); build.rs downloads without checksum (CI needs SHERPA_ONNX_ARCHIVE_DIR); Kokoro has no Russian; a bad KWS model aborts the process, so engines belong behind a process boundary.
+
+### T2.7. aulo-telemetry: logs and traces
+
+Stage: S2 · Area: infra · Depends on: T2.1 · Blocks: 1 task(s)
+
+tracing-subscriber JSON logs in ~/.aulo/logs with rotation, level from config/env, optional OTLP behind a feature. Secrets are never logged (redaction layer).
+
+
+Done when:
+
+- a test proves a key-like value is redacted
+
+Outcome: crates/aulo-telemetry: init(&Settings) -> Guard installs an EnvFilter (AULO_LOG over the level), a daily-rotating JSON file layer (tracing-appender, 14 files kept, non-blocking) and an ANSI-free stderr layer. Redaction runs on the finished line: secret-named JSON keys and name=value pairs, bearer tokens and common key shapes (sk-, ghp_, github_pat_, xox*, AKIA, AIza, JWT) are masked; if the patterns fail to compile everything is masked. Optional otlp feature (opentelemetry 0.33, plain HTTP) with a span processor that masks attributes before export. 16 tests. Follow-ups: mask secret-handle shapes after T5.10; aulo-config has no log-level key yet; invalid AULO_LOG is an error, not a warning.

@@ -24,7 +24,6 @@
 - T2.2. Dependency-graph test
 - T2.3. CI workflows
 - T2.6. Embedded default config
-- T2.7. aulo-telemetry: logs and traces
 - T2.10. aulo-store: full-text search over messages
 - T3.2. aulo-proto: code generation and breaking-change check
 - T3.3. aulo-server: tonic server scaffold

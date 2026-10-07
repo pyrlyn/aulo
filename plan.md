@@ -32,7 +32,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T2.2 | todo | P0 | 2 | 0% | |
 | T2.3 | todo | P0 | 2 | 0% | |
 | T2.6 | todo | P1 | 1 | 0% | |
-| T2.7 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T2.10 | todo | P2 | 2 | 0% | |
 | T3.2 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T3.3 | todo | P0 | 3 | 0% | |
@@ -433,18 +432,6 @@ config/default.toml with every assignment commented out; a test checks it parses
 Done when:
 
 - test passes; trycmd fixture for config show
-
-### T2.7. aulo-telemetry: logs and traces
-
-Stage: S2 · Area: infra · Depends on: T2.1 · Blocks: 1 task(s)
-
-tracing-subscriber JSON logs in ~/.aulo/logs with rotation, level from config/env, optional OTLP behind a feature. Secrets are never logged (redaction layer).
-
-Execution plan: 1. crates/aulo-telemetry: init(level, log_dir) builds a tracing-subscriber registry with an EnvFilter (AULO_LOG over the config level) and a JSON file layer through tracing-appender daily rotation with a bounded number of files, plus a human stderr layer for the CLI. 2. Redaction: a field formatter/visitor that masks fields named like secrets (token, key, password, authorization, secret) and values matching secret-handle or bearer patterns. 3. Optional `otlp` cargo feature wiring opentelemetry-otlp; off by default. 4. Tests: redaction of named fields and values, rotation file created in a temp dir, filter precedence.
-
-Done when:
-
-- a test proves a key-like value is redacted
 
 ### T2.10. aulo-store: full-text search over messages
 
