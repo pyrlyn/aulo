@@ -60,6 +60,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "aulo-speech"
+version = "0.0.0"
+dependencies = [
+ "aulo-types",
+ "thiserror",
+]
+
+[[package]]
 name = "aulo-store"
 version = "0.0.0"
 dependencies = [

@@ -1,0 +1,16 @@
+[package]
+name = "aulo-speech"
+description = "aulo speech engine contracts: STT, TTS, VAD, keyword spotting and end of turn"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+aulo-types = { path = "../aulo-types" }
+thiserror = { workspace = true }
+
+[lints]
+workspace = true
