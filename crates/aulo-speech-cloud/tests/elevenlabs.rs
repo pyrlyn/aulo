@@ -474,12 +474,16 @@ async fn text_caps_reject_before_anything_is_sent() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn a_full_text_queue_overflows_instead_of_blocking() {
-    // The server accepts the socket and never reads, so nothing drains the queue.
-    let (base, _server) = serve(|_ws| async {
+    // The server takes the TCP connection but never answers the handshake. An
+    // open socket would not do: the writer drains the queue into the kernel's
+    // send buffer, so whether pushes overflow would race the writer task.
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let base = format!("ws://{}", listener.local_addr().unwrap());
+    let _server = tokio::spawn(async move {
+        let held = listener.accept().await;
         tokio::time::sleep(Duration::from_secs(30)).await;
-        Vec::new()
-    })
-    .await;
+        drop(held);
+    });
     let mut engine = engine(config(&base));
     engine.begin(&request(None, 1.0)).unwrap();
     let started = Instant::now();
