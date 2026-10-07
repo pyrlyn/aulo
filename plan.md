@@ -62,7 +62,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T6.5 | todo | P1 | 3 | 0% | |
 | T6.6 | todo | P1 | 2 | 0% | |
 | T6.7 | todo | P2 | 3 | 0% | |
-| T7.5 | in progress | P1 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
+| T7.5 | in progress | P1 | 2 | 70% | Claude Code / claude-sonnet-5-5 |
 | T7.8 | in progress | P2 | 3 | 90% | Claude Code / claude-opus-5-5 |
 | T7.11 | in progress | P2 | 3 | 90% | Claude Code / claude-sonnet-5-5 |
 | T8.1 | todo | P0 | 4 | 0% | |
@@ -764,6 +764,8 @@ Stage: S7 · Area: speech · Depends on: T7.3, T1.13 · Blocks: 0 task(s)
 Whisper backend reusing the speech-capture whisper feature (cox-voice Transcriber).
 
 Execution plan: whisper STT engine in aulo-speech-system (or its own crate) over speech-capture's `whisper` feature (path dependency until the crate is published; branch stays unmerged until then), registered as an engine; fixture transcription test.
+
+Status: implemented on branch t7-5-whisper (crate aulo-speech-whisper over speech-capture's `whisper` feature; the shared offline engine moved to aulo-speech-local on main). Left: run the fixture test with the 78 MB ggml-tiny.en model and tune the WER threshold; merges once speech-capture is published.
 
 Done when:
 
