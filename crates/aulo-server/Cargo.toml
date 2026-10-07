@@ -1,0 +1,29 @@
+[package]
+name = "aulo-server"
+description = "Assembles the aulod gRPC server: listeners, limits, health, reflection and graceful shutdown"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+aulo-proto = { path = "../aulo-proto" }
+thiserror.workspace = true
+tokio = { workspace = true, features = ["net", "rt", "sync", "time"] }
+tokio-stream = { workspace = true, features = ["net"] }
+tokio-util.workspace = true
+tonic.workspace = true
+tonic-health.workspace = true
+tonic-reflection.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+hyper-util = { workspace = true, features = ["tokio"] }
+tempfile.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tower = { workspace = true, features = ["util"] }

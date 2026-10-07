@@ -30,10 +30,16 @@ prost = "0.14.4"
 prost-types = "0.14.4"
 # gRPC server and client runtime; owned by aulo-proto
 tonic = "0.14.6"
+# grpc.health.v1 service; owned by aulo-server
+tonic-health = "0.14.6"
 # prost codec for tonic
 tonic-prost = "0.14.6"
 # build-time code generation from proto/aulo/v1
 tonic-prost-build = "0.14.6"
+# gRPC server reflection for tooling (grpcurl, buf curl); owned by aulo-server
+tonic-reflection = "0.14.6"
+# HTTP/2 client IO adapter (TokioIo) for the gRPC client in tests
+hyper-util = "0.1.21"
 # layered config with per-key provenance
 figment = "0.10.19"
 # JSON Schema for config files
@@ -66,8 +72,14 @@ sha2 = "0.11.0"
 thiserror = "2.0.21"
 # async runtime for the daemon
 tokio = "1.53.2"
+# listener streams (UnixListenerStream, TcpListenerStream) for tonic's serve_with_incoming
+tokio-stream = "0.1.19"
+# CancellationToken fans one shutdown signal out to every listener
+tokio-util = "0.7.19"
 # config file format
 toml = "1.1.6"
+# service_fn connector for the gRPC client over a Unix socket in tests
+tower = "0.5.3"
 # local HTTP fixture server in the aulo-models tests
 wiremock = "0.6.5"
 # structured logs

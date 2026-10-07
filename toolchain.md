@@ -21,6 +21,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | diesel | local | https://github.com/diesel-rs/diesel | Typed SQLite access in `aulo-store` (no raw SQL) |
 | diesel_migrations | local | https://github.com/diesel-rs/diesel | Embedded, filename-keyed schema migrations |
 | figment | local | https://github.com/SergioBenitez/Figment | Layered config with per-key provenance |
+| hyper-util | local (dev) | https://github.com/hyperium/hyper-util | `TokioIo` adapter for the gRPC client over a Unix socket in `aulo-server` tests |
 | insta | local (dev) | https://github.com/mitsuhiko/insta | Snapshot tests of the speakable-text normalizer (`aulo-voice`) |
 | libsqlite3-sys | local | https://github.com/rusqlite/rusqlite | Bundled SQLite for Diesel |
 | opentelemetry | local | https://github.com/open-telemetry/opentelemetry-rust | OTel API for the optional OTLP trace export in `aulo-telemetry` (`otlp` feature) |
@@ -38,10 +39,16 @@ Only what the project uses today. Crates are added by the task that wires each o
 | sha2 | local | https://github.com/RustCrypto/hashes | SHA-256 of model files, hashed while they download |
 | tempfile | local (dev) | https://github.com/Stebalien/tempfile | Temporary databases and directories in tests |
 | thiserror | local | https://github.com/dtolnay/thiserror | Typed errors in library crates |
+| tokio | local | https://github.com/tokio-rs/tokio | Async runtime; Unix socket, named pipe and TCP listeners in `aulo-server` |
+| tokio-stream | local | https://github.com/tokio-rs/tokio | Listener streams for tonic `serve_with_incoming` in `aulo-server` |
+| tokio-util | local | https://github.com/tokio-rs/tokio | `CancellationToken` that shuts every `aulo-server` listener down together |
 | toml | local | https://github.com/toml-rs/toml | Parses `aulo-plugin.toml` in `aulo-plugin` (the manifest module owns that file) |
-| tonic | local | https://github.com/hyperium/tonic | gRPC server and client runtime, only in `aulo-proto` |
+| tonic | local | https://github.com/hyperium/tonic | gRPC server and client runtime in `aulo-proto` (generated code) and `aulo-server` (transport) |
+| tonic-health | local | https://github.com/hyperium/tonic | `grpc.health.v1` service, only in `aulo-server` |
 | tonic-prost | local | https://github.com/hyperium/tonic | Prost codec for tonic |
 | tonic-prost-build | local (build) | https://github.com/hyperium/tonic | Generates server and client code from the protos |
+| tonic-reflection | local | https://github.com/hyperium/tonic | gRPC server reflection for grpcurl and buf curl, only in `aulo-server` |
+| tower | local (dev) | https://github.com/tower-rs/tower | `service_fn` connector for the gRPC client over a Unix socket in `aulo-server` tests |
 | tracing | local | https://github.com/tokio-rs/tracing | Structured logs and spans |
 | tracing-appender | local | https://github.com/tokio-rs/tracing | Daily-rotating, non-blocking log files with a bounded file count |
 | tracing-opentelemetry | local | https://github.com/tokio-rs/tracing-opentelemetry | Bridges tracing spans to OTel, `otlp` feature only |
