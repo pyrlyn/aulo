@@ -55,7 +55,6 @@
 - T6.5. Echo cancellation elsewhere (webrtc-audio-processing)
 - T6.6. Microphone permission handling
 - T6.7. Opus for remote audio streams
-- T7.4. STT: sherpa-onnx (Parakeet TDT v3, Moonshine)
 - T7.5. STT: whisper.cpp via whisper-rs
 - T7.7. STT: Deepgram streaming
 - T7.8. STT: Apple SpeechAnalyzer (macOS 26+)

@@ -391,3 +391,16 @@ Done when:
 - test: client with wrong pin is refused
 
 Outcome: aulo_server::tls: TlsIdentity from user PEM files or a self-signed rcgen identity kept 0700/0600 under a given directory (never regenerated over a lone certificate), CertFingerprint (SHA-256, openssl form), PinnedServerVerifier and pinned_client_config for clients. TcpListen carries Option<TlsIdentity> instead of remote_auth_configured: off loopback needs TLS and a token. tonic tls-aws-lc with one process-wide aws-lc-rs provider and a 10 s handshake timeout. Not checked: certificate expiry and permissions of user-provided keys; aulod still passes tls: None and the client connector lives only in tests.
+
+### T7.4. STT: sherpa-onnx (Parakeet TDT v3, Moonshine)
+
+Stage: S7 · Area: speech · Depends on: T7.3, T0.5 · Blocks: 1 task(s)
+
+
+Default local STT. Parakeet TDT v3 (25 languages incl. ru, uk) on VAD segments; Moonshine streaming for low-latency English partials.
+
+Done when:
+
+- WER test on fixture WAVs under the threshold from the spike
+
+Outcome: New adapter crate aulo-speech-sherpa (sherpa-onnx =1.13.8): ParakeetFactory validates the catalog model files (id, sizes, ONNX header, token table, UTF-8 paths) before sherpa sees them and loads the model once per factory; ParakeetStt decodes VAD segments on one worker thread with a bounded job queue, preallocated utterance buffer, cancel, 25-language check and transcript cap; PARAKEET_ATTRIBUTION carries the CC-BY-4.0 notice. WER 0.000 on 5 fixture clips (en, ru) with a gated test and MAX_WER 0.10. Moonshine left out (offline-only in 1.13.8, no verified bundle); offline builds via SHERPA_ONNX_ARCHIVE_DIR or SHERPA_ONNX_LIB_DIR. Follow-ups in ideas.md.

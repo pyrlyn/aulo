@@ -14,3 +14,6 @@ Not approved. Nothing here moves to `roadmap.md` or `plan.md` without the creato
 - **"What am I looking at".** Answer questions about the current screen on a hotkey (screenshot + vision model), read-only.
 - **Chat channels.** Slack, Discord and Signal bridges like the Telegram plugin (T14.6).
 - **Plugin marketplace site.** A browsable index on top of the signed plugin index (T11.11).
+- **Moonshine English partials.** T7.4 shipped Parakeet only: sherpa-onnx 1.13.8 has Moonshine as an offline model, so partials would mean re-decoding the buffer, and the catalog has no verified Moonshine bundle.
+- **sherpa-onnx in a child process.** Removes spike risk R5: an onnxruntime C++ exception or a model damaged in place still aborts the daemon (T7.4).
+- **Checksum the sherpa-onnx prebuilt archive.** The sherpa-onnx-sys build script downloads it without a digest (spike risk R2); vendor it or verify it in our own build step.

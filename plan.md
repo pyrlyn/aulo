@@ -63,7 +63,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T6.5 | todo | P1 | 3 | 0% | |
 | T6.6 | todo | P1 | 2 | 0% | |
 | T6.7 | todo | P2 | 3 | 0% | |
-| T7.4 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T7.5 | todo | P1 | 2 | 0% | |
 | T7.7 | in progress | P2 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T7.8 | todo | P2 | 3 | 0% | |
@@ -737,18 +736,6 @@ Done when:
 - round-trip test within the SNR target
 
 ## S7. Speech engines
-
-### T7.4. STT: sherpa-onnx (Parakeet TDT v3, Moonshine)
-
-Stage: S7 · Area: speech · Depends on: T7.3, T0.5 · Blocks: 1 task(s)
-
-Execution plan: 1. New adapter crate aulo-speech-sherpa (the only owner of sherpa-onnx, pinned =1.13.x per the spike). 2. SttEngine for Parakeet TDT v3 on VAD segments and Moonshine for streaming English partials; models located through aulo-models. 3. Handle spike risks R2 (archive download at build, SHERPA_ONNX_ARCHIVE_DIR), R5 (a bad model must not abort the daemon) and R6 (attribution). 4. WER test on fixture WAVs, gated behind an env var or ignored when models are absent. 5. toolchain.md rows; verify clippy, fmt, workspace tests.
-
-Default local STT. Parakeet TDT v3 (25 languages incl. ru, uk) on VAD segments; Moonshine streaming for low-latency English partials.
-
-Done when:
-
-- WER test on fixture WAVs under the threshold from the spike
 
 ### T7.5. STT: whisper.cpp via whisper-rs
 
