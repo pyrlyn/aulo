@@ -16,14 +16,16 @@ aulo-proto = { path = "../aulo-proto" }
 aulo-store = { path = "../aulo-store" }
 aulo-types = { path = "../aulo-types" }
 getrandom.workspace = true
+rcgen.workspace = true
 keyring.workspace = true
+rustls.workspace = true
 sha2.workspace = true
 subtle.workspace = true
 thiserror.workspace = true
 tokio = { workspace = true, features = ["net", "rt", "sync", "time"] }
 tokio-stream = { workspace = true, features = ["net"] }
 tokio-util.workspace = true
-tonic.workspace = true
+tonic = { workspace = true, features = ["tls-aws-lc"] }
 tonic-health.workspace = true
 tonic-reflection.workspace = true
 tracing.workspace = true
@@ -36,4 +38,5 @@ aulo-telemetry = { path = "../aulo-telemetry" }
 hyper-util = { workspace = true, features = ["tokio"] }
 tempfile.workspace = true
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tokio-rustls.workspace = true
 tower = { workspace = true, features = ["util"] }

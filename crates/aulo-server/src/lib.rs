@@ -2,9 +2,8 @@
 //! reflection and graceful shutdown.
 //!
 //! Service implementations come from callers; this crate only decides how they
-//! are exposed. Every listener authenticates its clients ([`auth`]); TLS
-//! (T3.8) plugs in at the TCP listener, which refuses non-loopback addresses
-//! until it exists.
+//! are exposed. Every listener authenticates its clients ([`auth`]); the TCP
+//! listener adds TLS ([`tls`]) and refuses a non-loopback address without it.
 
 pub mod auth;
 mod chat;
@@ -14,6 +13,7 @@ mod listener;
 #[cfg(windows)]
 mod pipe;
 mod server;
+pub mod tls;
 
 pub use chat::ChatApi;
 pub use error::ServerError;

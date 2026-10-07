@@ -190,11 +190,11 @@ async fn a_relative_socket_path_is_refused() {
 }
 
 #[tokio::test]
-async fn tcp_refuses_non_loopback_without_auth() {
+async fn tcp_refuses_non_loopback_without_tls() {
     for addr in ["0.0.0.0:0", "[::]:0"] {
         let listen = Listen::Tcp(TcpListen {
             addr: addr.parse().unwrap(),
-            remote_auth_configured: false,
+            tls: None,
         });
         let err = bind(&listen).await.unwrap_err();
         assert!(
@@ -208,7 +208,7 @@ async fn tcp_refuses_non_loopback_without_auth() {
 async fn tcp_on_loopback_serves_health() {
     let bound = bind(&Listen::Tcp(TcpListen {
         addr: "127.0.0.1:0".parse().unwrap(),
-        remote_auth_configured: false,
+        tls: None,
     }))
     .await
     .unwrap();

@@ -20,9 +20,9 @@ pub async fn serve(config: &Config, home: &Path) -> Result<()> {
     if let Some(addr) = config.daemon.listen {
         let tcp = Listen::Tcp(TcpListen {
             addr,
-            // Token auth (T3.4) and TLS (T3.8) are not installed yet, so a
+            // The daemon does not load a certificate from config yet, so a
             // non-loopback address stays refused.
-            remote_auth_configured: false,
+            tls: None,
         });
         listeners.push(bind(&tcp).await.context("cannot bind daemon.listen")?);
     }

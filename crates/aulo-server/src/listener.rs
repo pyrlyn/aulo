@@ -10,6 +10,10 @@ use std::path::{Path, PathBuf};
 use tonic::transport::server::TcpIncoming;
 
 use crate::error::ServerError;
+use crate::tls::TlsIdentity;
+
+#[cfg(unix)]
+pub(crate) use unix::owner_only_dir;
 
 /// Where the local socket lives under `AULO_HOME`. The dedicated `run`
 /// directory is what [`bind`] restricts to the owner, so the home directory
@@ -31,14 +35,15 @@ pub enum Listen {
 }
 
 /// The remote endpoint (`daemon.listen`).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TcpListen {
     pub addr: SocketAddr,
-    /// Set only once TLS (T3.8) is configured. `ApiServer::serve` already
-    /// refuses any TCP listener without a token, but a token alone is not
-    /// enough off loopback: without TLS it would cross the network in clear.
-    /// Until then a non-loopback address is refused.
-    pub remote_auth_configured: bool,
+    /// Required off loopback. `ApiServer::serve` refuses any TCP listener
+    /// without a token, but a token alone is not enough there: without TLS it
+    /// would cross the network in clear. So a remote client always meets
+    /// both, and loopback may skip TLS because the token never leaves the
+    /// host.
+    pub tls: Option<TlsIdentity>,
 }
 
 /// A bound endpoint, ready for `ApiServer::serve`.
@@ -51,7 +56,7 @@ pub(crate) enum BoundKind {
     Unix(tokio::net::UnixListener, SocketFile),
     #[cfg(windows)]
     NamedPipe(tokio::net::windows::named_pipe::NamedPipeServer, String),
-    Tcp(TcpIncoming, SocketAddr),
+    Tcp(TcpIncoming, SocketAddr, Option<TlsIdentity>),
 }
 
 impl Bound {
@@ -59,7 +64,7 @@ impl Bound {
     /// for port 0.
     pub fn tcp_addr(&self) -> Option<SocketAddr> {
         match &self.0 {
-            BoundKind::Tcp(_, addr) => Some(*addr),
+            BoundKind::Tcp(_, addr, _) => Some(*addr),
             _ => None,
         }
     }
@@ -72,12 +77,12 @@ pub async fn bind(listen: &Listen) -> Result<Bound, ServerError> {
         Listen::Unix(path) => unix::bind(path).await,
         #[cfg(windows)]
         Listen::NamedPipe(name) => crate::pipe::bind(name),
-        Listen::Tcp(tcp) => bind_tcp(*tcp).await,
+        Listen::Tcp(tcp) => bind_tcp(tcp).await,
     }
 }
 
-async fn bind_tcp(tcp: TcpListen) -> Result<Bound, ServerError> {
-    if !tcp.addr.ip().is_loopback() && !tcp.remote_auth_configured {
+async fn bind_tcp(tcp: &TcpListen) -> Result<Bound, ServerError> {
+    if !tcp.addr.ip().is_loopback() && tcp.tls.is_none() {
         return Err(ServerError::UnauthenticatedRemote(tcp.addr));
     }
     let listener = tokio::net::TcpListener::bind(tcp.addr)
@@ -88,7 +93,7 @@ async fn bind_tcp(tcp: TcpListen) -> Result<Bound, ServerError> {
         .map_err(ServerError::io("read local address of", tcp.addr))?;
     // gRPC traffic is many small frames; Nagle would delay each one.
     let incoming = TcpIncoming::from(listener).with_nodelay(Some(true));
-    Ok(Bound(BoundKind::Tcp(incoming, addr)))
+    Ok(Bound(BoundKind::Tcp(incoming, addr, tcp.tls.clone())))
 }
 
 /// Removes the socket file when the server stops, so the next start does not
@@ -141,7 +146,7 @@ mod unix {
 
     /// Creates the directory as 0700, or accepts an existing one only if no
     /// other user can enter it: whoever can write there can swap the socket.
-    fn owner_only_dir(dir: &Path) -> Result<(), ServerError> {
+    pub(crate) fn owner_only_dir(dir: &Path) -> Result<(), ServerError> {
         match fs::symlink_metadata(dir) {
             Ok(meta) if meta.is_dir() => {
                 if meta.permissions().mode() & 0o077 != 0 {

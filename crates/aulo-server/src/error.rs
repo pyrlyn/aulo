@@ -1,5 +1,5 @@
 //! The one error type of aulo-server, so `aulod` can tell a busy socket or a
-//! refused remote bind apart from a plain I/O failure.
+//! refused remote bind or a broken certificate apart from a plain I/O failure.
 
 use std::io;
 use std::net::SocketAddr;
@@ -18,10 +18,28 @@ pub enum ServerError {
     #[error("{0} is in use by a running server")]
     SocketInUse(PathBuf),
     #[error(
-        "refusing to serve the API without authentication on non-loopback address {0}; \
-         bind to 127.0.0.1 or ::1"
+        "refusing to serve the API without TLS on non-loopback address {0}; \
+         configure TLS or bind to 127.0.0.1 or ::1"
     )]
     UnauthenticatedRemote(SocketAddr),
+    #[error("{0} is accessible to other users; restrict it to the owner (chmod 600)")]
+    InsecureFile(PathBuf),
+    #[error("{path}: {source}")]
+    Pem {
+        path: PathBuf,
+        #[source]
+        source: rustls::pki_types::pem::Error,
+    },
+    #[error("{0} holds no certificate")]
+    NoCertificate(PathBuf),
+    #[error("the TLS certificate and key are not a usable pair: {0}")]
+    TlsIdentity(#[source] rustls::Error),
+    #[error("cannot build the TLS client config: {0}")]
+    TlsClient(#[source] rustls::Error),
+    #[error("cannot generate a self-signed certificate: {0}")]
+    SelfSigned(#[from] rcgen::Error),
+    #[error("a certificate fingerprint is 32 bytes of hex, optionally colon-separated")]
+    InvalidFingerprint,
     #[error("refusing to serve TCP without an API token; install one with ApiServer::with_token")]
     TcpWithoutToken,
     #[error("{action} {target}: {source}")]

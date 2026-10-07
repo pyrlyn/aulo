@@ -38,6 +38,12 @@ tonic-prost = "0.14.6"
 tonic-prost-build = "0.14.6"
 # gRPC server reflection for tooling (grpcurl, buf curl); owned by aulo-server
 tonic-reflection = "0.14.6"
+# TLS for the TCP listener and the pinned-fingerprint client verifier; aws-lc-rs, the provider reqwest already builds
+rustls = { version = "0.23.45", default-features = false, features = ["aws_lc_rs", "std"] }
+# self-signed certificate for the TCP listener, generated on first start
+rcgen = { version = "0.14.10", default-features = false, features = ["aws_lc_rs", "crypto", "pem"] }
+# TLS stream under the pinned gRPC client in the aulo-server tests
+tokio-rustls = { version = "0.26.6", default-features = false }
 # HTTP/2 client IO adapter (TokioIo) for the gRPC client in tests
 hyper-util = "0.1.21"
 # layered config with per-key provenance

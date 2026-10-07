@@ -28,7 +28,7 @@ impl Tcp {
 async fn serve_tcp(token: &ApiToken) -> Tcp {
     let bound = bind(&Listen::Tcp(TcpListen {
         addr: "127.0.0.1:0".parse().unwrap(),
-        remote_auth_configured: false,
+        tls: None,
     }))
     .await
     .unwrap();
@@ -97,7 +97,7 @@ async fn tcp_with_the_right_token_is_accepted() {
 async fn tcp_without_an_installed_token_is_not_served() {
     let bound = bind(&Listen::Tcp(TcpListen {
         addr: "127.0.0.1:0".parse().unwrap(),
-        remote_auth_configured: false,
+        tls: None,
     }))
     .await
     .unwrap();

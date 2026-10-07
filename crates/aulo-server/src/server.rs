@@ -179,7 +179,7 @@ fn builder(limits: Limits) -> Server {
 }
 
 // Each listener gets its own check: the local socket trusts its owner, TCP
-// requires the token (and T3.8 adds the TLS config there).
+// requires the token, and off loopback TLS as well.
 async fn serve_one(
     limits: Limits,
     routes: Routes,
@@ -209,10 +209,17 @@ async fn serve_one(
                 .serve_with_incoming_shutdown(incoming, signal)
                 .await?;
         }
-        BoundKind::Tcp(incoming, _) => {
-            // `serve` checked this already; checking again keeps this
-            // branch closed if a caller ever reaches it another way.
+        BoundKind::Tcp(incoming, addr, tls) => {
+            // `serve` and `bind` checked these already; checking again keeps
+            // this branch closed if a caller ever reaches it another way.
             let verifier = token.ok_or(ServerError::TcpWithoutToken)?;
+            let server = match tls {
+                Some(tls) => server.tls_config(tls.server_config(limits.tls_handshake_timeout))?,
+                None if !addr.ip().is_loopback() => {
+                    return Err(ServerError::UnauthenticatedRemote(addr));
+                }
+                None => server,
+            };
             server
                 .layer(InterceptorLayer::new(auth::bearer(verifier)))
                 .add_routes(routes)

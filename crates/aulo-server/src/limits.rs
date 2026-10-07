@@ -31,6 +31,10 @@ pub struct Limits {
     pub request_timeout: Duration,
     /// How long shutdown waits for open streams before abandoning them.
     pub shutdown_grace: Duration,
+    /// How long a TCP client may take to finish the TLS handshake. tonic runs
+    /// each handshake in its own task with no deadline, so without this a
+    /// client that connects and goes silent holds that task forever.
+    pub tls_handshake_timeout: Duration,
 }
 
 impl Default for Limits {
@@ -42,6 +46,7 @@ impl Default for Limits {
             max_concurrent_streams: 64,
             request_timeout: Duration::from_secs(30),
             shutdown_grace: Duration::from_secs(10),
+            tls_handshake_timeout: Duration::from_secs(10),
         }
     }
 }

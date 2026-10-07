@@ -40,10 +40,12 @@ Only what the project uses today. Crates are added by the task that wires each o
 | prost | local | https://github.com/tokio-rs/prost | Protobuf messages for the gRPC API, only in `aulo-proto` |
 | prost-types | local | https://github.com/tokio-rs/prost | Well-known protobuf types (`Timestamp`) used by the generated code |
 | pulldown-cmark | local | https://github.com/pulldown-cmark/pulldown-cmark | Markdown events for the speakable-text normalizer (`aulo-voice`); no HTML renderer |
+| rcgen | local | https://github.com/rustls/rcgen | Self-signed certificate for the `aulo-server` TCP listener, generated on first start (aws-lc-rs) |
 | regex | local | https://github.com/rust-lang/regex | Credential and secret-pair patterns in the log redaction |
 | reqwest | local | https://github.com/seanmonstar/reqwest | Streaming HTTPS downloads (rustls) of speech models in `aulo-models`; multipart transcription uploads and streamed speech replies in `aulo-speech-cloud` |
 | ringbuf | local (macOS) | https://github.com/agerasev/ringbuf | Fixed-size lock-free ring from the main-queue TTS callback to `poll` (`aulo-speech-system`); spec §5.3 |
 | rustix | local | https://github.com/bytecodealliance/rustix | Daemon euid for the local-socket peer check in `aulo-server`, without hand-written `unsafe` |
+| rustls | local | https://github.com/rustls/rustls | Certificate and key checks for the `aulo-server` TCP listener; the pinned-fingerprint client verifier for `aulo connect --pin` (aws-lc-rs, the provider reqwest already builds) |
 | schemars | local | https://github.com/GREsau/schemars | JSON Schema generated from the config types |
 | semver | local | https://github.com/dtolnay/semver | Plugin manifest versions (`aulo-plugin`) |
 | serde | local | https://github.com/serde-rs/serde | Serialization of ids, events and config; reply parsing in `aulo-speech-cloud` |
@@ -54,10 +56,11 @@ Only what the project uses today. Crates are added by the task that wires each o
 | tempfile | local (dev) | https://github.com/Stebalien/tempfile | Temporary databases and directories in tests |
 | thiserror | local | https://github.com/dtolnay/thiserror | Typed errors in library crates |
 | tokio | local | https://github.com/tokio-rs/tokio | Async runtime; Unix socket, named pipe and TCP listeners in `aulo-server`; SIGINT/SIGTERM shutdown in `aulod` |
+| tokio-rustls | local (dev) | https://github.com/rustls/tokio-rustls | TLS stream under the pinned gRPC client in the `aulo-server` tests |
 | tokio-stream | local | https://github.com/tokio-rs/tokio | Listener streams for tonic `serve_with_incoming` in `aulo-server` |
 | tokio-util | local | https://github.com/tokio-rs/tokio | `CancellationToken` that shuts every `aulo-server` listener down together; `AbortOnDropHandle` that cancels an abandoned transcription or speech request in `aulo-speech-cloud` |
 | toml | local | https://github.com/toml-rs/toml | Parses `aulo-plugin.toml` in `aulo-plugin` (the manifest module owns that file); renders and parses the config in `aulo-config` (default file tests, `aulo config show`) |
-| tonic | local | https://github.com/hyperium/tonic | gRPC server and client runtime in `aulo-proto` (generated code) and `aulo-server` (transport) |
+| tonic | local | https://github.com/hyperium/tonic | gRPC server and client runtime in `aulo-proto` (generated code) and `aulo-server` (transport; rustls TLS on the TCP listener via `tls-aws-lc`) |
 | tonic-health | local | https://github.com/hyperium/tonic | `grpc.health.v1` service, only in `aulo-server` |
 | tonic-prost | local | https://github.com/hyperium/tonic | Prost codec for tonic |
 | tonic-prost-build | local (build) | https://github.com/hyperium/tonic | Generates server and client code from the protos |
