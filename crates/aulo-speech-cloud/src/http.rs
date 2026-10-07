@@ -4,15 +4,16 @@ use std::num::NonZeroUsize;
 use std::sync::Arc;
 
 use aulo_speech::SpeechError;
+use reqwest::Response;
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
 use reqwest::multipart::{Form, Part};
-use reqwest::{Response, StatusCode};
 use serde::Deserialize;
 use sse_core::{SseDecoder, SseEvent};
 use tokio::sync::mpsc;
 
 use crate::config::ResponseShape;
 use crate::engine::{Event, MAX_TRANSCRIPT_BYTES, Shared};
+use crate::net::{net_error, status_error};
 
 /// A plain reply is `{"text": ...}` plus optional extras, so this is generous.
 const MAX_JSON_BYTES: usize = 4 * MAX_TRANSCRIPT_BYTES;
@@ -23,6 +24,7 @@ const MAX_EVENT_BYTES: NonZeroUsize = match NonZeroUsize::new(2 * MAX_TRANSCRIPT
 };
 /// The whole stream, since the per-event limit does not bound the event count.
 const MAX_STREAM_BYTES: usize = 16 * MAX_TRANSCRIPT_BYTES;
+const NOUN: &str = "transcription";
 const DELTA_EVENT: &str = "transcript.text.delta";
 const DONE_EVENT: &str = "transcript.text.done";
 
@@ -78,7 +80,7 @@ async fn transcribe(
     if let Some(bearer) = &shared.bearer {
         post = post.header(AUTHORIZATION, bearer.clone());
     }
-    let mut response = post.send().await.map_err(net_error)?;
+    let mut response = post.send().await.map_err(stt_error)?;
     let status = response.status();
     if !status.is_success() {
         // The reply body is not read: its text is untrusted and 401s quote the key.
@@ -109,7 +111,7 @@ async fn read_stream(
     let mut decoder = SseDecoder::with_limit(MAX_EVENT_BYTES);
     let mut text = String::new();
     let mut received = 0usize;
-    while let Some(mut chunk) = response.chunk().await.map_err(net_error)? {
+    while let Some(mut chunk) = response.chunk().await.map_err(stt_error)? {
         received += chunk.len();
         if received > MAX_STREAM_BYTES {
             return Err(SpeechError::failed("stream is too long"));
@@ -143,7 +145,7 @@ async fn read_stream(
 /// Reads at most `cap` bytes; the flag says whether the body was longer.
 async fn read_capped(response: &mut Response, cap: usize) -> Result<(Vec<u8>, bool), SpeechError> {
     let mut body = Vec::new();
-    while let Some(chunk) = response.chunk().await.map_err(net_error)? {
+    while let Some(chunk) = response.chunk().await.map_err(stt_error)? {
         let room = cap - body.len();
         if chunk.len() > room {
             body.extend_from_slice(&chunk[..room]);
@@ -154,27 +156,8 @@ async fn read_capped(response: &mut Response, cap: usize) -> Result<(Vec<u8>, bo
     Ok((body, false))
 }
 
-fn net_error(error: reqwest::Error) -> SpeechError {
-    // The URL is the user's configured endpoint, but it may carry credentials.
-    let error = error.without_url();
-    if error.is_connect() {
-        SpeechError::unavailable("cannot reach the transcription server")
-    } else if error.is_timeout() {
-        SpeechError::failed("the transcription request timed out")
-    } else {
-        SpeechError::failed(&format!("transcription request failed: {error}"))
-    }
-}
-
-fn status_error(status: StatusCode) -> SpeechError {
-    let code = status.as_u16();
-    match status {
-        StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => SpeechError::unavailable(&format!(
-            "the server rejected the API key (HTTP {code}); check the key"
-        )),
-        StatusCode::TOO_MANY_REQUESTS => SpeechError::unavailable("rate limited (HTTP 429)"),
-        _ => SpeechError::failed(&format!("the server refused the request (HTTP {code})")),
-    }
+fn stt_error(error: reqwest::Error) -> SpeechError {
+    net_error(NOUN, error)
 }
 
 fn capped(text: &str) -> &str {

@@ -1,6 +1,6 @@
 [package]
 name = "aulo-speech-cloud"
-description = "aulo cloud speech engines: OpenAI-compatible transcription"
+description = "aulo cloud speech engines: OpenAI-compatible transcription and speech synthesis"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -19,7 +19,7 @@ tokio = { workspace = true, features = ["rt", "sync", "time"] }
 tokio-util = { workspace = true, features = ["rt"] }
 
 [dev-dependencies]
-tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tokio = { workspace = true, features = ["io-util", "macros", "net", "rt-multi-thread"] }
 wiremock.workspace = true
 
 [lints]

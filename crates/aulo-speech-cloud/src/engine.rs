@@ -1,6 +1,5 @@
 use std::io::Cursor;
 use std::mem;
-use std::net::IpAddr;
 use std::sync::Arc;
 
 use aulo_speech::{
@@ -8,13 +7,14 @@ use aulo_speech::{
     PIPELINE_SAMPLE_RATE_HZ, SpeechError, SttEngine, SttPoll, Transcript, TranscriptKind, TurnId,
 };
 use reqwest::header::HeaderValue;
-use reqwest::{Client, Url, redirect};
+use reqwest::{Client, Url};
 use tokio::runtime::Handle;
 use tokio::sync::mpsc::{self, error::TryRecvError};
 use tokio_util::task::AbortOnDropHandle;
 
 use crate::config::{CloudSttConfig, MAX_UTTERANCE_LIMIT, ResponseShape};
 use crate::http::{self, Request};
+use crate::net::{self, Endpoint};
 
 /// Longest transcript handed to the pipeline, in bytes. A 10 minute utterance
 /// is a few kilobytes of text, so this only bites on a misbehaving server,
@@ -23,7 +23,6 @@ pub const MAX_TRANSCRIPT_BYTES: usize = 16 * 1024;
 
 /// Room for partials; a full queue drops a partial, never the final.
 const EVENT_QUEUE: usize = 16;
-const CONNECT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
 const ENDPOINT_PATH: &str = "/audio/transcriptions";
 const PCM_BITS: u16 = 16;
 
@@ -59,46 +58,15 @@ pub struct CloudSttFactory {
 impl CloudSttFactory {
     /// `runtime` runs the uploads; engines never block on it.
     pub fn new(config: CloudSttConfig, runtime: Handle) -> Result<Self, SpeechError> {
-        let endpoint = Url::parse(&format!(
-            "{}{ENDPOINT_PATH}",
-            config.base_url.trim_end_matches('/')
-        ))
-        .map_err(|_| SpeechError::invalid("base url", "not a valid URL"))?;
-        let local = is_loopback(&endpoint);
-        // A bearer token over plain http to another host is readable on the path.
-        let secure = match endpoint.scheme() {
-            "https" => true,
-            "http" => local || config.api_key.is_none(),
-            _ => false,
-        };
-        if !secure {
-            return Err(SpeechError::invalid(
-                "base url",
-                "https, or http only to localhost",
-            ));
-        }
+        let Endpoint {
+            url: endpoint,
+            local,
+        } = net::endpoint(&config.base_url, ENDPOINT_PATH, config.api_key.is_some())?;
         if config.max_utterance.is_zero() || config.max_utterance > MAX_UTTERANCE_LIMIT {
             return Err(SpeechError::invalid("max utterance", "0 to 10 minutes"));
         }
-        let bearer = config
-            .api_key
-            .as_ref()
-            .map(|key| HeaderValue::from_str(&format!("Bearer {}", key.expose())))
-            .transpose()
-            .map_err(|_| SpeechError::invalid("api key", "not a valid header value"))?
-            .map(|mut value| {
-                // Keeps the token out of reqwest's own Debug output.
-                value.set_sensitive(true);
-                value
-            });
-        let client = Client::builder()
-            .user_agent(concat!("aulo-speech-cloud/", env!("CARGO_PKG_VERSION")))
-            // A redirect would resend the audio, and the key, somewhere the user never chose.
-            .redirect(redirect::Policy::none())
-            .connect_timeout(CONNECT_TIMEOUT)
-            .timeout(config.request_timeout)
-            .build()
-            .map_err(|e| SpeechError::unavailable(&e.without_url().to_string()))?;
+        let bearer = net::bearer(config.api_key.as_ref())?;
+        let client = net::client(Some(config.request_timeout))?;
         let max_samples =
             (config.max_utterance.as_secs_f64() * f64::from(PIPELINE_SAMPLE_RATE_HZ)) as usize;
         Ok(Self {
@@ -148,16 +116,6 @@ impl CloudSttFactory {
     {
         move |spec| self.build(spec)
     }
-}
-
-fn is_loopback(url: &Url) -> bool {
-    url.host_str().is_some_and(|host| {
-        host.eq_ignore_ascii_case("localhost")
-            || host
-                .trim_matches(['[', ']'])
-                .parse::<IpAddr>()
-                .is_ok_and(|ip| ip.is_loopback())
-    })
 }
 
 #[derive(Debug)]

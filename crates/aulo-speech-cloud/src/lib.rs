@@ -1,6 +1,7 @@
 //! Cloud speech engines. Today: speech-to-text over the OpenAI-compatible
-//! `POST /v1/audio/transcriptions` endpoint, which OpenAI and local servers
-//! such as runa both serve.
+//! `POST /v1/audio/transcriptions` endpoint and text-to-speech over
+//! `POST /v1/audio/speech`, which OpenAI and local servers such as runa both
+//! serve.
 //!
 //! Reference, checked 2026-10-07: the `createTranscription` operation and the
 //! `TranscriptTextDeltaEvent` / `TranscriptTextDoneEvent` schemas in OpenAI's
@@ -19,6 +20,17 @@
 //! whole utterance is uploaded at `finish`. The streaming shape only makes
 //! partial transcripts arrive while the server is still decoding.
 //!
+//! Speech, checked 2026-10-07 against the same document: the `createSpeech`
+//! operation and the `CreateSpeechRequest` schema. The request is JSON with
+//! `model`, `input` (at most 4096 characters), `voice`, `response_format` and
+//! `speed` (0.25 to 4.0); the 200 reply is a chunked `application/octet-stream`.
+//! The spec lists the voices `alloy` to `verse` ([`openai_voices`]) and the
+//! `pcm` format, but not its layout: 24 kHz, 16-bit signed little-endian mono
+//! comes from the text-to-speech guide on platform.openai.com (unverified
+//! here, since it refuses automated fetches). Each pushed text is its own
+//! request, run in order; the body is cut into 100 ms chunks and read no
+//! faster than playback drains them.
+//!
 //! Nothing is retried. A rejected key is reported as
 //! [`aulo_speech::SpeechError::Unavailable`] so the registry warns and falls
 //! back at once instead of sending every utterance to a server that refuses it.
@@ -26,6 +38,13 @@
 mod config;
 mod engine;
 mod http;
+mod net;
+mod speech;
+mod tts;
 
-pub use config::{ApiKey, CloudSttConfig, MAX_UTTERANCE_LIMIT, ResponseShape};
+pub use config::{
+    ApiKey, CloudSttConfig, CloudTtsConfig, DEFAULT_MAX_TEXT_CHARS, MAX_AUDIO_BYTES_LIMIT,
+    MAX_TEXT_CHARS_LIMIT, MAX_UTTERANCE_LIMIT, ResponseShape, openai_voices,
+};
 pub use engine::{CloudStt, CloudSttFactory, MAX_TRANSCRIPT_BYTES};
+pub use tts::{CloudTts, CloudTtsFactory, SAMPLE_RATE_HZ};

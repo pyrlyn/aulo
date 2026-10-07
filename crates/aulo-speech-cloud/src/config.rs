@@ -1,6 +1,8 @@
 use std::fmt;
 use std::time::Duration;
 
+use aulo_speech::Voice;
+
 /// Longest utterance the engine buffers. A 10 minute 16 kHz mono WAV is about
 /// 19 MB, under OpenAI's 25 MB upload limit, and bounds memory per engine.
 pub const MAX_UTTERANCE_LIMIT: Duration = Duration::from_secs(600);
@@ -70,6 +72,80 @@ impl CloudSttConfig {
             api_key: None,
             shape: ResponseShape::default(),
             max_utterance: DEFAULT_MAX_UTTERANCE,
+            request_timeout: DEFAULT_REQUEST_TIMEOUT,
+        }
+    }
+}
+
+/// OpenAI rejects longer input, and a local server that accepts more is still
+/// better served sentence by sentence.
+pub const DEFAULT_MAX_TEXT_CHARS: usize = 4096;
+/// Bounds the text queued for one request, so an oversized sentence cannot
+/// become an oversized upload.
+pub const MAX_TEXT_CHARS_LIMIT: usize = 65_536;
+/// About 5 minutes of 24 kHz 16-bit mono.
+const DEFAULT_MAX_AUDIO_BYTES: usize = 14 * 1024 * 1024;
+/// About 22 minutes of 24 kHz 16-bit mono; one reply never needs more, and
+/// the cap is what stops a server that never ends the stream.
+pub const MAX_AUDIO_BYTES_LIMIT: usize = 64 * 1024 * 1024;
+
+/// The voices `createSpeech` documents, for [`CloudTtsConfig::voices`].
+pub fn openai_voices() -> Vec<Voice> {
+    [
+        "alloy", "ash", "ballad", "coral", "echo", "fable", "nova", "onyx", "sage", "shimmer",
+        "verse",
+    ]
+    .into_iter()
+    .map(|id| Voice {
+        id: id.to_owned(),
+        name: id.to_owned(),
+        // The model follows the language of the text.
+        language: None,
+    })
+    .collect()
+}
+
+#[derive(Debug, Clone)]
+pub struct CloudTtsConfig {
+    /// Name for engine pickers, for example "OpenAI".
+    pub name: String,
+    /// Up to and including the version segment, for example
+    /// `https://api.openai.com/v1`.
+    pub base_url: String,
+    /// Used when the resolved engine spec names no model.
+    pub default_model: String,
+    /// What `Engine::voices` lists; any other voice is `Unsupported`.
+    pub voices: Vec<Voice>,
+    /// Must be one of `voices`; used when neither the spec nor the request names one.
+    pub default_voice: String,
+    /// `None` for servers that take no key, such as a local runa.
+    pub api_key: Option<ApiKey>,
+    /// Longest text sent in one request, in characters.
+    pub max_text_chars: usize,
+    /// Audio past this fails the reply.
+    pub max_audio_bytes: usize,
+    /// Wait for the reply headers and between audio chunks. It is not a total:
+    /// audio is read at playback speed, so a long reply takes long.
+    pub request_timeout: Duration,
+}
+
+impl CloudTtsConfig {
+    pub fn new(
+        name: impl Into<String>,
+        base_url: impl Into<String>,
+        default_model: impl Into<String>,
+        voices: Vec<Voice>,
+        default_voice: impl Into<String>,
+    ) -> Self {
+        Self {
+            name: name.into(),
+            base_url: base_url.into(),
+            default_model: default_model.into(),
+            voices,
+            default_voice: default_voice.into(),
+            api_key: None,
+            max_text_chars: DEFAULT_MAX_TEXT_CHARS,
+            max_audio_bytes: DEFAULT_MAX_AUDIO_BYTES,
             request_timeout: DEFAULT_REQUEST_TIMEOUT,
         }
     }
