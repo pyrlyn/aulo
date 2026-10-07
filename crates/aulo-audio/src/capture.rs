@@ -17,13 +17,13 @@ use crate::sink::{FRAME_SAMPLES, SampleSink};
 /// enough to ride out a busy consumer without letting the backlog grow stale.
 pub const DEFAULT_RING_FRAMES: usize = 150;
 
-/// Which microphone to open.
+/// Which device to open, a microphone for capture or a speaker for playback.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum DeviceSelector {
-    /// The system default input device.
+    /// The system default device.
     #[default]
     Default,
-    /// The input device with exactly this name.
+    /// The device with exactly this name.
     Named(String),
 }
 
