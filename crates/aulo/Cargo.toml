@@ -19,13 +19,18 @@ path = "src/bin/aulod.rs"
 [dependencies]
 anyhow.workspace = true
 aulo-config = { path = "../aulo-config" }
+aulo-server = { path = "../aulo-server" }
+aulo-telemetry = { path = "../aulo-telemetry" }
 clap.workspace = true
+# Builds the `--listen` override for the config loader and parses `cargo metadata` in the
+# dependency-graph test.
+serde_json.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread", "signal"] }
+tracing.workspace = true
 
 [dev-dependencies]
-# Full command-output fixtures in tests/cmd/.
+tempfile.workspace = true
 trycmd.workspace = true
-# Parses `cargo metadata` in the dependency-graph test.
-serde_json.workspace = true
 
 [lints]
 workspace = true

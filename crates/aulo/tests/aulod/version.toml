@@ -1,0 +1,6 @@
+bin.name = "aulod"
+args = "--version"
+status.code = 0
+stdout = """
+aulod 0.0.0
+"""

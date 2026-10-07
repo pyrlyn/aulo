@@ -1,0 +1,7 @@
+bin.name = "aulod"
+args = "run"
+status.code = 1
+stdout = ""
+stderr = """
+aulod: already running (pid 4242, home [..]); stop it first or use another AULO_HOME
+"""
