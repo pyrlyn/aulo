@@ -3,6 +3,8 @@
 
 use aulo_speech::ErrorDetail;
 
+use crate::MicPermission;
+
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 #[non_exhaustive]
 pub enum AudioError {
@@ -18,6 +20,10 @@ pub enum AudioError {
         what: &'static str,
         reason: &'static str,
     },
+    /// The system refuses this process the microphone; a stream would only
+    /// deliver silence. Turn it into a notice with [`MicPermission::notice`].
+    #[error("microphone access is {0}")]
+    Permission(MicPermission),
     /// The platform refused or broke the stream: permission, format, driver.
     #[error("input stream failed: {0}")]
     Stream(ErrorDetail),

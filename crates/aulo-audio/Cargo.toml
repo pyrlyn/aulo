@@ -12,9 +12,18 @@ publish.workspace = true
 aulo-speech = { path = "../aulo-speech" }
 # Resampler: the streaming, allocation-free linear resampler the TTS path already uses.
 aulo-speech-system = { path = "../aulo-speech-system" }
+aulo-types = { path = "../aulo-types" }
 ringbuf = { workspace = true }
 speech-capture = { workspace = true }
 thiserror = { workspace = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+# TCC state of the microphone via AVAudioApplication.recordPermission
+objc2-avf-audio = { workspace = true, features = ["std", "AVAudioApplication"] }
+
+[target.'cfg(windows)'.dependencies]
+# Safe read of the microphone consent values in the registry
+windows-registry = { workspace = true }
 
 [features]
 # A scriptable fake input device for tests in this and other crates; never on in a release build.
