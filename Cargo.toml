@@ -28,6 +28,14 @@ libsqlite3-sys = { version = "0.38.2", features = ["bundled"] }
 figment = "0.10.19"
 # JSON Schema for config files
 schemars = "1.2.2"
+# OTLP trace export, only built with the aulo-telemetry `otlp` feature
+opentelemetry = "0.33.0"
+# OTLP span exporter over HTTP, only built with the aulo-telemetry `otlp` feature
+opentelemetry-otlp = { version = "0.33.0", default-features = false }
+# tracer provider and batch span processor, only built with the aulo-telemetry `otlp` feature
+opentelemetry_sdk = "0.33.0"
+# secret patterns for the log redaction layer
+regex = "1.13.1"
 # serialization of config, events and stored rows
 serde = { version = "1.0.229", features = ["derive"] }
 # JSON for schemas, MCP and stored payloads
@@ -42,6 +50,12 @@ tokio = "1.53.2"
 toml = "1.1.6"
 # structured logs
 tracing = "0.1.44"
+# daily-rotating, non-blocking log files with a bounded file count
+tracing-appender = "0.2.5"
+# bridges tracing spans to OpenTelemetry, only built with the aulo-telemetry `otlp` feature
+tracing-opentelemetry = "0.34.0"
+# EnvFilter, JSON and human formatters for the log subscriber
+tracing-subscriber = "0.3.23"
 # sortable ids for bots, chats, turns and calls
 ulid = "3.0.0"
 
