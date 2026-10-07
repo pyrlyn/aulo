@@ -33,7 +33,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T2.3 | todo | P0 | 2 | 0% | |
 | T2.6 | todo | P1 | 1 | 0% | |
 | T2.10 | todo | P2 | 2 | 0% | |
-| T3.3 | todo | P0 | 3 | 0% | |
+| T3.3 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T3.4 | todo | P0 | 3 | 0% | |
 | T3.5 | todo | P0 | 2 | 0% | |
 | T3.6 | todo | P0 | 2 | 0% | |
@@ -72,7 +72,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T6.5 | todo | P1 | 3 | 0% | |
 | T6.6 | todo | P1 | 2 | 0% | |
 | T6.7 | todo | P2 | 3 | 0% | |
-| T7.2 | todo | P0 | 3 | 0% | |
+| T7.2 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T7.3 | todo | P0 | 3 | 0% | |
 | T7.4 | todo | P0 | 3 | 0% | |
 | T7.5 | todo | P1 | 2 | 0% | |
@@ -450,6 +450,8 @@ Done when:
 Stage: S3 · Area: api · Depends on: T3.2, T2.5, T2.7 · Blocks: 4 task(s)
 
 tonic server with tonic-health and reflection, listeners for a Unix socket / Windows named pipe (local) and TCP (remote), graceful shutdown, request size limits.
+
+Execution plan: 1. crates/aulo-server: tonic Server builder taking service impls from callers (no business logic here), tonic-health and tonic-reflection (latest compatible with tonic 0.14.6). 2. Listeners: Unix socket under AULO_HOME with 0600 permissions (stale socket removed only if no one answers), Windows named pipe behind cfg(windows), optional TCP from DaemonConfig.listen. 3. Limits: max decoding/encoding message size, concurrency and timeouts from config with safe defaults; graceful shutdown on a token/signal draining streams. 4. Tests: health check over a Unix socket in a temp dir, reflection lists aulo.v1 services, oversize request rejected, shutdown completes.
 
 Done when:
 
@@ -848,6 +850,8 @@ Done when:
 Stage: S7 · Area: speech · Depends on: T7.1, T2.5 · Blocks: 5 task(s)
 
 Engines register by id (built-in and plugin-provided). [voice.stt] and [voice.tts] select engine, model and voice; a chat or bot can override; switching through gRPC, CLI (aulo voice use) or voice command takes effect on the next utterance without restart. A failing engine is skipped for the next one in the fallback list (fail open).
+
+Execution plan: 1. In aulo-speech (or aulo-voice if the spec puts it there): EngineRegistry holding factories by EngineId and kind (built-in and plugin-provided), build(engine, model, voice) from aulo-config EngineConfig. 2. Selection order chat override > bot override > config, then the fallback chain; an engine that fails to build or reports should_fall_back is skipped with a Notice (fail open). 3. Runtime switch API (swap active STT/TTS between turns, never mid-utterance) used later by gRPC SetVoice, CLI and voice command. 4. Tests with fake factories: selection precedence, fallback with notice, switching, unknown engine id, out-of-range rate mapped to an error.
 
 Done when:
 
