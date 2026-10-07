@@ -31,7 +31,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T2.3 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T3.7 | todo | P0 | 3 | 0% | |
 | T3.8 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
-| T3.9 | todo | P2 | 3 | 0% | |
+| T3.9 | in progress | P2 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T4.1 | todo | P0 | 3 | 0% | |
 | T4.2 | todo | P0 | 2 | 0% | |
 | T4.3 | todo | P1 | 2 | 0% | |
@@ -72,7 +72,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T7.10 | in progress | P1 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T7.11 | todo | P2 | 3 | 0% | |
 | T7.12 | todo | P2 | 2 | 0% | |
-| T7.14 | todo | P2 | 2 | 0% | |
+| T7.14 | in progress | P2 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T7.16 | todo | P2 | 2 | 0% | |
 | T8.1 | todo | P0 | 4 | 0% | |
 | T8.2 | todo | P0 | 2 | 0% | |
@@ -415,6 +415,8 @@ Done when:
 ### T3.9. Run aulod as a user service
 
 Stage: S3 · Area: api · Depends on: T3.6 · Blocks: 0 task(s)
+
+Execution plan: 1. `aulod service install|uninstall|status` subcommands in crates/aulo behind a ServiceManager trait. 2. Backends: launchd LaunchAgent plist via launchctl bootstrap/bootout on macOS, systemd user unit via systemctl --user on Linux, Task Scheduler logon task via schtasks on Windows; files rendered from templates with the resolved binary path and AULO_HOME. 3. Idempotent install and uninstall, checked with a fake manager that records commands and files. 4. Verify clippy, fmt, workspace tests.
 
 aulod service install/uninstall: launchd agent on macOS, systemd user unit on Linux, Task Scheduler entry on Windows.
 
@@ -837,6 +839,8 @@ Done when:
 ### T7.14. TTS: ElevenLabs streaming
 
 Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 0 task(s)
+
+Execution plan: 1. In aulo-speech-cloud, a TtsEngine over the ElevenLabs stream-input WebSocket (tokio-tungstenite, approved in D4) with voice id and model from config and the key as an ApiKey handle. 2. Reuse the net module rules from T7.6/T7.13 (endpoint validation, error mapping, caps, bounded audio queue, cancel). 3. Recorded-session test: a local WebSocket server replays a captured message sequence. 4. Verify clippy, fmt, workspace tests.
 
 WebSocket streaming TTS with voice id and model from config; key from the keychain.
 
