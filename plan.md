@@ -70,7 +70,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T6.5 | todo | P1 | 3 | 0% | |
 | T6.6 | todo | P1 | 2 | 0% | |
 | T6.7 | todo | P2 | 3 | 0% | |
-| T7.2 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T7.4 | todo | P0 | 3 | 0% | |
 | T7.5 | todo | P1 | 2 | 0% | |
 | T7.6 | todo | P1 | 3 | 0% | |
@@ -820,18 +819,6 @@ Done when:
 - round-trip test within the SNR target
 
 ## S7. Speech engines
-
-### T7.2. Engine registry and runtime switching
-
-Stage: S7 · Area: speech · Depends on: T7.1, T2.5 · Blocks: 5 task(s)
-
-Engines register by id (built-in and plugin-provided). [voice.stt] and [voice.tts] select engine, model and voice; a chat or bot can override; switching through gRPC, CLI (aulo voice use) or voice command takes effect on the next utterance without restart. A failing engine is skipped for the next one in the fallback list (fail open).
-
-Execution plan: 1. In aulo-speech (or aulo-voice if the spec puts it there): EngineRegistry holding factories by EngineId and kind (built-in and plugin-provided), build(engine, model, voice) from aulo-config EngineConfig. 2. Selection order chat override > bot override > config, then the fallback chain; an engine that fails to build or reports should_fall_back is skipped with a Notice (fail open). 3. Runtime switch API (swap active STT/TTS between turns, never mid-utterance) used later by gRPC SetVoice, CLI and voice command. 4. Tests with fake factories: selection precedence, fallback with notice, switching, unknown engine id, out-of-range rate mapped to an error.
-
-Done when:
-
-- test switches TTS mid-chat; a failing engine falls back with a notice
 
 ### T7.4. STT: sherpa-onnx (Parakeet TDT v3, Moonshine)
 

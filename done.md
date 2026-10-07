@@ -248,3 +248,16 @@ Done when:
 - test: corrupted download is rejected
 
 Outcome: crates/aulo-models (adapter; added to spec §4.2 and the deps ROLES): embedded data/models.json catalog with schema and stale test (pinned base_url, files with size and sha256; ids and paths reject .., absolute, \, :, .part). ModelManager list/path/pull/remove under <AULO_HOME>/models/<id>/: streams into .part while hashing, caps at the catalog size, fsyncs and renames atomically, refuses hash or size mismatch and deletes the partial, resumes via Range with Content-Range checks, 5 redirects max, timeouts. reqwest 0.13 (rustls), sha2. 14 wiremock tests including a corrupted download. Catalog seeded with Parakeet TDT v3 int8 pinned to HF commit 2bda32e. Left out: Silero VAD and KWS (GitHub release assets without published digests), Kokoro (378 files; needs a catalog generator), tar.bz2 archives.
+
+### T7.2. Engine registry and runtime switching
+
+Stage: S7 · Area: speech · Depends on: T7.1, T2.5 · Blocks: 5 task(s)
+
+Engines register by id (built-in and plugin-provided). [voice.stt] and [voice.tts] select engine, model and voice; a chat or bot can override; switching through gRPC, CLI (aulo voice use) or voice command takes effect on the next utterance without restart. A failing engine is skipped for the next one in the fallback list (fail open).
+
+
+Done when:
+
+- test switches TTS mid-chat; a failing engine falls back with a notice
+
+Outcome: aulo-voice (domain) gains EngineRegistry<E> (SttRegistry, TtsRegistry; duplicate ids refused so a plugin cannot replace a built-in; unregistered id is Unavailable and falls back), candidates(config, Overrides{bot, chat}) ordering chat > bot > config > fallback list without duplicates, and ActiveEngine<E> whose switch applies at the next begin (never mid-utterance); build failures and should_fall_back errors skip the engine with a Warn Notice, caller bugs and overflow do not. aulo-speech gains EngineSpec, EngineChoice and a testkit feature with the shared fake engines; aulo-config gains EngineConfig::choice, which turns bad engine ids and out-of-range rates into a ConfigError naming key and layer. 14 tests incl. switching TTS mid-chat and fallback with a notice. Decisions: the configured engine stays second behind an override; fallback engines start with default model and voice; validation runs at startup via choice(), not in Config::load.
