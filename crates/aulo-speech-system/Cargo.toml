@@ -1,0 +1,49 @@
+[package]
+name = "aulo-speech-system"
+description = "aulo speech engines over the operating system's own voices"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+aulo-speech = { path = "../aulo-speech" }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+block2 = { workspace = true }
+objc2 = { workspace = true }
+objc2-avf-audio = { workspace = true, features = [
+    "std",
+    "block2",
+    "AVAudioBuffer",
+    "AVAudioFormat",
+    "AVAudioSettings",
+    "AVAudioTypes",
+    "AVSpeechSynthesis",
+] }
+objc2-foundation = { workspace = true, features = [
+    "std",
+    "NSArray",
+    "NSDictionary",
+    "NSEnumerator",
+    "NSObject",
+    "NSString",
+    "NSValue",
+] }
+ringbuf = { workspace = true }
+
+[target.'cfg(target_os = "macos")'.dev-dependencies]
+aulo-voice = { path = "../aulo-voice" }
+# The synthesis test pumps the main run loop, where AVSpeechSynthesizer delivers audio.
+objc2-foundation = { workspace = true, features = ["NSDate", "NSRunLoop"] }
+
+# libtest runs tests off the main thread and parks it, so AVSpeechSynthesizer's
+# main-queue callbacks would never fire; this test drives the main run loop itself.
+[[test]]
+name = "macos"
+harness = false
+
+[lints]
+workspace = true

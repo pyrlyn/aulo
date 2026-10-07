@@ -50,6 +50,16 @@ opentelemetry = "0.33.0"
 opentelemetry-otlp = { version = "0.33.0", default-features = false }
 # tracer provider and batch span processor, only built with the aulo-telemetry `otlp` feature
 opentelemetry_sdk = "0.33.0"
+# Objective-C runtime (Retained, downcasts) for the macOS system voices in aulo-speech-system
+objc2 = "0.6.5"
+# AVSpeechSynthesizer and AVAudioPCMBuffer bindings; members pick the framework features they use
+objc2-avf-audio = { version = "0.3.2", default-features = false }
+# NSString, NSArray and NSNumber for the AVFoundation calls; members pick features
+objc2-foundation = { version = "0.3.2", default-features = false }
+# Objective-C blocks for AVSpeechSynthesizer's buffer callback
+block2 = "0.6.2"
+# fixed-size lock-free SPSC rings between platform audio callbacks and engine polls (spec §5.3)
+ringbuf = "0.5.2"
 # snapshot tests (golden speech text per language)
 insta = "1.49.0"
 # markdown to plain text for the speakable-text normalizer
