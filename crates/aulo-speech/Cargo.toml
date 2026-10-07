@@ -12,5 +12,13 @@ publish.workspace = true
 aulo-types = { path = "../aulo-types" }
 thiserror = { workspace = true }
 
+[features]
+# Fake engines for tests in this and other crates; never on in a release build.
+testkit = []
+
+[dev-dependencies]
+# Turns `testkit` on for this crate's own integration tests.
+aulo-speech = { path = ".", features = ["testkit"] }
+
 [lints]
 workspace = true

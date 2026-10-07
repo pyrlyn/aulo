@@ -1,6 +1,6 @@
 [package]
 name = "aulo-voice"
-description = "aulo conversation pipeline: speakable-text normalizer and streaming sentence splitter"
+description = "aulo voice domain: speech engine registry and switching, speakable-text normalizer and sentence splitter"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,11 +9,15 @@ repository.workspace = true
 publish.workspace = true
 
 [dependencies]
+aulo-speech = { path = "../aulo-speech" }
+aulo-types = { path = "../aulo-types" }
 # Markdown is parsed without the HTML renderer: only the event stream is used.
 pulldown-cmark = { workspace = true }
+thiserror = { workspace = true }
 url = { workspace = true }
 
 [dev-dependencies]
+aulo-speech = { path = "../aulo-speech", features = ["testkit"] }
 insta = { workspace = true }
 
 [lints]

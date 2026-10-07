@@ -64,6 +64,7 @@ dependencies = [
 name = "aulo-config"
 version = "0.0.0"
 dependencies = [
+ "aulo-speech",
  "figment",
  "schemars",
  "serde",
@@ -115,6 +116,7 @@ dependencies = [
 name = "aulo-speech"
 version = "0.0.0"
 dependencies = [
+ "aulo-speech",
  "aulo-types",
  "thiserror",
 ]
@@ -162,8 +164,11 @@ dependencies = [
 name = "aulo-voice"
 version = "0.0.0"
 dependencies = [
+ "aulo-speech",
+ "aulo-types",
  "insta",
  "pulldown-cmark",
+ "thiserror",
  "url",
 ]
 

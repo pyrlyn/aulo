@@ -9,6 +9,8 @@ repository.workspace = true
 publish.workspace = true
 
 [dependencies]
+# validated engine choice for [voice.stt] and [voice.tts]
+aulo-speech = { path = "../aulo-speech" }
 figment = { workspace = true, features = ["toml", "env"] }
 schemars.workspace = true
 serde.workspace = true

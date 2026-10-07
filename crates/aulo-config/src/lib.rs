@@ -3,6 +3,7 @@
 //!
 //! Nothing else in the workspace imports `figment` or `toml`.
 
+mod choice;
 mod error;
 mod load;
 mod model;

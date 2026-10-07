@@ -44,7 +44,10 @@ mod audio;
 mod detect;
 mod engine;
 mod error;
+mod select;
 mod stt;
+#[cfg(feature = "testkit")]
+pub mod testkit;
 mod tts;
 
 pub use audio::{AudioFormat, AudioFrame, PIPELINE_SAMPLE_RATE_HZ};
@@ -52,5 +55,6 @@ pub use aulo_types::{TranscriptKind, TurnId};
 pub use detect::{KeywordHit, KeywordSpotter, TurnDecision, TurnDetector, Vad, VadEvent};
 pub use engine::{Capabilities, EngineId, EngineInfo, EngineKind, LanguageSupport};
 pub use error::{ErrorDetail, MAX_ERROR_DETAIL_BYTES, SpeechError};
+pub use select::{EngineChoice, EngineSpec};
 pub use stt::{SttEngine, SttPoll, Transcript};
 pub use tts::{SpeechRate, TtsEngine, TtsPoll, TtsRequest, Voice};
