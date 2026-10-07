@@ -61,7 +61,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T6.4 | todo | P1 | 4 | 0% | |
 | T6.5 | todo | P1 | 3 | 0% | |
 | T6.6 | in progress | P1 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
-| T6.7 | in progress | P2 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
+| T6.7 | in progress | P2 | 3 | 90% | Claude Code / claude-sonnet-5-5 |
 | T7.5 | in progress | P1 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T7.8 | in progress | P2 | 3 | 90% | Claude Code / claude-opus-5-5 |
 | T7.11 | in progress | P2 | 3 | 90% | Claude Code / claude-sonnet-5-5 |
@@ -755,6 +755,8 @@ Stage: S6 · Area: audio · Depends on: T6.1 · Blocks: 0 task(s)
 Optional Opus encoding of VoiceService frames for low-bandwidth remote clients (PCM16 16 kHz stays the default).
 
 Execution plan: optional Opus encode/decode of 20 ms PCM16 16 kHz frames (stacked on t6-1-audio-capture), behind a feature, PCM16 stays default; round-trip SNR test.
+
+Status: implemented on branch t6-7-opus (`opus` 0.4 over bundled libopus 1.6.1 behind the off-by-default `opus` feature; proto value AUDIO_FORMAT_OPUS_16KHZ_MONO; decoder caps 1500 bytes and 6 frames; round-trip SNR about 10.4 dB at 24 kbit/s against a proposed 8 dB target). Merges with T6.1; Windows and Linux arm64 builds of the C codec are unverified.
 
 Done when:
 
