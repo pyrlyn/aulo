@@ -56,8 +56,12 @@ insta = "1.49.0"
 pulldown-cmark = { version = "0.13.4", default-features = false }
 # secret patterns for the log redaction layer
 regex = "1.13.1"
-# streaming HTTPS model downloads in aulo-models (rustls, no system OpenSSL)
+# HTTPS client for model downloads (aulo-models) and cloud speech (aulo-speech-cloud); rustls, no system OpenSSL
 reqwest = { version = "0.13.5", default-features = false, features = ["rustls"] }
+# WAV encoding of the utterance sent to a transcription endpoint
+hound = "3.5.1"
+# zero-I/O server-sent-events parser for streaming transcription replies
+sse-core = { version = "0.2.3", default-features = false, features = ["std"] }
 # serialization of config, events and stored rows
 serde = { version = "1.0.229", features = ["derive"] }
 # plugin manifest versions (semver.org precedence and validation)

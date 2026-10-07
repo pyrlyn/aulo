@@ -1,0 +1,26 @@
+[package]
+name = "aulo-speech-cloud"
+description = "aulo cloud speech engines: OpenAI-compatible transcription"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+aulo-speech = { path = "../aulo-speech" }
+hound.workspace = true
+reqwest = { workspace = true, features = ["multipart"] }
+serde.workspace = true
+serde_json.workspace = true
+sse-core.workspace = true
+tokio = { workspace = true, features = ["rt", "sync", "time"] }
+tokio-util = { workspace = true, features = ["rt"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+wiremock.workspace = true
+
+[lints]
+workspace = true

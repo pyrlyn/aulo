@@ -24,6 +24,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | diesel_migrations | local | https://github.com/diesel-rs/diesel | Embedded, filename-keyed schema migrations |
 | figment | local | https://github.com/SergioBenitez/Figment | Layered config with per-key provenance |
 | getrandom | local | https://github.com/rust-random/getrandom | OS randomness for the 256-bit `aulod` API token (`aulo-server`) |
+| hound | local | https://github.com/ruuda/hound | Encodes the buffered utterance as 16-bit PCM WAV for the upload in `aulo-speech-cloud` |
 | hyper-util | local (dev) | https://github.com/hyperium/hyper-util | `TokioIo` adapter for the gRPC client over a Unix socket in `aulo-server` tests |
 | insta | local (dev) | https://github.com/mitsuhiko/insta | Snapshot tests of the speakable-text normalizer (`aulo-voice`) |
 | keyring | local | https://github.com/open-source-cooperative/keyring-rs | OS keychain that holds the `aulod` API token (`aulo-server`) |
@@ -35,19 +36,20 @@ Only what the project uses today. Crates are added by the task that wires each o
 | prost-types | local | https://github.com/tokio-rs/prost | Well-known protobuf types (`Timestamp`) used by the generated code |
 | pulldown-cmark | local | https://github.com/pulldown-cmark/pulldown-cmark | Markdown events for the speakable-text normalizer (`aulo-voice`); no HTML renderer |
 | regex | local | https://github.com/rust-lang/regex | Credential and secret-pair patterns in the log redaction |
-| reqwest | local | https://github.com/seanmonstar/reqwest | Streaming HTTPS downloads (rustls) of speech models in `aulo-models` |
+| reqwest | local | https://github.com/seanmonstar/reqwest | Streaming HTTPS downloads (rustls) of speech models in `aulo-models`; multipart transcription uploads in `aulo-speech-cloud` |
 | rustix | local | https://github.com/bytecodealliance/rustix | Daemon euid for the local-socket peer check in `aulo-server`, without hand-written `unsafe` |
 | schemars | local | https://github.com/GREsau/schemars | JSON Schema generated from the config types |
 | semver | local | https://github.com/dtolnay/semver | Plugin manifest versions (`aulo-plugin`) |
-| serde | local | https://github.com/serde-rs/serde | Serialization of ids, events and config |
-| serde_json | local | https://github.com/serde-rs/json | Config schema output and overrides (`aulod --listen`); round-trip tests; `cargo metadata` parsing in the dependency-graph test |
+| serde | local | https://github.com/serde-rs/serde | Serialization of ids, events and config; reply parsing in `aulo-speech-cloud` |
+| serde_json | local | https://github.com/serde-rs/json | Config schema output and overrides; round-trip tests; `cargo metadata` parsing in the dependency-graph test; reply and SSE event parsing in `aulo-speech-cloud` |
 | sha2 | local | https://github.com/RustCrypto/hashes | SHA-256 of model files, hashed while they download; the API token is held only as its SHA-256 |
+| sse-core | local | https://github.com/PizzasBear/sse-rs | Zero-I/O server-sent-events parser for streaming transcription replies in `aulo-speech-cloud` (`eventsource-stream` has had no release since 2022) |
 | subtle | local | https://github.com/dalek-cryptography/subtle | Constant-time comparison of the API token digest (`aulo-server`) |
 | tempfile | local (dev) | https://github.com/Stebalien/tempfile | Temporary databases and directories in tests |
 | thiserror | local | https://github.com/dtolnay/thiserror | Typed errors in library crates |
 | tokio | local | https://github.com/tokio-rs/tokio | Async runtime; Unix socket, named pipe and TCP listeners in `aulo-server`; SIGINT/SIGTERM shutdown in `aulod` |
 | tokio-stream | local | https://github.com/tokio-rs/tokio | Listener streams for tonic `serve_with_incoming` in `aulo-server` |
-| tokio-util | local | https://github.com/tokio-rs/tokio | `CancellationToken` that shuts every `aulo-server` listener down together |
+| tokio-util | local | https://github.com/tokio-rs/tokio | `CancellationToken` that shuts every `aulo-server` listener down together; `AbortOnDropHandle` that cancels an abandoned transcription request in `aulo-speech-cloud` |
 | toml | local | https://github.com/toml-rs/toml | Parses `aulo-plugin.toml` in `aulo-plugin` (the manifest module owns that file); renders and parses the config in `aulo-config` (default file tests, `aulo config show`) |
 | tonic | local | https://github.com/hyperium/tonic | gRPC server and client runtime in `aulo-proto` (generated code) and `aulo-server` (transport) |
 | tonic-health | local | https://github.com/hyperium/tonic | `grpc.health.v1` service, only in `aulo-server` |
@@ -62,4 +64,4 @@ Only what the project uses today. Crates are added by the task that wires each o
 | trycmd | local (dev) | https://github.com/assert-rs/snapbox | Full command-output fixtures for the `aulo` CLI and `aulod` (`crates/aulo/tests/cmd/`, `crates/aulo/tests/aulod/`) |
 | ulid | local | https://github.com/dylanhart/ulid-rs | Sortable ids for bots, chats, turns, calls and stored rows |
 | url | local | https://github.com/servo/rust-url | Host of a URL for the speakable-text normalizer (`aulo-voice`) |
-| wiremock | local (dev) | https://github.com/LukeMathWalker/wiremock-rs | Local HTTP fixture server for the `aulo-models` downloader tests |
+| wiremock | local (dev) | https://github.com/LukeMathWalker/wiremock-rs | Local HTTP fixture server for the `aulo-models` downloader and `aulo-speech-cloud` transcription tests |
