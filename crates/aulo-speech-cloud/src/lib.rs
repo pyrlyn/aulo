@@ -34,11 +34,15 @@
 //! Speech can also come from ElevenLabs over a WebSocket ([`ElevenLabsTts`]); its
 //! protocol and sources are documented in that module.
 //!
+//! Deepgram's live API is a streaming speech-to-text engine over a WebSocket
+//! ([`DeepgramStt`]); its protocol and sources are documented in that module.
+//!
 //! Nothing is retried. A rejected key is reported as
 //! [`aulo_speech::SpeechError::Unavailable`] so the registry warns and falls
 //! back at once instead of sending every utterance to a server that refuses it.
 
 mod config;
+mod deepgram;
 mod elevenlabs;
 mod engine;
 mod http;
@@ -51,6 +55,7 @@ pub use config::{
     ApiKey, CloudSttConfig, CloudTtsConfig, DEFAULT_MAX_TEXT_CHARS, MAX_AUDIO_BYTES_LIMIT,
     MAX_TEXT_CHARS_LIMIT, MAX_UTTERANCE_LIMIT, ResponseShape, openai_voices,
 };
+pub use deepgram::{DEEPGRAM_BASE_URL, DeepgramStt, DeepgramSttConfig, DeepgramSttFactory};
 pub use elevenlabs::{
     DEFAULT_BASE_URL, ElevenLabsTts, ElevenLabsTtsConfig, ElevenLabsTtsFactory,
     MAX_REPLY_CHARS_LIMIT, PCM_SAMPLE_RATES_HZ,

@@ -28,7 +28,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | diesel | local | https://github.com/diesel-rs/diesel | Typed SQLite access in `aulo-store` (no raw SQL) |
 | diesel_migrations | local | https://github.com/diesel-rs/diesel | Embedded, filename-keyed schema migrations |
 | figment | local | https://github.com/SergioBenitez/Figment | Layered config with per-key provenance |
-| futures-util | local | https://github.com/rust-lang/futures-rs | Splits the ElevenLabs WebSocket into read and write halves (`StreamExt`, `SinkExt`) in `aulo-speech-cloud`, so a slow audio consumer never stalls the text sent |
+| futures-util | local | https://github.com/rust-lang/futures-rs | Splits the ElevenLabs and Deepgram WebSockets into read and write halves (`StreamExt`, `SinkExt`) in `aulo-speech-cloud`, so a slow audio consumer never stalls the text sent and results are read while audio is written |
 | getrandom | local | https://github.com/rust-random/getrandom | OS randomness for the 256-bit `aulod` API token (`aulo-server`) |
 | hound | local | https://github.com/ruuda/hound | Encodes the buffered utterance as 16-bit PCM WAV for the upload in `aulo-speech-cloud`; decodes the WAV stream of `espeak-ng --stdout` in `aulo-speech-system` |
 | hyper-util | local (dev) | https://github.com/hyperium/hyper-util | `TokioIo` adapter for the gRPC client over a Unix socket in `aulo-server` tests |
@@ -63,7 +63,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | tokio | local | https://github.com/tokio-rs/tokio | Async runtime; Unix socket, named pipe and TCP listeners in `aulo-server`; SIGINT/SIGTERM shutdown in `aulod` |
 | tokio-rustls | local (dev) | https://github.com/rustls/tokio-rustls | TLS stream under the pinned gRPC client in the `aulo-server` tests |
 | tokio-stream | local | https://github.com/tokio-rs/tokio | Listener streams for tonic `serve_with_incoming` in `aulo-server` |
-| tokio-tungstenite | local | https://github.com/snapview/tokio-tungstenite | WebSocket client (rustls, platform trust roots) for the ElevenLabs `stream-input` speech API in `aulo-speech-cloud`; also the local WebSocket fixture server in its tests (spec D4) |
+| tokio-tungstenite | local | https://github.com/snapview/tokio-tungstenite | WebSocket client (rustls, platform trust roots) for the ElevenLabs `stream-input` speech API and the Deepgram live transcription API in `aulo-speech-cloud`; also the local WebSocket fixture server in its tests (spec D4) |
 | tokio-util | local | https://github.com/tokio-rs/tokio | `CancellationToken` that shuts every `aulo-server` listener down together; `AbortOnDropHandle` that cancels an abandoned transcription or speech request in `aulo-speech-cloud` |
 | toml | local | https://github.com/toml-rs/toml | Parses `aulo-plugin.toml` in `aulo-plugin` (the manifest module owns that file); renders and parses the config in `aulo-config` (default file tests, `aulo config show`) |
 | tonic | local | https://github.com/hyperium/tonic | gRPC server and client runtime in `aulo-proto` (generated code) and `aulo-server` (transport; rustls TLS on the TCP listener via `tls-aws-lc`) |

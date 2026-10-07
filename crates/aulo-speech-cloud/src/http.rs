@@ -160,11 +160,11 @@ fn stt_error(error: reqwest::Error) -> SpeechError {
     net_error(NOUN, error)
 }
 
-fn capped(text: &str) -> &str {
+pub(crate) fn capped(text: &str) -> &str {
     &text[..text.floor_char_boundary(MAX_TRANSCRIPT_BYTES)]
 }
 
-fn push_capped(buffer: &mut String, piece: &str) {
+pub(crate) fn push_capped(buffer: &mut String, piece: &str) {
     let room = MAX_TRANSCRIPT_BYTES.saturating_sub(buffer.len());
     buffer.push_str(&piece[..piece.floor_char_boundary(room)]);
 }

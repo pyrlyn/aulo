@@ -128,15 +128,57 @@ enum State {
     Waiting(Waiting),
 }
 
-/// An uploaded utterance. Dropping it aborts the request, which is how
+/// An utterance in flight. Dropping it aborts the background task, which is how
 /// `cancel` and `begin` stay instant.
 #[derive(Debug)]
-struct Waiting {
+pub(crate) struct Waiting {
     turn: TurnId,
     language: Option<String>,
     events: mpsc::Receiver<Event>,
     _task: Option<AbortOnDropHandle<()>>,
     delivered: bool,
+}
+
+impl Waiting {
+    pub(crate) fn new(
+        turn: TurnId,
+        language: Option<String>,
+        events: mpsc::Receiver<Event>,
+        task: Option<AbortOnDropHandle<()>>,
+    ) -> Self {
+        Self {
+            turn,
+            language,
+            events,
+            _task: task,
+            delivered: false,
+        }
+    }
+
+    /// An error ends the utterance; the caller drops it.
+    pub(crate) fn poll(&mut self, out: &mut Transcript) -> Result<SttPoll, SpeechError> {
+        if self.delivered {
+            return Ok(SttPoll::Done);
+        }
+        let language = self.language.as_deref();
+        match self.events.try_recv() {
+            Ok(Event::Partial(text)) => {
+                out.set(self.turn, TranscriptKind::Partial, &text, language);
+                Ok(SttPoll::Updated)
+            }
+            Ok(Event::Final(text)) => {
+                self.delivered = true;
+                out.set(self.turn, TranscriptKind::Final, &text, language);
+                Ok(SttPoll::Updated)
+            }
+            Ok(Event::Failed(error)) => Err(error),
+            Err(TryRecvError::Empty) => Ok(SttPoll::Pending),
+            // The task ended without a verdict: the runtime shut down under it.
+            Err(TryRecvError::Disconnected) => {
+                Err(SpeechError::failed("transcription task ended early"))
+            }
+        }
+    }
 }
 
 /// OpenAI-compatible transcription engine. Audio is buffered in storage sized
@@ -206,13 +248,7 @@ impl SttEngine for CloudStt {
                 sender,
             ))))
         };
-        self.state = State::Waiting(Waiting {
-            turn,
-            language,
-            events,
-            _task: task,
-            delivered: false,
-        });
+        self.state = State::Waiting(Waiting::new(turn, language, events, task));
         Ok(())
     }
 
@@ -220,31 +256,11 @@ impl SttEngine for CloudStt {
         let State::Waiting(waiting) = &mut self.state else {
             return Ok(SttPoll::Pending);
         };
-        if waiting.delivered {
-            return Ok(SttPoll::Done);
+        let polled = waiting.poll(out);
+        if polled.is_err() {
+            self.state = State::Idle;
         }
-        let language = waiting.language.as_deref();
-        match waiting.events.try_recv() {
-            Ok(Event::Partial(text)) => {
-                out.set(waiting.turn, TranscriptKind::Partial, &text, language);
-                Ok(SttPoll::Updated)
-            }
-            Ok(Event::Final(text)) => {
-                waiting.delivered = true;
-                out.set(waiting.turn, TranscriptKind::Final, &text, language);
-                Ok(SttPoll::Updated)
-            }
-            Ok(Event::Failed(error)) => {
-                self.state = State::Idle;
-                Err(error)
-            }
-            Err(TryRecvError::Empty) => Ok(SttPoll::Pending),
-            Err(TryRecvError::Disconnected) => {
-                // The task ended without a verdict: the runtime shut down under it.
-                self.state = State::Idle;
-                Err(SpeechError::failed("transcription task ended early"))
-            }
-        }
+        polled
     }
 
     fn cancel(&mut self) {
@@ -254,7 +270,7 @@ impl SttEngine for CloudStt {
 }
 
 /// `f32` samples are in -1.0..=1.0; the clamp keeps overshoot from wrapping.
-fn to_pcm16(sample: f32) -> i16 {
+pub(crate) fn to_pcm16(sample: f32) -> i16 {
     (sample.clamp(-1.0, 1.0) * f32::from(i16::MAX)) as i16
 }
 
