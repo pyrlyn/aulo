@@ -159,8 +159,10 @@ fn engines_without_a_key_stay_unbuilt_and_off_the_network() {
             Some(Outcome::Unavailable(format!("no key: set {variable}")))
         );
     }
-    let Some(Outcome::Unavailable(why)) = reason(Kind::Stt, "sherpa-parakeet") else {
-        panic!("parakeet should be unavailable without its model");
-    };
-    assert!(why.contains("not installed"), "{why}");
+    for engine in ["sherpa-parakeet", "whisper-cpp"] {
+        let Some(Outcome::Unavailable(why)) = reason(Kind::Stt, engine) else {
+            panic!("{engine} should be unavailable without its model");
+        };
+        assert!(why.contains("not installed"), "{why}");
+    }
 }
