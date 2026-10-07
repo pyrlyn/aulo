@@ -34,7 +34,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T2.6 | todo | P1 | 1 | 0% | |
 | T2.7 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T2.10 | todo | P2 | 2 | 0% | |
-| T3.2 | todo | P0 | 2 | 0% | |
+| T3.2 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T3.3 | todo | P0 | 3 | 0% | |
 | T3.4 | todo | P0 | 3 | 0% | |
 | T3.5 | todo | P0 | 2 | 0% | |
@@ -135,7 +135,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T10.6 | todo | P1 | 3 | 0% | |
 | T10.7 | todo | P2 | 2 | 0% | |
 | T10.8 | todo | P1 | 1 | 0% | |
-| T11.1 | todo | P0 | 2 | 0% | |
+| T11.1 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T11.2 | todo | P0 | 3 | 0% | |
 | T11.3 | todo | P0 | 2 | 0% | |
 | T11.4 | todo | P1 | 3 | 0% | |
@@ -463,6 +463,8 @@ Done when:
 Stage: S3 · Area: api · Depends on: T3.1 · Blocks: 3 task(s)
 
 tonic-build/prost code generation; CI runs buf breaking against main.
+
+Execution plan: 1. crates/aulo-proto: build.rs with tonic-prost-build 0.14.6 compiling proto/aulo/v1/*.proto (server and client), protoc found via PATH or protoc-bin-vendored if that is the maintained norm; lib.rs re-exports `aulo::v1`. 2. Workspace deps tonic, tonic-prost, prost, prost-types at latest. 3. .github/workflows/proto.yml: bufbuild/buf-action lint, format and breaking against main on pull requests. 4. Verify: crate builds, clippy, a test that encodes/decodes an Event; local `buf breaking --against .git#branch=main` fails on a deliberate field-number change (revert after).
 
 Done when:
 
@@ -1491,6 +1493,8 @@ Done when:
 Stage: S11 · Area: plugins · Depends on: T2.5 · Blocks: 1 task(s)
 
 aulo-plugin.toml with schemars schema: id, version, kinds (tools, stt, tts, llm-provider, skills, hooks), requested capabilities (net hosts, fs roots, exec, audio), entry (mcp-process, grpc-process, wasm).
+
+Execution plan: 1. crates/aulo-plugin-manifest (or a module in the plugin crate the spec names): PluginManifest types for aulo-plugin.toml with serde(deny_unknown_fields) and schemars, following rust.md Config files. 2. Fields: id, version (semver), kinds, capabilities (net hosts, fs roots, exec, audio), entry (mcp-process, grpc-process, wasm) with validation (id charset, non-empty kinds, entry matches kinds). 3. Committed schemas/aulo-plugin.schema.json with a stale test. 4. Tests: valid example, unknown key rejected with file name, invalid id, schema stale.
 
 Done when:
 
