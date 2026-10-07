@@ -8,7 +8,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 
 | # | Status | Priority | Complexity | Readiness | Agent |
 | --- | --- | --- | --- | --- | --- |
-| T0.5 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T0.6 | in progress | P1 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T1.1 | todo | P0 | 4 | 0% | |
 | T1.2 | todo | P0 | 3 | 0% | |
@@ -187,19 +186,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T15.5 | todo | P1 | 2 | 0% | |
 
 ## S0. Decisions and spikes
-
-### T0.5. Spike: sherpa-onnx on macOS arm64
-
-Stage: S0 · Area: spike · Depends on: T0.3 · Blocks: 2 task(s)
-
-Build the official sherpa-onnx Rust crate (1.13.x) and run its examples for Parakeet TDT v3 STT, Silero VAD, keyword spotting and Kokoro TTS. Measure build time, binary size, model sizes, real-time factor and time to first audio. Write docs/spikes/sherpa-onnx.md with numbers and sources.
-
-Execution plan: 1. Scratch Cargo project outside the workspace (scratchpad) depending on the official sherpa-onnx crate. 2. Run Silero VAD, Parakeet TDT v3 offline STT on en and ru WAVs, keyword spotting, Kokoro TTS, following the crate examples; download models from the official release URLs. 3. Measure cold build time, release binary size, model sizes, RTF, time to first audio, peak RSS. 4. Write docs/spikes/sherpa-onnx.md with numbers, versions, sources and a go/no-go.
-
-Done when:
-
-- docs/spikes/sherpa-onnx.md with measured numbers
-- go/no-go for sherpa-onnx as the default local speech backend
 
 ### T0.6. Spike: echo cancellation from Rust
 

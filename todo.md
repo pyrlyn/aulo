@@ -1,6 +1,5 @@
 # aulo — todo
 
-- T0.5. Spike: sherpa-onnx on macOS arm64
 - T0.6. Spike: echo cancellation from Rust
 - T1.1. Extract llm-wire: provider contract and neutral types
 - T1.2. Extract llm-http: credentials, retries, SSE framing

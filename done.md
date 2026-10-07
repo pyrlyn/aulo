@@ -130,3 +130,17 @@ Done when:
 - buf lint passes; spec.md API section matches the protos
 
 Outcome: proto/buf.yaml (v2, STANDARD lint, FILE breaking) and proto/aulo/v1/{common,event,chat,session,voice,approval,config,mcp,plugin,audit}.proto: ChatService, SessionService.Converse (bidi), VoiceService.Talk (bidi, 16 KiB audio frames, 32 KiB TTS chunks), ApprovalService, ConfigService (GetConfig JSON, SetConfig RFC 7386 merge patch), McpService, PluginService, AuditService (Export streams JSONL). Event oneof mirrors AuloEvent 1:1 plus agent-loop events. Size caps, untrusted fields and per-service scopes documented in comments. buf lint, build and format clean (buf 1.73.0). spec §5.2/§11 aligned (SetVoice on VoiceService; Converse/Talk Request/Response names). Follow-ups: ApprovalDecision adds DENY_ONCE; Chat.model is ModelRef while the store has one string (T3.5); daemon must enforce needs_click on Decide (T5.3).
+
+### T0.5. Spike: sherpa-onnx on macOS arm64
+
+Stage: S0 · Area: spike · Depends on: T0.3 · Blocks: 2 task(s)
+
+Build the official sherpa-onnx Rust crate (1.13.x) and run its examples for Parakeet TDT v3 STT, Silero VAD, keyword spotting and Kokoro TTS. Measure build time, binary size, model sizes, real-time factor and time to first audio. Write docs/spikes/sherpa-onnx.md with numbers and sources.
+
+
+Done when:
+
+- docs/spikes/sherpa-onnx.md with measured numbers
+- go/no-go for sherpa-onnx as the default local speech backend
+
+Outcome: docs/spikes/sherpa-onnx.md: sherpa-onnx 1.13.8 on M3 Max, GO. Prebuilt static lib (16 s cold build, 19.6 MB stripped binary). Parakeet TDT v3 int8 RTF 0.07 at 4 threads (640 MiB, 1.2-1.4 GB RSS); Kokoro fp32 RTF 0.23, first audio 0.24-0.64 s (int8 is 3x slower); KWS RTF 0.015, English only; Silero VAD RTF 0.003. Risks: the prebuilt lib links espeak-ng (GPL-3.0), which conflicts with the plugin-process rule (open question for the creator); build.rs downloads without checksum (CI needs SHERPA_ONNX_ARCHIVE_DIR); Kokoro has no Russian; a bad KWS model aborts the process, so engines belong behind a process boundary.
