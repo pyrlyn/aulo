@@ -8,21 +8,21 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 
 | # | Status | Priority | Complexity | Readiness | Agent |
 | --- | --- | --- | --- | --- | --- |
-| T1.1 | in progress | P0 | 4 | 5% | Claude Code / claude-sonnet-5-5 |
-| T1.2 | todo | P0 | 3 | 0% | |
+| T1.1 | in progress | P0 | 4 | 60% | Claude Code / claude-sonnet-5-5 |
+| T1.2 | in progress | P0 | 3 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.3 | todo | P0 | 3 | 0% | |
 | T1.4 | todo | P0 | 3 | 0% | |
 | T1.5 | todo | P0 | 2 | 0% | |
 | T1.6 | todo | P0 | 3 | 0% | |
 | T1.7 | todo | P1 | 3 | 0% | |
-| T1.8 | in progress | P0 | 3 | 5% | Claude Code / claude-sonnet-5-5 |
+| T1.8 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.9 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.10 | in progress | P0 | 2 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.11 | todo | P1 | 2 | 0% | |
 | T1.12 | in progress | P0 | 4 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.13 | in progress | P0 | 3 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.14 | todo | P1 | 2 | 0% | |
-| T1.15 | todo | P0 | 4 | 0% | |
+| T1.15 | in progress | P0 | 4 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.16 | todo | P1 | 3 | 0% | |
 | T1.17 | in progress | P1 | 3 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.18 | todo | P2 | 2 | 0% | |
@@ -181,6 +181,8 @@ Done when:
 
 Stage: S1 · Area: shared · Depends on: T1.1 · Blocks: 2 task(s)
 
+Execution plan: in a packages/crates worktree branched from t1-1-llm-wire, create llm-http (publish = false, dual licence, rust-version 1.98) from cox-provider-http: resolve_key (env first, then keyring), retry policy, SSE framing, with tests for env-first, keyring fallback and retry backoff; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption waits for publication.
+
 Move resolve_key (env var, then keyring), retry policy and SSE framing from cox-provider-http into packages/crates/llm-http.
 
 Done when:
@@ -320,6 +322,8 @@ Done when:
 ### T1.15. Extract agent-loop: neutral turn state machine
 
 Stage: S1 · Area: shared · Depends on: T1.1, T0.7 · Blocks: 2 task(s)
+
+Execution plan: in a packages/crates worktree branched from t1-1-llm-wire, create agent-loop (publish = false, dual licence, rust-version 1.98) from the neutral part of cox-core: Submission/Event, parallel and exclusive tool dispatch, approvals, interrupt via CancellationToken, max steps; tools and approvals behind traits; coding-specific parts stay in cox; tests with a scripted provider for tool calls, approval and interrupt; verify cargo clippy/fmt/test. cox adoption (T1.16) waits for publication.
 
 Per the T0.7 decision, extract the turn state machine (Submission/Event, parallel and exclusive tool dispatch, approvals, interrupt via CancellationToken, max steps) from cox-core into packages/crates/agent-loop. Coding-specific parts stay in cox.
 
