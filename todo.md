@@ -149,3 +149,9 @@
 - T15.3. Windows app and Linux packages
 - T15.4. User guide
 - T15.5. API reference
+- T16.2. `Resampler` hangs on a zero/negative input rate
+- T16.3. `OfflineStt::begin` validates language before cancelling
+- T16.4. A stale partial can overwrite a newer held transcript
+- T16.5. Windows named pipe admits any writing client as `LocalOwner`
+- T16.6. Unwired store/grants surface
+- T16.7. Small fixes batch

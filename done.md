@@ -495,3 +495,9 @@ Done when:
 - recorded-session test
 
 Outcome: New crate aulo-realtime: tokio-tungstenite client for the OpenAI Realtime and GPT-Live voice sockets, events mapped to aulo-types, client-secret minting for remote clients; ApiKey and the loopback endpoint check shared from aulo-types. Recorded-session tests replay fixtures shaped from the docs (no live key). About 840 non-test lines, kept as one task by the creator's decision. Checks: cargo test --workspace 475 passed; clippy -D warnings and fmt clean. Note for T8.11: a remote client must not talk to the model directly, because a client connection can override a minted session's instructions and tools.
+
+### T16.1. `daemon.listen` can never work: the daemon never installs an API token
+
+`crates/aulo/src/daemon/serve.rs` built `ApiServer::new(Limits::default())` without `.with_token(...)`, so `ApiServer::serve` always refused the TCP listener (`ServerError::TcpWithoutToken`, covered by `aulo-server` tests) — a user setting the documented `daemon.listen` key or `aulod --listen` got a daemon that bound the socket and then exited. The `KeychainTokenStore::load_or_create` machinery was exported but never called. Found by the 2026-10-07 audit. Fix: when `daemon.listen` asks for TCP, the daemon loads-or-creates the token (`dev.aulo.daemon` service, one keychain account per home, so a test daemon never touches the real one's) and serves with it; a unix-socket daemon still never touches the keychain, and a token failure at startup is a startup error rather than a post-bind exit.
+Model: ZCode / GLM-5.3 · Status: done 2026-10-07 · Priority: P1 · Complexity: 2 · Files: `crates/aulo/src/daemon/serve.rs`
+Check: `cargo check -p aulo` clean; `cargo test -p aulo --bin aulod` — 17 passed; the refusal path itself is pinned by `aulo-server` `auth.rs:109` and `tls.rs:165`.
