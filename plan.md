@@ -67,7 +67,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T6.7 | todo | P2 | 3 | 0% | |
 | T7.4 | todo | P0 | 3 | 0% | |
 | T7.5 | todo | P1 | 2 | 0% | |
-| T7.6 | in progress | P1 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T7.7 | todo | P2 | 3 | 0% | |
 | T7.8 | todo | P2 | 3 | 0% | |
 | T7.9 | todo | P0 | 3 | 0% | |
@@ -780,18 +779,6 @@ Whisper backend reusing the speech-capture whisper feature (cox-voice Transcribe
 Done when:
 
 - fixture transcription test
-
-### T7.6. STT: OpenAI-compatible transcription endpoint
-
-Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 0 task(s)
-
-/v1/audio/transcriptions client: works with OpenAI (GPT Transcribe), runa (local server) and other compatible servers. Streaming variant where the server supports it.
-
-Execution plan: 1. crates/aulo-speech-cloud (adapter, spec §4.2): OpenAI-compatible /v1/audio/transcriptions SttEngine. The trait is sync push/poll: frames go into a bounded buffer (cap by seconds), finish() hands the WAV-encoded utterance to a background tokio task that POSTs multipart and returns partials/final through a bounded channel; poll is try_recv. 2. Shapes: plain JSON response, and the streaming SSE variant (stream=true, transcript.text.delta/done events) when configured. 3. base_url, model, api key handle from caller; key never logged; response text capped; HTTP errors -> SpeechError::Unavailable/Failed so the registry falls back. 4. wiremock tests for both shapes, error mapping and the cap.
-
-Done when:
-
-- wiremock tests for both shapes
 
 ### T7.7. STT: Deepgram streaming
 

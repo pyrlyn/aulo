@@ -326,3 +326,16 @@ Done when:
 - tests: TCP without token is rejected; UDS from owner is accepted
 
 Outcome: aulo_server::auth: Unix socket peers must match the daemon euid (rustix); TCP needs exactly one Bearer token compared in constant time (subtle) against its SHA-256, health and reflection included; no TCP listener without an installed token. ApiToken is aulo_ + 64 hex from getrandom, redacted Debug, masked by aulo-telemetry. TokenStore with keyring 4 and in-memory stores. Windows pipe clients trust the default DACL (no per-client check without unsafe FFI). remote_auth_configured stays the non-loopback gate until TLS (T3.8); token scopes not modelled yet.
+
+### T7.6. STT: OpenAI-compatible transcription endpoint
+
+Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 0 task(s)
+
+/v1/audio/transcriptions client: works with OpenAI (GPT Transcribe), runa (local server) and other compatible servers. Streaming variant where the server supports it.
+
+
+Done when:
+
+- wiremock tests for both shapes
+
+Outcome: New adapter crate aulo-speech-cloud: CloudStt over POST /v1/audio/transcriptions (multipart WAV via hound), JSON and SSE (sse-core) shapes chosen by reply Content-Type, preallocated utterance buffer with Overflow, abort on cancel, no retries, no redirects, key never sent over plain http off loopback, error bodies never read, transcript and reply caps; 401/403/429/connect map to Unavailable for registry fallback. Registration under engine ids and [voice.stt] keys for timeouts left to the assembly task.

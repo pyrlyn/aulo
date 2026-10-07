@@ -59,7 +59,6 @@
 - T6.7. Opus for remote audio streams
 - T7.4. STT: sherpa-onnx (Parakeet TDT v3, Moonshine)
 - T7.5. STT: whisper.cpp via whisper-rs
-- T7.6. STT: OpenAI-compatible transcription endpoint
 - T7.7. STT: Deepgram streaming
 - T7.8. STT: Apple SpeechAnalyzer (macOS 26+)
 - T7.9. TTS: sherpa-onnx (Kokoro, Matcha, VITS)
