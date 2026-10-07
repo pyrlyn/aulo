@@ -455,12 +455,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "aulo-speech-local"
+version = "0.0.0"
+dependencies = [
+ "aulo-models",
+ "aulo-speech",
+ "tempfile",
+]
+
+[[package]]
 name = "aulo-speech-sherpa"
 version = "0.0.0"
 dependencies = [
  "aulo-models",
  "aulo-speech",
  "aulo-speech-bench",
+ "aulo-speech-local",
  "hound",
  "serde_json",
  "sherpa-onnx",

@@ -1,0 +1,19 @@
+[package]
+name = "aulo-speech-local"
+description = "Plumbing shared by aulo's local speech engines: the model worker thread, the one-utterance-at-a-time STT engine and catalog file checks"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+aulo-models = { path = "../aulo-models" }
+aulo-speech = { path = "../aulo-speech" }
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true

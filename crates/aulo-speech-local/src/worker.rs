@@ -14,7 +14,7 @@ use aulo_speech::SpeechError;
 /// Most threads a model may use; more than the cores only adds contention.
 pub const MAX_THREADS: u16 = 64;
 
-pub(crate) fn check_threads(threads: u16) -> Result<(), SpeechError> {
+pub fn check_threads(threads: u16) -> Result<(), SpeechError> {
     if threads == 0 || threads > MAX_THREADS {
         return Err(SpeechError::invalid("threads", "1 to 64"));
     }
@@ -22,14 +22,14 @@ pub(crate) fn check_threads(threads: u16) -> Result<(), SpeechError> {
 }
 
 /// One unit of work: an utterance to decode or a sentence to speak.
-pub(crate) trait Job: Send + 'static {
+pub trait Job: Send + 'static {
     /// Set by `cancel`, so work nobody waits for any more is skipped instead
     /// of delaying the next reply.
     fn cancelled(&self) -> bool;
 }
 
 #[derive(Debug)]
-pub(crate) struct Worker<J> {
+pub struct Worker<J> {
     jobs: SyncSender<J>,
 }
 
@@ -48,7 +48,7 @@ impl<J: Job> Worker<J> {
     /// jobs may wait behind the one running; bounded so a stalled worker turns
     /// into a fallback instead of a growing pile of work. The thread exits
     /// when the last `Worker` clone is dropped.
-    pub(crate) fn spawn<L, R>(name: &str, queue: usize, load: L) -> Result<Self, SpeechError>
+    pub fn spawn<L, R>(name: &str, queue: usize, load: L) -> Result<Self, SpeechError>
     where
         L: FnOnce() -> Result<R, SpeechError> + Send + 'static,
         R: FnMut(J),
@@ -83,7 +83,7 @@ impl<J: Job> Worker<J> {
 
     /// Never blocks; a full queue hands the job back so the engine decides
     /// whether that is a failure or an overflow.
-    pub(crate) fn submit(&self, job: J) -> Result<(), TrySendError<J>> {
+    pub fn submit(&self, job: J) -> Result<(), TrySendError<J>> {
         self.jobs.try_send(job)
     }
 }

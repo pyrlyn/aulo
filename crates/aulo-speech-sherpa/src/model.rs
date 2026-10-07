@@ -3,12 +3,13 @@
 //! returning an error, so everything that can be checked cheaply is checked
 //! here, where a failure is an ordinary `Err` and the registry falls back.
 
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
 use aulo_models::{Model, ModelKind};
 use aulo_speech::SpeechError;
+use aulo_speech_local::check_installed;
 
 /// The catalog id of the only Parakeet bundle this engine loads. Pinning the
 /// id pins the hashes too: aulo-models gives a file its final name only after
@@ -134,21 +135,7 @@ impl<'a> Bundle<'a> {
         id: &str,
         kind: ModelKind,
     ) -> Result<Self, SpeechError> {
-        if model.id != id || model.kind != kind {
-            return Err(SpeechError::unsupported(&format!("not the {id} model")));
-        }
-        for file in &model.files {
-            let size = fs::metadata(dir.join(&file.path))
-                .ok()
-                .filter(|m| m.is_file())
-                .map(|m| m.len());
-            if size != Some(file.size) {
-                return Err(SpeechError::unavailable(&format!(
-                    "{} is missing or not the pinned size; run `aulo models pull {}`",
-                    file.path, model.id
-                )));
-            }
-        }
+        check_installed(model, dir, id, kind)?;
         Ok(Self { model, dir })
     }
 
@@ -240,6 +227,8 @@ fn check_tokens(path: &Path, size: u64, numbering: Numbering) -> Result<(), Spee
 
 #[cfg(test)]
 pub(crate) mod tests {
+    use std::fs;
+
     use super::*;
     use aulo_models::ModelFile;
 

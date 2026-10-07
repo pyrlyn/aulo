@@ -11,6 +11,7 @@ publish.workspace = true
 [dependencies]
 aulo-models = { path = "../aulo-models" }
 aulo-speech = { path = "../aulo-speech" }
+aulo-speech-local = { path = "../aulo-speech-local" }
 serde_json.workspace = true
 sherpa-onnx.workspace = true
 

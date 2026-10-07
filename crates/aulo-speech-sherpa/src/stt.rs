@@ -1,31 +1,25 @@
-use std::mem;
 use std::path::Path;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::mpsc::{Receiver, SyncSender, TryRecvError, TrySendError, sync_channel};
-use std::sync::{Arc, OnceLock};
+use std::sync::OnceLock;
 use std::time::Duration;
 
 use aulo_models::Model;
 use aulo_speech::{
-    AudioFormat, AudioFrame, Capabilities, EngineInfo, EngineKind, EngineSpec, LanguageSupport,
-    PIPELINE_SAMPLE_RATE_HZ, SpeechError, SttEngine, SttPoll, Transcript, TranscriptKind, TurnId,
+    Capabilities, EngineInfo, EngineKind, EngineSpec, LanguageSupport, PIPELINE_SAMPLE_RATE_HZ,
+    SpeechError, SttEngine,
+};
+use aulo_speech_local::{
+    OfflineStt, SttJob, Worker, check_threads, decoder, max_utterance_samples,
 };
 use sherpa_onnx::{OfflineRecognizer, OfflineRecognizerConfig, OfflineTransducerModelConfig};
 
 use crate::model::{PARAKEET_MODEL_ID, ParakeetFiles};
-use crate::worker::{Job, Worker, check_threads};
+
+/// Parakeet TDT v3 on one VAD segment at a time, decoded whole on the worker
+/// after `finish`. Not streaming: no partials.
+pub type ParakeetStt = OfflineStt;
 
 /// The id config uses to pick this engine (`[voice.stt] engine = ...`).
 pub const PARAKEET_ENGINE_ID: &str = "sherpa-parakeet";
-
-/// Longest transcript handed to the pipeline, in bytes. Model output is
-/// untrusted text that ends up in a prompt; a minute of speech is about a
-/// kilobyte, so this only bites on a misbehaving model.
-pub const MAX_TRANSCRIPT_BYTES: usize = 16 * 1024;
-
-/// Upper bound for [`ParakeetConfig::max_utterance`]. The audio buffer is
-/// sized for it up front, and decoding memory grows with segment length.
-pub const MAX_UTTERANCE_LIMIT: Duration = Duration::from_secs(300);
 
 /// The 25 languages on the model card, checked 2026-10-07:
 /// <https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3>. The model detects
@@ -37,50 +31,6 @@ const LANGUAGES: [&str; 25] = [
 
 /// sherpa-onnx's name for the NeMo TDT transducer layout.
 const MODEL_TYPE: &str = "nemo_transducer";
-
-/// Utterances waiting behind the one being decoded.
-const JOB_QUEUE: usize = 4;
-
-/// One finished utterance to decode.
-#[derive(Debug)]
-pub(crate) struct SttJob {
-    samples: Vec<f32>,
-    cancelled: Arc<AtomicBool>,
-    reply: SyncSender<Reply>,
-}
-
-impl Job for SttJob {
-    fn cancelled(&self) -> bool {
-        self.cancelled.load(Ordering::Acquire)
-    }
-}
-
-/// The transcript, plus the audio buffer handed back so the engine reuses
-/// its allocation for the next utterance.
-#[derive(Debug)]
-struct Reply {
-    text: Option<String>,
-    samples: Vec<f32>,
-}
-
-/// Runs `decode` on the worker thread, one utterance per job.
-fn decoder<L, D>(load: L) -> Result<Worker<SttJob>, SpeechError>
-where
-    L: FnOnce() -> Result<D, SpeechError> + Send + 'static,
-    D: FnMut(&[f32]) -> Option<String>,
-{
-    Worker::spawn("aulo-sherpa-stt", JOB_QUEUE, move || {
-        let mut decode = load()?;
-        Ok(move |job: SttJob| {
-            let text = decode(&job.samples);
-            // The engine may have moved on; its receiver is gone then.
-            let _ = job.reply.try_send(Reply {
-                text,
-                samples: job.samples,
-            });
-        })
-    })
-}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParakeetConfig {
@@ -117,11 +67,7 @@ impl ParakeetFactory {
     /// ever sees them.
     pub fn new(model: &Model, dir: &Path, config: ParakeetConfig) -> Result<Self, SpeechError> {
         check_threads(config.threads)?;
-        if config.max_utterance.is_zero() || config.max_utterance > MAX_UTTERANCE_LIMIT {
-            return Err(SpeechError::invalid("max utterance", "0 to 5 minutes"));
-        }
-        let max_samples =
-            (config.max_utterance.as_secs_f64() * f64::from(PIPELINE_SAMPLE_RATE_HZ)) as usize;
+        let max_samples = max_utterance_samples(config.max_utterance)?;
         Ok(Self {
             files: ParakeetFiles::locate(model, dir)?,
             threads: config.threads,
@@ -145,10 +91,14 @@ impl ParakeetFactory {
             .worker
             .get_or_init(|| {
                 let (files, threads) = (self.files.clone(), self.threads);
-                decoder(move || load(files, threads))
+                decoder("aulo-sherpa-stt", move || load(files, threads))
             })
             .clone()?;
-        Ok(Box::new(ParakeetStt::new(spec, worker, self.max_samples)))
+        Ok(Box::new(OfflineStt::new(
+            info(spec),
+            worker,
+            self.max_samples,
+        )))
     }
 
     /// The closure form `EngineRegistry::register` takes.
@@ -163,7 +113,7 @@ impl ParakeetFactory {
 fn load(
     files: ParakeetFiles,
     threads: u16,
-) -> Result<impl FnMut(&[f32]) -> Option<String>, SpeechError> {
+) -> Result<impl FnMut(&[f32]) -> Result<String, SpeechError>, SpeechError> {
     let mut config = OfflineRecognizerConfig::default();
     config.model_config.transducer = OfflineTransducerModelConfig {
         encoder: Some(files.encoder),
@@ -183,187 +133,36 @@ fn load(
         let stream = recognizer.create_stream();
         stream.accept_waveform(rate, samples);
         recognizer.decode(&stream);
-        stream.get_result().map(|result| result.text)
+        stream
+            .get_result()
+            .map(|result| result.text)
+            .ok_or_else(|| SpeechError::failed("Parakeet returned no result"))
     })
 }
 
-#[derive(Debug)]
-enum State {
-    Idle,
-    Recording {
-        turn: TurnId,
-        language: Option<String>,
-    },
-    Waiting {
-        turn: TurnId,
-        language: Option<String>,
-        replies: Receiver<Reply>,
-        cancelled: Arc<AtomicBool>,
-    },
-    Delivered,
-}
-
-/// Parakeet TDT v3 on one VAD segment at a time: frames are buffered in
-/// storage sized once for the longest segment, and the whole segment is
-/// decoded on the worker after `finish`. Not streaming: no partials.
-#[derive(Debug)]
-pub struct ParakeetStt {
-    info: EngineInfo,
-    worker: Worker<SttJob>,
-    samples: Vec<f32>,
-    max_samples: usize,
-    state: State,
-}
-
-impl ParakeetStt {
-    fn new(spec: &EngineSpec, worker: Worker<SttJob>, max_samples: usize) -> Self {
-        Self {
-            info: EngineInfo {
-                id: spec.engine.clone(),
-                kind: EngineKind::Stt,
-                name: "NVIDIA Parakeet TDT 0.6B v3 (sherpa-onnx)".into(),
-                capabilities: Capabilities {
-                    streaming: false,
-                    languages: LanguageSupport::Listed(
-                        LANGUAGES.iter().map(|&tag| tag.to_owned()).collect(),
-                    ),
-                    offline: true,
-                    needs_network: false,
-                },
-            },
-            worker,
-            samples: Vec::new(),
-            max_samples,
-            state: State::Idle,
-        }
-    }
-}
-
-impl SttEngine for ParakeetStt {
-    fn info(&self) -> &EngineInfo {
-        &self.info
-    }
-
-    fn begin(&mut self, turn_id: TurnId, language: Option<&str>) -> Result<(), SpeechError> {
-        if let Some(tag) = language
-            && !self.info.capabilities.languages.supports(tag)
-        {
-            return Err(SpeechError::unsupported(tag));
-        }
-        self.cancel();
-        // Only allocates when a cancelled decode kept the previous buffer.
-        self.samples.reserve_exact(self.max_samples);
-        self.state = State::Recording {
-            turn: turn_id,
-            language: language.map(str::to_owned),
-        };
-        Ok(())
-    }
-
-    fn push(&mut self, frame: AudioFrame<'_>) -> Result<(), SpeechError> {
-        if !matches!(self.state, State::Recording { .. }) {
-            return Err(SpeechError::OutOfOrder("push outside an utterance"));
-        }
-        if frame.format() != AudioFormat::PIPELINE {
-            return Err(SpeechError::invalid("audio format", "16 kHz mono only"));
-        }
-        if self.samples.len() + frame.len() > self.max_samples {
-            return Err(SpeechError::Overflow {
-                dropped: frame.len(),
-            });
-        }
-        self.samples.extend_from_slice(frame.samples());
-        Ok(())
-    }
-
-    fn finish(&mut self) -> Result<(), SpeechError> {
-        let State::Recording { turn, language } = mem::replace(&mut self.state, State::Idle) else {
-            return Err(SpeechError::OutOfOrder("finish before begin"));
-        };
-        // One slot: the worker sends exactly one reply per job.
-        let (reply, replies) = sync_channel(1);
-        let cancelled = Arc::new(AtomicBool::new(false));
-        let samples = mem::take(&mut self.samples);
-        if samples.is_empty() {
-            // Nothing was said; the contract still wants one final.
-            let _ = reply.try_send(Reply {
-                text: Some(String::new()),
-                samples,
-            });
-        } else {
-            let job = SttJob {
-                samples,
-                cancelled: Arc::clone(&cancelled),
-                reply,
-            };
-            self.worker.submit(job).map_err(|error| match error {
-                TrySendError::Full(_) => SpeechError::failed("speech worker is busy"),
-                TrySendError::Disconnected(_) => SpeechError::unavailable("speech worker stopped"),
-            })?;
-        }
-        self.state = State::Waiting {
-            turn,
-            language,
-            replies,
-            cancelled,
-        };
-        Ok(())
-    }
-
-    fn poll(&mut self, out: &mut Transcript) -> Result<SttPoll, SpeechError> {
-        let State::Waiting {
-            turn,
-            language,
-            replies,
-            ..
-        } = &self.state
-        else {
-            return Ok(match self.state {
-                State::Delivered => SttPoll::Done,
-                _ => SttPoll::Pending,
-            });
-        };
-        let reply = match replies.try_recv() {
-            Ok(reply) => reply,
-            Err(TryRecvError::Empty) => return Ok(SttPoll::Pending),
-            Err(TryRecvError::Disconnected) => {
-                self.state = State::Idle;
-                return Err(SpeechError::failed("speech worker stopped"));
-            }
-        };
-        let Some(text) = reply.text else {
-            self.state = State::Idle;
-            return Err(SpeechError::failed("Parakeet returned no result"));
-        };
-        let text = text.trim();
-        let text = &text[..text.floor_char_boundary(MAX_TRANSCRIPT_BYTES)];
-        out.set(*turn, TranscriptKind::Final, text, language.as_deref());
-        self.samples = reply.samples;
-        self.samples.clear();
-        self.state = State::Delivered;
-        Ok(SttPoll::Updated)
-    }
-
-    fn cancel(&mut self) {
-        if let State::Waiting { cancelled, .. } = &self.state {
-            cancelled.store(true, Ordering::Release);
-        }
-        self.state = State::Idle;
-        self.samples.clear();
+/// The engine description for the registry and pickers.
+fn info(spec: &EngineSpec) -> EngineInfo {
+    EngineInfo {
+        id: spec.engine.clone(),
+        kind: EngineKind::Stt,
+        name: "NVIDIA Parakeet TDT 0.6B v3 (sherpa-onnx)".into(),
+        capabilities: Capabilities {
+            streaming: false,
+            languages: LanguageSupport::Listed(
+                LANGUAGES.iter().map(|&tag| tag.to_owned()).collect(),
+            ),
+            offline: true,
+            needs_network: false,
+        },
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Mutex;
-    use std::time::Instant;
-
     use aulo_speech::{EngineId, SpeechRate};
+    use aulo_speech_local::MAX_UTTERANCE_LIMIT;
 
     use super::*;
-
-    const FRAME: usize = 320;
-    const MAX_SAMPLES: usize = FRAME * 4;
 
     fn spec(model: Option<&str>) -> EngineSpec {
         EngineSpec {
@@ -374,137 +173,12 @@ mod tests {
         }
     }
 
-    /// An engine over a fake decoder that "hears" the sample count, and
-    /// waits on `gate` first so tests can hold a decode in flight.
-    fn engine(gate: Arc<Mutex<()>>, text: Option<&'static str>) -> ParakeetStt {
-        let worker = decoder(move || {
-            Ok(move |samples: &[f32]| {
-                let _held = gate.lock().unwrap();
-                text.map(|t| format!(" {t} {} ", samples.len()))
-            })
-        })
-        .unwrap();
-        ParakeetStt::new(&spec(None), worker, MAX_SAMPLES)
-    }
-
-    fn push(stt: &mut ParakeetStt, frames: usize) -> Result<(), SpeechError> {
-        let samples = [0.1_f32; FRAME];
-        for i in 0..frames {
-            let at = (i * FRAME) as u64;
-            stt.push(AudioFrame::new(&samples, AudioFormat::PIPELINE, at).unwrap())?;
-        }
-        Ok(())
-    }
-
-    fn wait(stt: &mut ParakeetStt, out: &mut Transcript) -> Result<SttPoll, SpeechError> {
-        let deadline = Instant::now() + Duration::from_secs(5);
-        loop {
-            match stt.poll(out)? {
-                SttPoll::Pending if Instant::now() < deadline => std::thread::yield_now(),
-                other => return Ok(other),
-            }
-        }
-    }
-
     #[test]
-    fn one_trimmed_final_per_segment_and_the_buffer_is_reused() {
-        let mut stt = engine(Arc::default(), Some("hello"));
-        let turn = TurnId::new();
-        let mut out = Transcript::with_capacity(turn, 64);
-        stt.begin(turn, Some("ru-RU")).unwrap();
-        let buffer = stt.samples.as_ptr();
-        push(&mut stt, 2).unwrap();
-        assert_eq!(stt.poll(&mut out).unwrap(), SttPoll::Pending);
-        stt.finish().unwrap();
-        assert_eq!(wait(&mut stt, &mut out).unwrap(), SttPoll::Updated);
-        assert_eq!(out.kind, TranscriptKind::Final);
-        assert_eq!(out.text, "hello 640");
-        assert_eq!(out.language.as_deref(), Some("ru-RU"));
-        assert_eq!(stt.poll(&mut out).unwrap(), SttPoll::Done);
-        stt.begin(TurnId::new(), None).unwrap();
-        assert_eq!(stt.samples.as_ptr(), buffer);
-        assert_eq!(stt.samples.capacity(), MAX_SAMPLES);
-    }
-
-    #[test]
-    fn silence_still_gets_an_empty_final() {
-        let mut stt = engine(Arc::default(), Some("never"));
-        let mut out = Transcript::with_capacity(TurnId::new(), 8);
-        stt.begin(TurnId::new(), None).unwrap();
-        stt.finish().unwrap();
-        assert_eq!(stt.poll(&mut out).unwrap(), SttPoll::Updated);
-        assert_eq!((out.kind, out.text.as_str()), (TranscriptKind::Final, ""));
-    }
-
-    #[test]
-    fn audio_past_the_cap_overflows_without_growing() {
-        let mut stt = engine(Arc::default(), Some("x"));
-        stt.begin(TurnId::new(), None).unwrap();
-        push(&mut stt, 4).unwrap();
-        assert_eq!(
-            push(&mut stt, 1).unwrap_err(),
-            SpeechError::Overflow { dropped: FRAME }
-        );
-        assert_eq!(stt.samples.capacity(), MAX_SAMPLES);
-    }
-
-    #[test]
-    fn calls_out_of_order_and_foreign_input_are_refused() {
-        let mut stt = engine(Arc::default(), Some("x"));
-        assert!(matches!(push(&mut stt, 1), Err(SpeechError::OutOfOrder(_))));
-        assert!(matches!(stt.finish(), Err(SpeechError::OutOfOrder(_))));
-        let error = stt.begin(TurnId::new(), Some("ja")).unwrap_err();
-        assert!(error.should_fall_back());
-        stt.begin(TurnId::new(), Some("uk")).unwrap();
-        let stereo = AudioFormat::new(48_000, 2).unwrap();
-        let frame = AudioFrame::new(&[0.0; 4], stereo, 0).unwrap();
-        assert!(matches!(stt.push(frame), Err(SpeechError::Invalid { .. })));
-    }
-
-    #[test]
-    fn cancel_returns_at_once_while_a_decode_is_in_flight() {
-        let gate = Arc::new(Mutex::new(()));
-        let held = gate.lock().unwrap();
-        let mut stt = engine(Arc::clone(&gate), Some("late"));
-        let mut out = Transcript::with_capacity(TurnId::new(), 8);
-        stt.begin(TurnId::new(), None).unwrap();
-        push(&mut stt, 1).unwrap();
-        stt.finish().unwrap();
-        let started = Instant::now();
-        stt.cancel();
-        assert!(started.elapsed() < Duration::from_millis(150));
-        assert_eq!(stt.poll(&mut out).unwrap(), SttPoll::Pending);
-        drop(held);
-        // The next utterance gets its own reply, never the cancelled one.
-        let turn = TurnId::new();
-        stt.begin(turn, None).unwrap();
-        push(&mut stt, 3).unwrap();
-        stt.finish().unwrap();
-        assert_eq!(wait(&mut stt, &mut out).unwrap(), SttPoll::Updated);
-        assert_eq!((out.turn_id, out.text.as_str()), (turn, "late 960"));
-    }
-
-    #[test]
-    fn a_decoder_without_a_result_fails_over() {
-        let mut stt = engine(Arc::default(), None);
-        let mut out = Transcript::with_capacity(TurnId::new(), 8);
-        stt.begin(TurnId::new(), None).unwrap();
-        push(&mut stt, 1).unwrap();
-        stt.finish().unwrap();
-        assert!(wait(&mut stt, &mut out).unwrap_err().should_fall_back());
-    }
-
-    #[test]
-    fn transcripts_are_capped_on_a_char_boundary() {
-        let long: &'static str = "я".repeat(MAX_TRANSCRIPT_BYTES).leak();
-        let mut stt = engine(Arc::default(), Some(long));
-        let mut out = Transcript::with_capacity(TurnId::new(), 8);
-        stt.begin(TurnId::new(), None).unwrap();
-        push(&mut stt, 1).unwrap();
-        stt.finish().unwrap();
-        wait(&mut stt, &mut out).unwrap();
-        assert!(out.text.len() <= MAX_TRANSCRIPT_BYTES);
-        assert!(out.text.chars().all(|c| c == 'я'));
+    fn the_engine_is_offline_and_not_streaming() {
+        let info = info(&spec(None));
+        assert!(!info.capabilities.streaming && info.capabilities.offline);
+        assert!(info.capabilities.languages.supports("ru-RU"));
+        assert!(!info.capabilities.languages.supports("ja"));
     }
 
     #[test]

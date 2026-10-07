@@ -58,18 +58,14 @@
 mod model;
 mod stt;
 mod tts;
-mod worker;
 
+pub use aulo_speech_local::{MAX_THREADS, MAX_TRANSCRIPT_BYTES, MAX_UTTERANCE_LIMIT};
 pub use model::{KOKORO_MODEL_ID, PARAKEET_MODEL_ID};
-pub use stt::{
-    MAX_TRANSCRIPT_BYTES, MAX_UTTERANCE_LIMIT, PARAKEET_ENGINE_ID, ParakeetConfig, ParakeetFactory,
-    ParakeetStt,
-};
+pub use stt::{PARAKEET_ENGINE_ID, ParakeetConfig, ParakeetFactory, ParakeetStt};
 pub use tts::{
     CHUNK_SAMPLES, KOKORO_ENGINE_ID, KOKORO_SAMPLE_RATE_HZ, KokoroConfig, KokoroFactory, KokoroTts,
     MAX_SPEECH_TEXT_BYTES,
 };
-pub use worker::MAX_THREADS;
 
 /// The CC-BY-4.0 notice for the Parakeet weights. The licence asks for the
 /// creator, a link to the licence and a note of changes.

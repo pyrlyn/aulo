@@ -38,6 +38,7 @@ const ROLES: &[(&str, Role)] = &[
     ("aulo-telemetry", Role::Adapter),
     ("aulo-models", Role::Adapter),
     ("aulo-audio", Role::Adapter),
+    ("aulo-speech-local", Role::Adapter),
     ("aulo-speech-sherpa", Role::Adapter),
     ("aulo-speech-whisper", Role::Adapter),
     ("aulo-speech-system", Role::Adapter),

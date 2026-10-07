@@ -9,13 +9,13 @@ use aulo_speech::{
     AudioFormat, Capabilities, EngineInfo, EngineKind, EngineSpec, LanguageSupport, SpeechError,
     TtsEngine, TtsPoll, TtsRequest, Voice,
 };
+use aulo_speech_local::{Job, Worker, check_threads};
 use sherpa_onnx::{
     GenerationConfig, OfflineTts, OfflineTtsConfig, OfflineTtsKokoroModelConfig,
     OfflineTtsModelConfig,
 };
 
 use crate::model::{KOKORO_MODEL_ID, KokoroFiles};
-use crate::worker::{Job, Worker, check_threads};
 
 /// The id config uses to pick this engine (`[voice.tts] engine = ...`).
 pub const KOKORO_ENGINE_ID: &str = "sherpa-kokoro";
