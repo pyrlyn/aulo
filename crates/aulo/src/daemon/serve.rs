@@ -5,12 +5,29 @@ use std::path::Path;
 
 use anyhow::{Context, Result};
 use aulo_config::Config;
+use aulo_server::auth::TokenStore;
 use aulo_server::{ApiServer, CancellationToken, Limits, Listen, TcpListen, bind};
 
 pub async fn serve(config: &Config, home: &Path) -> Result<()> {
     // Before binding, so a signal during startup still takes the clean path.
     let shutdown = CancellationToken::new();
     cancel_on_signal(&shutdown).context("cannot install the signal handlers")?;
+
+    // `ApiServer::serve` refuses a TCP listener without a token (T16.1);
+    // load-or-create one only when `daemon.listen` asks for TCP, so a
+    // unix-socket daemon never touches the keychain. Each home gets its own
+    // account, so a test daemon never reads or replaces the real one's.
+    let token = match config.daemon.listen {
+        Some(_) => Some(
+            aulo_server::auth::KeychainTokenStore::new(
+                "dev.aulo.daemon",
+                home.display().to_string(),
+            )
+            .load_or_create()
+            .context("cannot load the API token for daemon.listen")?,
+        ),
+        None => None,
+    };
 
     let mut listeners = vec![
         bind(&local_listen(home))
@@ -28,9 +45,11 @@ pub async fn serve(config: &Config, home: &Path) -> Result<()> {
     }
     tracing::info!(endpoints = listeners.len(), "aulod serving");
 
-    ApiServer::new(Limits::default())?
-        .serve(listeners, shutdown)
-        .await?;
+    let mut server = ApiServer::new(Limits::default())?;
+    if let Some(token) = &token {
+        server = server.with_token(token);
+    }
+    server.serve(listeners, shutdown).await?;
     tracing::info!("aulod stopped");
     Ok(())
 }

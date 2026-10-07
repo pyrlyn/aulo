@@ -157,6 +157,12 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T15.3 | todo | P2 | 3 | 0% | |
 | T15.4 | todo | P1 | 2 | 0% | |
 | T15.5 | in progress | P1 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
+| T16.2 | todo | P1 | 2 | 0% | |
+| T16.3 | todo | P2 | 1 | 0% | |
+| T16.4 | todo | P2 | 2 | 0% | |
+| T16.5 | todo | P2 | 3 | 0% | |
+| T16.6 | todo | P3 | 2 | 0% | |
+| T16.7 | todo | P3 | 1 | 0% | |
 
 ## S0. Decisions and spikes
 
@@ -1744,3 +1750,31 @@ Generated reference for the gRPC API from the protos (buf / protoc-gen-doc).
 Done when:
 
 - reference regenerates in CI
+
+### T16. Audit fixes (2026-10-07)
+
+Findings from a code audit on 2026-10-07. Verified-clean areas worth noting: strict input caps, constant-time token compare, pinned SHA-256 model downloads, XML/systemd/schtasks escaping, secret redaction at every sink, endpoint and model-path validation. T16.1 (daemon.listen without a token) is closed in `done.md`.
+
+### T16.2. `Resampler` hangs on a zero/negative input rate
+
+`crates/aulo-speech-system/src/resample.rs:22-28` guards only `output_hz > 0.0`; `push` (`resample.rs:35-43`) loops `while self.pos < 1.0 { …; self.pos += step; }`, which never terminates when `step <= 0`. The macOS callback path feeds `format.sampleRate()` from the buffer straight in (`src/macos/worker.rs:200-218`) — a malformed zero-rate buffer spins forever on the main dispatch queue, hanging the process. Done means: non-positive input rates are rejected (pass-through or drop), with a test.
+
+### T16.3. `OfflineStt::begin` validates language before cancelling
+
+`crates/aulo-speech-local/src/offline.rs:128-142` returns `Unsupported` before `self.cancel()`, so a previous utterance left in `Waiting` survives a failed `begin` — violating the trait contract "`begin` … implies `cancel`" (`aulo-speech/src/stt.rs:76-79`) that the other engines honour (`deepgram.rs:248-250`, `macos/stt.rs:175-176`). Done means: the cancel runs first, with a test.
+
+### T16.4. A stale partial can overwrite a newer held transcript
+
+`crates/aulo-speech-system/src/macos/stt.rs:261-267`: a final arriving before `finish` is held, but pending items in the older `partials` queue are not cleared; the next poll (`stt.rs:278-284`) delivers an older partial over the newer cumulative text until `finish` releases the held final. Done means: holding an outcome clears the partials queue, with a test.
+
+### T16.5. Windows named pipe admits any writing client as `LocalOwner`
+
+`crates/aulo-server/src/auth.rs:161-174` inserts `Caller::LocalOwner` for any pipe client, relying on the default DACL — weaker than the Unix `SO_PEERCRED` uid check (`auth.rs:136-153`) and than the module's "fails closed" claim. Done means: `GetNamedPipeClientProcessId` (or an equivalent owner check) is verified before `LocalOwner` is granted.
+
+### T16.6. Unwired store/grants surface
+
+`Store::list_chats` (`aulo-store/src/lib.rs:142-149`) plus `create_bot`/`append_message`/`record_tool_call`/`record_usage` and the whole grants/audit surface (`safety.rs:13-107`) have zero non-test callers — the daemon never opens the database (`crates/aulo/src/daemon/serve.rs` mounts no service). Expected before T4/T5 land, but until then this code runs only under test. Done means: an integration test drives the store and one grant through `aulod` (or the surface is explicitly gated).
+
+### T16.7. Small fixes batch
+
+`aulo-speech-local/src/model.rs:29-32` tells users to run `aulo models pull <id>` — no such subcommand exists (`crates/aulo/src/main.rs:18-26`); `scripts/sync-issues.py:39` crashes with a bare `KeyError` on a plan card missing from the summary table (unlike the friendly `sys.exit` at line 33); `daemon.listen` fails at two different points for non-loopback vs loopback (bind refusal at `listener.rs:84-87` vs the serve-time refusal T16.1 fixed). Done means: all three consistent.
