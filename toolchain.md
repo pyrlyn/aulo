@@ -12,6 +12,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | just | mise (`mise.toml`) | Task runner (`justfile`) | https://github.com/casey/just |
 | buf (1.73.0) | brew | Lints and builds the protos, `buf format`, breaking-change check (`proto/buf.yaml`) | https://github.com/bufbuild/buf |
 | protoc (libprotoc 36.2) | brew (`PROTOC` or `PATH`) | `aulo-proto` build script compiles `proto/aulo/v1`; not vendored so the version follows the platform package | https://github.com/protocolbuffers/protobuf |
+| sherpa-onnx native lib (1.13.8, static) | downloaded by the `sherpa-onnx-sys` build script from the k2-fsa GitHub release into `<target>/sherpa-onnx-prebuilt/`, once per target directory; offline: `SHERPA_ONNX_ARCHIVE_DIR` (directory holding the release archive) or `SHERPA_ONNX_LIB_DIR` (unpacked `lib/`) | Prebuilt sherpa-onnx and onnxruntime linked into `aulo-speech-sherpa`; contains GPL-3.0 espeak-ng (spec §17 D9) | https://github.com/k2-fsa/sherpa-onnx/releases/tag/v1.13.8 |
 | mise | brew | Pins the Rust toolchain and just | https://github.com/jdx/mise |
 | protoc-gen-doc (v1.5.1) | buf remote plugin `buf.build/community/pseudomuto-doc` (`buf.gen.yaml`), nothing to install | Generates the Markdown gRPC API reference in `docs/api/` (`just api-docs`) | https://github.com/pseudomuto/protoc-gen-doc |
 
@@ -51,6 +52,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | serde | local | https://github.com/serde-rs/serde | Serialization of ids, events and config; reply parsing in `aulo-speech-cloud` |
 | serde_json | local | https://github.com/serde-rs/json | Config schema output and overrides; round-trip tests; `cargo metadata` parsing in the dependency-graph test; reply and SSE event parsing and speech request bodies in `aulo-speech-cloud` |
 | sha2 | local | https://github.com/RustCrypto/hashes | SHA-256 of model files, hashed while they download; the API token is held only as its SHA-256 |
+| sherpa-onnx | local | https://github.com/k2-fsa/sherpa-onnx | Local speech engines, only in `aulo-speech-sherpa` (Parakeet TDT v3 STT); exact pin `=1.13.8` because `sherpa-onnx-sys` downloads the native lib of its own release |
 | sse-core | local | https://github.com/PizzasBear/sse-rs | Zero-I/O server-sent-events parser for streaming transcription replies in `aulo-speech-cloud` (`eventsource-stream` has had no release since 2022) |
 | subtle | local | https://github.com/dalek-cryptography/subtle | Constant-time comparison of the API token digest (`aulo-server`) |
 | tempfile | local (dev) | https://github.com/Stebalien/tempfile | Temporary databases and directories in tests |
