@@ -512,3 +512,8 @@ Check: `cargo test -p aulo-speech-system resample` — 5 passed (new: `a_non_pos
 `crates/aulo-speech-local/src/offline.rs` returned `unsupported` before `self.cancel()`, so an utterance left in `Recording` or `Waiting` survived a failed `begin` — violating the trait contract "`begin` … implies `cancel`" (`aulo-speech/src/stt.rs`) that deepgram and the macOS engine honour. Found by the 2026-10-07 audit. Fix: the cancel runs first; a rejected language still ends the utterance in progress.
 Model: ZCode / GLM-5.3 · Status: done 2026-10-07 · Priority: P2 · Complexity: 1 · Files: `crates/aulo-speech-local/src/offline.rs`
 Check: `cargo test -p aulo-speech-local offline` — 9 passed (new: `a_rejected_language_still_cancels_the_utterance_in_progress`); `cargo fmt --check` clean.
+### T16.4. A stale partial can overwrite a newer held transcript
+
+`crates/aulo-speech-system/src/macos/stt.rs`: when a final arrived before `finish`, the outcome was delivered as a partial and held — but items still queued in the older `partials` channel were not cleared, so the next poll drained one and delivered an older partial ("open the") over the newer held text ("Open the door.") until `finish` released the held final. Found by the 2026-10-07 audit. Fix: holding an outcome drops every partial queued behind it.
+Model: ZCode / GLM-5.3 · Status: done 2026-10-07 · Priority: P2 · Complexity: 2 · Files: `crates/aulo-speech-system/src/macos/stt.rs`
+Check: `cargo test -p aulo-speech-system stt` — 10 passed (new: `a_held_final_drops_the_partials_queued_behind_it`); `cargo fmt --check` clean.

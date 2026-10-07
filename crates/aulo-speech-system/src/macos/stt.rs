@@ -261,6 +261,10 @@ impl SttEngine for SystemStt {
             Ok(Ok(text)) => {
                 let poll = self.deliver(out, TranscriptKind::Partial, &text);
                 if let State::Live(session) = &mut self.state {
+                    // The outcome outranks anything still queued as a
+                    // partial: drop them, or the next poll would deliver an
+                    // older partial over this held text (T16.4).
+                    while session.partials.try_recv().is_ok() {}
                     session.held = Some(text);
                 }
                 return Ok(poll);
@@ -407,6 +411,40 @@ mod tests {
         assert_eq!(
             seen(&log, 2),
             [Seen::Begin("en-GB".into(), 0), Seen::Finish(fence)]
+        );
+    }
+
+    /// T16.4: an outcome held before `finish` outranks the partials still
+    /// queued behind it — they must be dropped, or the next poll would
+    /// deliver an older partial over the held text.
+    #[test]
+    fn a_held_final_drops_the_partials_queued_behind_it() {
+        let (mut stt, log, sinks) = engine();
+        let turn = TurnId::new();
+        let mut out = Transcript::with_capacity(turn, 64);
+        stt.begin(turn, Some("en")).unwrap();
+        push(&mut stt, 1).unwrap();
+        seen(&log, 1);
+        let (partials, outcome) = sink(&sinks, 0);
+        // The recognizer's last partial never made it out before the final.
+        partials.try_send("open".into()).unwrap();
+        outcome.try_send(Ok("Open the door.".into())).unwrap();
+        drop(outcome);
+        assert_eq!(stt.poll(&mut out).unwrap(), SttPoll::Updated);
+        assert_eq!(
+            (out.kind, out.text.as_str()),
+            (TranscriptKind::Partial, "Open the door.")
+        );
+        assert_eq!(
+            stt.poll(&mut out).unwrap(),
+            SttPoll::Pending,
+            "the older queued partial must not overwrite the held outcome"
+        );
+        stt.finish().unwrap();
+        assert_eq!(stt.poll(&mut out).unwrap(), SttPoll::Updated);
+        assert_eq!(
+            (out.kind, out.text.as_str()),
+            (TranscriptKind::Final, "Open the door.")
         );
     }
 
