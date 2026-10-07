@@ -8,7 +8,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 
 | # | Status | Priority | Complexity | Readiness | Agent |
 | --- | --- | --- | --- | --- | --- |
-| T0.6 | in progress | P1 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T1.1 | todo | P0 | 4 | 0% | |
 | T1.2 | todo | P0 | 3 | 0% | |
 | T1.3 | todo | P0 | 3 | 0% | |
@@ -181,18 +180,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T15.5 | todo | P1 | 2 | 0% | |
 
 ## S0. Decisions and spikes
-
-### T0.6. Spike: echo cancellation from Rust
-
-Stage: S0 · Area: spike · Depends on: T0.3 · Blocks: 2 task(s)
-
-Compare macOS Voice Processing I/O (AVAudioEngine setVoiceProcessingEnabled via objc2-avf-audio) with webrtc-audio-processing 2.x (AEC3). Play TTS through speakers while capturing; measure residual echo and false barge-ins. Write docs/spikes/aec.md.
-
-Execution plan: 1. Scratch project: macOS Voice Processing I/O via objc2-avf-audio (AVAudioEngine, setVoiceProcessingEnabled on input and output nodes). 2. Second scratch: webrtc-audio-processing 2.x AEC3 with the playback stream as far-end reference. 3. Play a speech WAV through the speakers while recording; measure residual echo energy (dB) and VAD false triggers for both, plus build complexity. 4. Write docs/spikes/aec.md with a recommendation per OS.
-
-Done when:
-
-- docs/spikes/aec.md with a recommendation per OS
 
 ## S1. Shared crates in packages/
 

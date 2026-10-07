@@ -209,3 +209,16 @@ Done when:
 - schema test; invalid manifest names the file
 
 Outcome: crates/aulo-plugin (manifest module): PluginManifest::load/from_toml for aulo-plugin.toml (id, semver version, kinds set, optional entry mcp-process/grpc-process/wasm, capabilities net/fs_read/fs_write/exec/audio), deny_unknown_fields everywhere, committed schemas/aulo-plugin.schema.json with a stale test. Untrusted-input guards: 64 KiB read cap, id [a-z][a-z0-9]*(-[a-z0-9]+)* up to 32 chars, entry must match kinds (streaming kinds need grpc-process, tools mcp-process or wasm), relative entry paths without .., host-only net patterns (no bare * or *.tld), absolute fs roots, control characters and lengths capped; errors name the file and escape echoed values. 20 tests. Open: manifest types for aulo-plugin-sdk (T11.5), exec as bool vs allowlist (T11.2), no name/description yet (T11.10).
+
+### T0.6. Spike: echo cancellation from Rust
+
+Stage: S0 · Area: spike · Depends on: T0.3 · Blocks: 2 task(s)
+
+Compare macOS Voice Processing I/O (AVAudioEngine setVoiceProcessingEnabled via objc2-avf-audio) with webrtc-audio-processing 2.x (AEC3). Play TTS through speakers while capturing; measure residual echo and false barge-ins. Write docs/spikes/aec.md.
+
+
+Done when:
+
+- docs/spikes/aec.md with a recommendation per OS
+
+Outcome: docs/spikes/aec.md (M3 Max, built-in speakers and mic, 7 s TTS echo): raw mic -40 dBFS with a never-ending false barge-in; webrtc-audio-processing 2.1.0 AEC3 27.5 dB reduction (30 dB with NS), 0 false barge-ins, cuts the first overlapping word and detects real speech ~1 s late; macOS VP-IO ~38 dB after a 0.5 s leak at playback start, 0 false barge-ins, but ducks other audio. Recommendation: macOS VP-IO default with AEC3 fallback (TTS must play through the engine; barge-in ignores the start leak); Windows 11 OS AEC on a communications WASAPI stream (needs its own spike; AEC3 bundled MSVC build reportedly fails, unverified); Linux AEC3 bundled (meson, ninja; beware Homebrew abseil linking dynamically). Open: a live human barge-in test on both; AEC3 tuning; a 7.5 s burst seen with cpal on built-in speakers.
