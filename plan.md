@@ -16,7 +16,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.6 | todo | P0 | 3 | 0% | |
 | T1.7 | todo | P1 | 3 | 0% | |
 | T1.8 | in progress | P0 | 3 | 5% | Claude Code / claude-sonnet-5-5 |
-| T1.9 | in progress | P0 | 3 | 5% | Claude Code / claude-sonnet-5-5 |
+| T1.9 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.10 | in progress | P0 | 2 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.11 | todo | P1 | 2 | 0% | |
 | T1.12 | in progress | P0 | 4 | 5% | Claude Code / claude-sonnet-5-5 |
@@ -24,7 +24,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.14 | todo | P1 | 2 | 0% | |
 | T1.15 | todo | P0 | 4 | 0% | |
 | T1.16 | todo | P1 | 3 | 0% | |
-| T1.17 | todo | P1 | 3 | 0% | |
+| T1.17 | in progress | P1 | 3 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.18 | todo | P2 | 2 | 0% | |
 | T1.19 | todo | P1 | 3 | 0% | |
 | T1.20 | todo | P2 | 3 | 0% | |
@@ -340,6 +340,8 @@ Done when:
 ### T1.17. Extract agent-ext: skills and shell hooks
 
 Stage: S1 · Area: shared · Depends on: T0.1 · Blocks: 2 task(s)
+
+Execution plan: in a packages/crates worktree branched from s1-setup, create agent-ext (publish = false, dual licence) from cox-ext: SKILL.md discovery (index line, deferred skill tool) and Claude-Code-style shell hooks (JSON on stdin, exit 2 blocks, HookChain, fail open); crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption waits for publication.
 
 Move SKILL.md discovery (index line in prompt, deferred skill tool) and Claude-Code-style shell hooks (JSON on stdin, exit 2 blocks, HookChain) from cox-ext into packages/crates/agent-ext. cox adopts it.
 
