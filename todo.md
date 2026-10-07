@@ -21,7 +21,6 @@
 - T1.19. runa: stream tokens as they are generated
 - T1.20. runa: library target for in-process local inference
 - T2.3. CI workflows
-- T2.6. Embedded default config
 - T2.10. aulo-store: full-text search over messages
 - T3.4. aulo-server: authentication
 - T3.5. aulo-server: ChatService

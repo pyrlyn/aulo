@@ -274,3 +274,16 @@ Done when:
 - integration test connects over UDS and calls health
 
 Outcome: crates/aulo-server: ApiServer::new(Limits) mounts tonic-health and reflection (v1, v1alpha) over aulo_proto::FILE_DESCRIPTOR_SET; add_service requires MessageLimits so no service is mounted without size caps (4 MiB both ways), plus per-connection concurrency 32, 64 streams, 30 s timeout. bind(Listen) fails fast: Unix socket under <home>/run (absolute path, parent 0700 or refused, symlinked parent refused, socket 0600, a live socket is never replaced, a stale one only after connection refused, non-sockets untouched), Windows named pipe (first instance, remote clients rejected; not compiled here), TCP refused on non-loopback unless remote auth is configured. serve() with CancellationToken flips health to NOT_SERVING and drains streams for 10 s. 12 tests over a real UDS incl. health, reflection, oversize, shutdown and socket safety. Follow-ups: limits into config; loopback TCP vs the TLS rule (T3.8); owner-only pipe DACL (T3.4).
+
+### T2.6. Embedded default config
+
+Stage: S2 · Area: infra · Depends on: T2.5 · Blocks: 0 task(s)
+
+config/default.toml with every assignment commented out; a test checks it parses to Config::default(). `aulo config show --origin` prints values with provenance.
+
+
+Done when:
+
+- test passes; trycmd fixture for config show
+
+Outcome: aulo-config embeds config/default.toml as DEFAULT_TOML (## prose, # commented-out settings; unset keys show an example marked unset by default); tests check it parses to Config::default() commented and uncommented, and a schema walk fails when a Config key has no line. Config::to_toml_redacted and Loaded::render_origins mask every string through aulo_telemetry::redact plus URL userinfo. crates/aulo gains a clap skeleton with `aulo config show [--origin]` and `aulo config default`; errors name the file. trycmd fixtures. Follow-ups: aulo-config now depends on aulo-telemetry for redaction (move to text-sanitize when T1.11 lands); keys print alphabetically.
