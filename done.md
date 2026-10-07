@@ -469,3 +469,16 @@ Done when:
 - time-to-first-audio test within the budget
 
 Outcome: KokoroTts in aulo-speech-sherpa (sherpa-kokoro, kokoro-multi-lang-v1_0, 24 kHz): 54 speakers with names and nine languages from the primary sources, per-text phoneme language, one job per sentence in order through the generic worker shared with Parakeet, 100 ms chunks through a per-reply channel of 8, instant cancel, text caps and cleaning; Russian and unknown voices return Unsupported for fallback. Bundle files validated before sherpa sees them, load checks 24 kHz and 54 speakers, then a warm-up. Catalog entry of 377 files with SHA-256 computed from the official k2-fsa archive (digest matched) and cross-checked against the Hugging Face commit; licence labelled Apache-2.0 AND GPL-3.0-or-later. Time to first audio 0.24 s (en) and 0.16 s (es) on 4 threads, under the 0.3 s budget. About 547 non-test lines, over the 500 cap.
+
+### T7.16. Speech benchmarks
+
+Stage: S7 · Area: speech · Depends on: T7.4, T7.9 · Blocks: 0 task(s)
+
+
+WER (runa-media word_error_rate), real-time factor and time-to-first-audio per engine on fixtures; divan benches and a report command.
+
+Done when:
+
+- aulo bench speech prints a table
+
+Outcome: Outcome: new crate aulo-speech-bench (WER as a small word-level Levenshtein, since the only crates.io candidate rwer 0.2.2 is new and heavy; embedded fixture clips; push/poll timing harness; engine discovery; table and JSON report) and `aulo bench speech [--engine ID] [--json]`. Unavailable engines get a row with the reason; cloud engines are built only when their key is set. divan benches for WER, decode, resampling and the harness. The sherpa WER test now uses the shared WordErrors. Parakeet and Kokoro rows are untested end to end without local models; ElevenLabs model and voice ids are unverified.

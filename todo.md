@@ -57,7 +57,6 @@
 - T7.5. STT: whisper.cpp via whisper-rs
 - T7.8. STT: Apple SpeechAnalyzer (macOS 26+)
 - T7.11. TTS: Windows system voices
-- T7.16. Speech benchmarks
 - T8.1. aulo-voice: conversation pipeline
 - T8.2. VAD backends
 - T8.3. Push-to-talk
