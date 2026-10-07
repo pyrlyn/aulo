@@ -12,7 +12,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.2 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.3 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.4 | in progress | P0 | 3 | 5% | Claude Code / claude-sonnet-5-5 |
-| T1.5 | in progress | P0 | 2 | 5% | Claude Code / claude-sonnet-5-5 |
+| T1.5 | in progress | P0 | 2 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.6 | todo | P0 | 3 | 0% | |
 | T1.7 | todo | P1 | 3 | 0% | |
 | T1.8 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
@@ -25,7 +25,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.15 | in progress | P0 | 4 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.16 | todo | P1 | 3 | 0% | |
 | T1.17 | in progress | P1 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
-| T1.18 | todo | P2 | 2 | 0% | |
+| T1.18 | in progress | P2 | 2 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.19 | todo | P1 | 3 | 0% | |
 | T1.20 | todo | P2 | 3 | 0% | |
 | T2.3 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
@@ -366,6 +366,8 @@ Done when:
 ### T1.18. Extract agent-host-config: register MCP servers in agent hosts
 
 Stage: S1 · Area: shared · Depends on: none · Blocks: 1 task(s)
+
+Execution plan: in a packages/crates worktree branched from s1-setup, create agent-host-config (publish = false, dual licence, MSRV of rtok) from rtok-agent-sdk register_mcp/unregister_mcp: touch only our entry, keep foreign bytes, write atomically, back up with file-backup (path dep in the same workspace); round-trip test keeps foreign keys byte-for-byte; crate-level project files like change-preview; verify cargo clippy/fmt/test. rtok adoption waits for publication.
 
 Move register_mcp/unregister_mcp, backup and atomic JSON edits from rtok-agent-sdk into packages/crates/agent-host-config (foreign-config rule: touch only our entry, keep bytes, write atomically, back up with file-backup).
 
