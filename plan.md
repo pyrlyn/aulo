@@ -55,7 +55,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T5.11 | todo | P1 | 2 | 0% | |
 | T5.12 | todo | P1 | 3 | 0% | |
 | T5.13 | todo | P1 | 2 | 0% | |
-| T6.1 | in progress | P0 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
+| T6.1 | in progress | P0 | 3 | 90% | Claude Code / claude-sonnet-5-5 |
 | T6.2 | todo | P0 | 2 | 0% | |
 | T6.3 | todo | P1 | 2 | 0% | |
 | T6.4 | todo | P1 | 4 | 0% | |
@@ -688,6 +688,8 @@ Stage: S6 · Area: audio · Depends on: T1.13, T2.4 · Blocks: 3 task(s)
 speech-capture behind an aulo trait: device by name or default, 16 kHz mono f32 frames of 20 ms into a lock-free ring buffer (ringbuf), overflow counted, never blocks the audio thread.
 
 Execution plan: new crate aulo-audio with a capture trait over speech-capture (path dependency on the extracted crate until it is published; branch stays unmerged until then), device by name or default, 20 ms 16 kHz mono frames into a ringbuf, overflow counter; fake-device tests.
+
+Status: implemented on branch t6-1-audio-capture (aulo-audio wraps speech-capture's new streaming `InputDevice`, added in packages/crates branch t1-13-speech-capture); merges once speech-capture is published. Manual check left: `cargo test -p aulo-audio --test real_device -- --ignored --nocapture` on macOS.
 
 Done when:
 
