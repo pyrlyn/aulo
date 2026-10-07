@@ -17,10 +17,10 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.7 | todo | P1 | 3 | 0% | |
 | T1.8 | in progress | P0 | 3 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.9 | in progress | P0 | 3 | 5% | Claude Code / claude-sonnet-5-5 |
-| T1.10 | in progress | P0 | 2 | 5% | Claude Code / claude-sonnet-5-5 |
+| T1.10 | in progress | P0 | 2 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.11 | todo | P1 | 2 | 0% | |
 | T1.12 | in progress | P0 | 4 | 5% | Claude Code / claude-sonnet-5-5 |
-| T1.13 | todo | P0 | 3 | 0% | |
+| T1.13 | in progress | P0 | 3 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.14 | todo | P1 | 2 | 0% | |
 | T1.15 | todo | P0 | 4 | 0% | |
 | T1.16 | todo | P1 | 3 | 0% | |
@@ -298,6 +298,8 @@ Done when:
 ### T1.13. Extract speech-capture: microphone capture and resampling
 
 Stage: S1 · Area: shared · Depends on: T0.1 · Blocks: 2 task(s)
+
+Execution plan: in a packages/crates worktree branched from s1-setup, create speech-capture (publish = false, dual licence) merging cox-voice capture (cpal default device, downmix, rubato to 16 kHz) with runa-media decode/resample/energy VAD; whisper behind a feature; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox and runa adoption waits for publication.
 
 Merge cox-voice capture (cpal default device, downmix, rubato to 16 kHz) with runa-media decode/resample/energy VAD into packages/crates/speech-capture. cox and runa adopt it; whisper transcription stays behind a feature.
 
