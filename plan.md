@@ -8,18 +8,18 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 
 | # | Status | Priority | Complexity | Readiness | Agent |
 | --- | --- | --- | --- | --- | --- |
-| T1.1 | todo | P0 | 4 | 0% | |
+| T1.1 | in progress | P0 | 4 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.2 | todo | P0 | 3 | 0% | |
 | T1.3 | todo | P0 | 3 | 0% | |
 | T1.4 | todo | P0 | 3 | 0% | |
 | T1.5 | todo | P0 | 2 | 0% | |
 | T1.6 | todo | P0 | 3 | 0% | |
 | T1.7 | todo | P1 | 3 | 0% | |
-| T1.8 | todo | P0 | 3 | 0% | |
-| T1.9 | todo | P0 | 3 | 0% | |
-| T1.10 | todo | P0 | 2 | 0% | |
+| T1.8 | in progress | P0 | 3 | 5% | Claude Code / claude-sonnet-5-5 |
+| T1.9 | in progress | P0 | 3 | 5% | Claude Code / claude-sonnet-5-5 |
+| T1.10 | in progress | P0 | 2 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.11 | todo | P1 | 2 | 0% | |
-| T1.12 | todo | P0 | 4 | 0% | |
+| T1.12 | in progress | P0 | 4 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.13 | todo | P0 | 3 | 0% | |
 | T1.14 | todo | P1 | 2 | 0% | |
 | T1.15 | todo | P0 | 4 | 0% | |
@@ -168,6 +168,8 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 
 Stage: S1 · Area: shared · Depends on: T0.1, T0.7 · Blocks: 3 task(s)
 
+Execution plan: in a packages/crates worktree branched from s1-setup, create llm-wire (publish = false, dual licence) with the provider trait and neutral types copied from cox-protocol plus their tests; Replay/Scripted fakes behind `test-util`; crate-level AGENTS.md, README.md, plan.md, todo.md, done.md, roadmap.md, ideas.md, toolchain.md like change-preview; verify cargo clippy/fmt/test in packages/crates. cox re-export waits until the crate is published (crates.io or a git dependency), because a path dependency breaks cox CI.
+
 Move the provider trait and the neutral types (Request, ProviderEvent, Caps, ToolSpec, Usage, Risk) out of cox-protocol into packages/crates/llm-wire. No behaviour change. Keep the Replay/Scripted fakes behind a test-util feature.
 
 Done when:
@@ -239,6 +241,8 @@ Done when:
 
 Stage: S1 · Area: shared · Depends on: T0.1 · Blocks: 1 task(s)
 
+Execution plan: in a packages/crates worktree branched from s1-setup, create perm-rules (publish = false, dual licence) from cox-permission with a neutral, extensible subject type and its rule-grammar and decision-order tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption waits for publication (a path dependency breaks cox CI).
+
 Move cox-permission (rule grammar such as Bash(git commit:*), Edit(src/**), mcp__srv__*, decision order, risk fallback) into packages/crates/perm-rules with neutral subject types so aulo can add App(...) and Site(...) subjects. cox adopts it.
 
 Done when:
@@ -249,6 +253,8 @@ Done when:
 
 Stage: S1 · Area: shared · Depends on: T0.1 · Blocks: 1 task(s)
 
+Execution plan: in a packages/crates worktree branched from s1-setup, create proc-sandbox (publish = false, dual licence) from cox-sandbox with its tests (macOS and Linux paths cfg-gated); crate-level project files like change-preview; verify cargo clippy/fmt/test on macOS. cox adoption waits for publication.
+
 Move cox-sandbox (SandboxMode, command wrapping, argv for PTYs, path::confine) into packages/crates/proc-sandbox. cox adopts it.
 
 Done when:
@@ -258,6 +264,8 @@ Done when:
 ### T1.10. Extract shell-classify: bash risk classifier
 
 Stage: S1 · Area: shared · Depends on: T0.1 · Blocks: 1 task(s)
+
+Execution plan: in a packages/crates worktree branched from s1-setup, create shell-classify (publish = false, dual licence) from cox-tools/src/bash/classify.rs with its fixture tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption waits for publication.
 
 Move the tree-sitter bash classifier from cox-tools/src/bash/classify.rs into packages/crates/shell-classify (ReadOnly, Write, Exec, Destructive).
 
@@ -278,6 +286,8 @@ Done when:
 ### T1.12. Extract mcp-host: MCP client with discovery and OAuth
 
 Stage: S1 · Area: shared · Depends on: T0.1 · Blocks: 1 task(s)
+
+Execution plan: in a packages/crates worktree branched from s1-setup, create mcp-host (publish = false, dual licence) from the cox-mcp client parts on rmcp 3.x with the fail-open and discovery tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption waits for publication.
 
 Move cox-mcp client parts (connect_all that turns a failing server into a notice, .mcp.json discovery with ${VAR} expansion, OAuth with injectable store, elicitation mapping, deferred tools) into packages/crates/mcp-host on rmcp 3.x. cox adopts it.
 
