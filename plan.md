@@ -60,7 +60,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T6.3 | todo | P1 | 2 | 0% | |
 | T6.4 | todo | P1 | 4 | 0% | |
 | T6.5 | todo | P1 | 3 | 0% | |
-| T6.6 | in progress | P1 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
+| T6.6 | in progress | P1 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T6.7 | in progress | P2 | 3 | 90% | Claude Code / claude-sonnet-5-5 |
 | T7.5 | in progress | P1 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T7.8 | in progress | P2 | 3 | 90% | Claude Code / claude-opus-5-5 |
@@ -743,6 +743,8 @@ Stage: S6 · Area: audio · Depends on: T6.1 · Blocks: 0 task(s)
 Detect a denied microphone (macOS TCC, Windows privacy settings) and report a clear notice with the fix instead of silence.
 
 Execution plan: a permission probe trait in aulo-audio (stacked on t6-1-audio-capture) with macOS TCC and Windows privacy implementations behind cfg, mapping a denied microphone to a notice with the fix; fake-probe tests for the notice text.
+
+Status: implemented on branch t6-6-mic-permission (MicPermission probe: macOS AVAudioApplication.recordPermission, Windows consent-store registry via windows-registry, Linux Unknown; notices name the settings path; `Capture::start_checked`; SilenceWatch for all-zero input). Open: whether NotDetermined should block the daemon (TCC can kill a launchd process that prompts); the Windows probe is compiled, never run. Merges with T6.1.
 
 Done when:
 
