@@ -20,7 +20,14 @@ pub struct Resampler {
 impl Resampler {
     pub fn new(input_hz: f64, output_hz: u32) -> Self {
         let output_hz = f64::from(output_hz);
-        let differs = (input_hz - output_hz).abs() >= SAME_RATE_EPSILON_HZ && output_hz > 0.0;
+        // A non-positive input rate — a malformed buffer reporting 0 Hz,
+        // which the macOS callback path feeds in straight from
+        // `format.sampleRate()` — must pass through: a step of zero or less
+        // never advances `pos`, and the emit loop in `push` would spin
+        // forever on the main dispatch queue (T16.2).
+        let differs = (input_hz - output_hz).abs() >= SAME_RATE_EPSILON_HZ
+            && input_hz > 0.0
+            && output_hz > 0.0;
         Self {
             step: differs.then(|| input_hz / output_hz),
             pos: 0.0,
@@ -53,6 +60,20 @@ mod tests {
             resampler.push(sample, |s| out.push(s));
         }
         out
+    }
+
+    /// T16.2: a non-positive input rate (a malformed buffer reporting 0 Hz
+    /// from the macOS callback path) passes through instead of spinning in
+    /// the emit loop forever — before the guard, `step <= 0` never advanced
+    /// `pos` and `push` hung the main dispatch queue.
+    #[test]
+    fn a_non_positive_input_rate_passes_through() {
+        for broken in [0.0, -16000.0] {
+            let mut r = Resampler::new(broken, 48_000);
+            let input = [0.1, -0.2, 0.3];
+            let out = run(&mut r, &input);
+            assert_eq!(out, input, "{broken} Hz must pass samples through");
+        }
     }
 
     #[test]

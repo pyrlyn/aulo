@@ -157,7 +157,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T15.3 | todo | P2 | 3 | 0% | |
 | T15.4 | todo | P1 | 2 | 0% | |
 | T15.5 | in progress | P1 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
-| T16.2 | todo | P1 | 2 | 0% | |
 | T16.3 | todo | P2 | 1 | 0% | |
 | T16.4 | todo | P2 | 2 | 0% | |
 | T16.5 | todo | P2 | 3 | 0% | |
@@ -1754,10 +1753,6 @@ Done when:
 ### T16. Audit fixes (2026-10-07)
 
 Findings from a code audit on 2026-10-07. Verified-clean areas worth noting: strict input caps, constant-time token compare, pinned SHA-256 model downloads, XML/systemd/schtasks escaping, secret redaction at every sink, endpoint and model-path validation. T16.1 (daemon.listen without a token) is closed in `done.md`.
-
-### T16.2. `Resampler` hangs on a zero/negative input rate
-
-`crates/aulo-speech-system/src/resample.rs:22-28` guards only `output_hz > 0.0`; `push` (`resample.rs:35-43`) loops `while self.pos < 1.0 { …; self.pos += step; }`, which never terminates when `step <= 0`. The macOS callback path feeds `format.sampleRate()` from the buffer straight in (`src/macos/worker.rs:200-218`) — a malformed zero-rate buffer spins forever on the main dispatch queue, hanging the process. Done means: non-positive input rates are rejected (pass-through or drop), with a test.
 
 ### T16.3. `OfflineStt::begin` validates language before cancelling
 
