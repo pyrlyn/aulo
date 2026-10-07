@@ -27,8 +27,10 @@ pub fn check_installed(
             .map(|m| m.len());
         if size != Some(file.size) {
             return Err(SpeechError::unavailable(&format!(
-                "{} is missing or not the pinned size; run `aulo models pull {}`",
-                file.path, model.id
+                "{} under {} is missing or not the pinned size for model {}",
+                file.path,
+                dir.display(),
+                model.id
             )));
         }
     }
