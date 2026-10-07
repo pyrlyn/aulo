@@ -29,7 +29,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.19 | todo | P1 | 3 | 0% | |
 | T1.20 | todo | P2 | 3 | 0% | |
 | T2.3 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
-| T2.6 | todo | P1 | 1 | 0% | |
+| T2.6 | in progress | P1 | 1 | 0% | Claude Code / claude-sonnet-5-5 |
 | T2.10 | todo | P2 | 2 | 0% | |
 | T3.3 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T3.4 | todo | P0 | 3 | 0% | |
@@ -402,6 +402,8 @@ Done when:
 Stage: S2 · Area: infra · Depends on: T2.5 · Blocks: 0 task(s)
 
 config/default.toml with every assignment commented out; a test checks it parses to Config::default(). `aulo config show --origin` prints values with provenance.
+
+Execution plan: 1. crates/aulo-config/config/default.toml: every section and key of Config with its default, all assignments commented out, short why-comments; embedded with include_str! and exposed as DEFAULT_TOML. 2. Test: uncommenting every assignment parses to Config::default() (and the file as shipped parses to the default too); a test fails when a Config field is missing from the file. 3. crates/aulo: clap CLI skeleton with `aulo config show [--origin]` printing effective values (TOML) or key = value  # origin lines from Provenance; `aulo config default` prints DEFAULT_TOML. 4. Tests: CLI output snapshot via assert_cmd or a direct function test.
 
 Done when:
 
