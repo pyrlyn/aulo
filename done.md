@@ -430,3 +430,16 @@ Done when:
 - recorded-session test
 
 Outcome: ElevenLabsTts in aulo-speech-cloud over the stream-input WebSocket (tokio-tungstenite with rustls, base64, futures-util): xi-api-key header never in the URL, validated voice id in the path, pcm_<rate> output, init/text/close message sequence with a flush per sentence so the first one plays early, audio through the shared bounded reply queues (new private reply.rs shared with OpenAI TTS), abort on cancel or begin, message, audio and text caps; auth, quota, rate and connect failures map to Unavailable and server text is never echoed. Verified against a synthetic recorded session only; error and close-code layout marked unverified. About 550 net lines including the moved reply code.
+
+### T7.12. TTS: Linux speech-dispatcher / espeak-ng
+
+Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 0 task(s)
+
+
+Speech-dispatcher (SSIP) or espeak-ng subprocess as the zero-download fallback voice.
+
+Done when:
+
+- test on the Linux runner with espeak-ng installed
+
+Outcome: espeak module in aulo-speech-system (compiles and is tested on every OS; exported as the Linux system engine): one espeak-ng process per sentence with text on stdin, no shell, voice ids only from --voices, sample rate probed from the WAV header and checked per utterance, decoding through hound into a fixed 2^18-sample ring with backpressure and counted drops, cancel and Drop kill and reap the child, a generation fence against stale audio. speech-dispatcher left out: it plays audio itself and would bypass aulo-audio and AEC. The binary path is trusted startup config, never EngineSpec.model. Linux CI installs espeak-ng; the real-binary test is unverified until CI runs. About 584 non-test lines, over the 500 cap.
