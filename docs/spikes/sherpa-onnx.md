@@ -1,6 +1,6 @@
 # Spike T0.5: sherpa-onnx on macOS arm64
 
-Verdict: **GO** for sherpa-onnx as the default local speech backend, with one open licence question (espeak-ng is GPL-3.0 and is statically linked, see Risks R1).
+Verdict: **GO** for sherpa-onnx as the default local speech backend, espeak-ng is GPL-3.0 and is statically linked (R1); the creator accepted the GPL (spec §17 D9).
 
 Checked 2026-10-07. Scratch project (not in the repo): `/private/tmp/claude-501/-Users-listepo-GitHub-listepo/565734e4-fe95-469c-8f24-2a200fc4f56b/scratchpad/t0.5`.
 
@@ -60,7 +60,7 @@ Not measured: all four engines resident in one process (the sum of the peaks abo
 
 ## Risks for T5.x / T6.x
 
-- **R1 (licence, needs creator decision):** the prebuilt static lib contains `libespeak-ng.a` and `libpiper_phonemize.a`, and the final binary exports `espeak_*` symbols (`nm -gU`). espeak-ng is GPL-3.0 ([repo licence, checked 2026-10-07](https://github.com/espeak-ng/espeak-ng)); sherpa-onnx's own build pulls a fork of it ([cmake/espeak-ng-for-piper.cmake @ v1.13.8](https://github.com/k2-fsa/sherpa-onnx/blob/v1.13.8/cmake/espeak-ng-for-piper.cmake)). AGENTS.md says GPL code only runs as a separate plugin process, so linking this crate into `aulod` conflicts with that rule. Options: run TTS (or all of sherpa-onnx) as a separate process; build sherpa-onnx from source without espeak/TTS and use VAD+KWS+STT in-process; or accept GPL. I have not decided this.
+- **R1 (licence, decided: GPL accepted, spec §17 D9):** the prebuilt static lib contains `libespeak-ng.a` and `libpiper_phonemize.a`, and the final binary exports `espeak_*` symbols (`nm -gU`). espeak-ng is GPL-3.0 ([repo licence, checked 2026-10-07](https://github.com/espeak-ng/espeak-ng)); sherpa-onnx's own build pulls a fork of it ([cmake/espeak-ng-for-piper.cmake @ v1.13.8](https://github.com/k2-fsa/sherpa-onnx/blob/v1.13.8/cmake/espeak-ng-for-piper.cmake)). AGENTS.md says GPL code only runs as a separate plugin process, so linking this crate into `aulod` conflicts with that rule. The options were a separate process, a source build without espeak, or accepting the GPL; the creator accepted the GPL.
 - **R2 (build):** `build.rs` downloads a 21 MB archive from GitHub at build time. CI and reproducible/offline builds must set `SHERPA_ONNX_ARCHIVE_DIR` or vendor the archive, and pin its checksum (`build.rs` in 1.13.8 contains no checksum or digest verification).
 - **R3 (memory/latency):** Parakeet needs about 1.4 GB RSS and 640 MiB on disk; Kokoro fp32 about 0.9 GB. Ship fp32 Kokoro (int8 is slower on Apple silicon). Keep the first sentence of a reply short to get time-to-first-audio under 0.3 s; use at least 4 threads (1 thread gives Kokoro RTF 0.78 and STT 0.25).
 - **R4 (languages):** Russian STT works (Parakeet v3), Russian TTS does not exist in Kokoro; the aulo default voice stack for ru needs a second TTS engine behind the same trait.

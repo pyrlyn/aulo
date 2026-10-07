@@ -577,6 +577,7 @@ Settled by the creator on 2026-10-07 (details in `done.md`):
 - **D6** The API is gRPC (tonic and prost), not HTTP/JSON. Creator, 2026-10-07.
 - **D7** There are two deployment shapes: a desktop app with chats, and a server with an API. Creator, 2026-10-07.
 - **D8** The repository is the public `pyrlyn/aulo`. Creator, 2026-10-07.
+- **D9** sherpa-onnx links espeak-ng (GPL-3.0) in-process; the GPL is accepted. A build that contains sherpa-onnx TTS is distributed under GPL-3.0-or-later only, so the royalty-free and commercial options of D1 do not cover it. Other GPL engines (Piper) still run as separate plugin processes. Creator, 2026-10-07 (sherpa-onnx spike, risk R1).
 
 Open:
 
@@ -590,6 +591,6 @@ Open:
 | Echo makes barge-in fire on aulo's own voice | T0.6 spike, VP-IO / AEC3, headphones mode, barge-in sensitivity |
 | Prompt injection through web pages and screenshots | Untrusted-content guards, sentinel, blocklist, read-only unattended mode |
 | The model acts on the wrong window or element | Accessibility refs before pixels, batched actions stop on failure, screen viewer and kill switch |
-| Licence mix (Piper GPL, model licences such as CC BY-NC) | D1 keeps aulo GPL-compatible; Piper only as a separate plugin; model licences checked in the model manager table |
+| Licence mix (espeak-ng and Piper GPL, model licences such as CC BY-NC) | D1 keeps aulo GPL-compatible; D9 accepts espeak-ng inside sherpa-onnx; Piper only as a separate plugin; model licences checked in the model manager table |
 | Extraction work in cox delays aulo | S1 tasks run in parallel with S2–S3, which do not depend on them |
 | runa streaming latency | T1.19, or Ollama/LM Studio until it lands |
