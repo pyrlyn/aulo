@@ -65,7 +65,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T7.5 | todo | P1 | 2 | 0% | |
 | T7.8 | in progress | P2 | 3 | 90% | Claude Code / claude-opus-5-5 |
 | T7.11 | in progress | P2 | 3 | 90% | Claude Code / claude-sonnet-5-5 |
-| T7.16 | todo | P2 | 2 | 0% | |
+| T7.16 | in progress | P2 | 2 | 5% | Claude Code / claude-sonnet-5-5 |
 | T8.1 | todo | P0 | 4 | 0% | |
 | T8.2 | todo | P0 | 2 | 0% | |
 | T8.3 | todo | P0 | 2 | 0% | |
@@ -787,6 +787,8 @@ Done when:
 ### T7.16. Speech benchmarks
 
 Stage: S7 · Area: speech · Depends on: T7.4, T7.9 · Blocks: 0 task(s)
+
+Execution plan: in an aulo worktree, add WER, real-time factor and time-to-first-audio measurement per installed engine on fixture clips (WER from a maintained crates.io crate if one fits, otherwise a small word-level edit distance with a note about runa-media word_error_rate), divan benches, and an `aulo bench speech` command that prints a table; tests on fixtures without network; verify clippy/fmt/test for the workspace.
 
 WER (runa-media word_error_rate), real-time factor and time-to-first-audio per engine on fixtures; divan benches and a report command.
 
