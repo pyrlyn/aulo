@@ -39,12 +39,13 @@ jobs:
       # The reusable workflow has no package input, only this hook, so the system packages
       # are installed here. crates/aulo-proto needs `protoc` on every runner (its build script
       # takes it from PATH, never vendored); the audio crates need ALSA headers on Linux, and
-      # espeak-ng lets the Linux system-voice test run against the real binary.
+      # espeak-ng lets the Linux system-voice test run against the real binary. libprotobuf-dev
+      # carries the well-known types (timestamp.proto) that --no-install-recommends drops.
       setup-command: |
         case "$RUNNER_OS" in
           Linux)
             sudo apt-get update -qq
-            sudo apt-get install -y --no-install-recommends espeak-ng libasound2-dev protobuf-compiler
+            sudo apt-get install -y --no-install-recommends espeak-ng libasound2-dev libprotobuf-dev protobuf-compiler
             ;;
           macOS)
             HOMEBREW_NO_AUTO_UPDATE=1 brew install protobuf
