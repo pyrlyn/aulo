@@ -4,7 +4,7 @@ status.code = 0
 stdout = """
 Manage aulod as a user service that starts at login
 
-Usage: aulod service [OPTIONS] <COMMAND>
+Usage: aulod[EXE] service [OPTIONS] <COMMAND>
 
 Commands:
   install    Install and start aulod as a user service that starts at login

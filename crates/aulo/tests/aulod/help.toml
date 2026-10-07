@@ -4,7 +4,7 @@ status.code = 0
 stdout = """
 The aulo daemon
 
-Usage: aulod [OPTIONS] [COMMAND]
+Usage: aulod[EXE] [OPTIONS] [COMMAND]
 
 Commands:
   run      Run the daemon in the foreground (the default)
