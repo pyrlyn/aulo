@@ -71,7 +71,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T6.6 | todo | P1 | 2 | 0% | |
 | T6.7 | todo | P2 | 3 | 0% | |
 | T7.2 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
-| T7.3 | in progress | P0 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T7.4 | todo | P0 | 3 | 0% | |
 | T7.5 | todo | P1 | 2 | 0% | |
 | T7.6 | todo | P1 | 3 | 0% | |
@@ -833,18 +832,6 @@ Execution plan: 1. In aulo-speech (or aulo-voice if the spec puts it there): Eng
 Done when:
 
 - test switches TTS mid-chat; a failing engine falls back with a notice
-
-### T7.3. Model manager
-
-Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 4 task(s)
-
-Download speech models from Hugging Face with pinned SHA-256 (cox whisper-models.json pattern) into ~/.aulo/models, progress events, aulo models pull/ls/rm. Refuse a hash mismatch.
-
-Execution plan: 1. Model catalog file (models.json-like, committed, with schema per rust.md Config files) listing id, kind, files with URL, size and SHA-256 pinned to a Hugging Face revision. 2. Downloader (reqwest streaming, rustls) into <AULO_HOME>/models/<id>/ via a .part file, hashing while streaming, atomic rename, refuses a hash or size mismatch and deletes the partial; resumable via Range when supported; progress callback. 3. pull/ls/rm library API (CLI wiring later). 4. Tests against a local HTTP server fixture: success, hash mismatch refused, size cap, rm, ls; no real network in tests.
-
-Done when:
-
-- test: corrupted download is rejected
 
 ### T7.4. STT: sherpa-onnx (Parakeet TDT v3, Moonshine)
 

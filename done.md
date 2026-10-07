@@ -235,3 +235,16 @@ Done when:
 - insta snapshot tests for en and ru
 
 Outcome: crates/aulo-voice (domain): speakable(markdown, SpeakOptions) strips markdown (pulldown-cmark), turns code blocks and tables into "It's on the screen." / "Это на экране.", URLs into hosts, removes bidi/control/zero-width characters, expands %, decimals and ~24 units with Russian plurals, caps input at 64 KiB and speech at 2000 chars. SentenceSplitter and SpeakableStream emit whole sentences from deltas (abbreviation-aware, max chunk) so TTS starts after the first paragraph. detect_language guesses en/ru. insta golden snapshots for en and ru. Limits: numbers not spelled out; dates, times, versions, compound units left as written; the stream waits for a blank line or ~1 KiB.
+
+### T7.3. Model manager
+
+Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 4 task(s)
+
+Download speech models from Hugging Face with pinned SHA-256 (cox whisper-models.json pattern) into ~/.aulo/models, progress events, aulo models pull/ls/rm. Refuse a hash mismatch.
+
+
+Done when:
+
+- test: corrupted download is rejected
+
+Outcome: crates/aulo-models (adapter; added to spec §4.2 and the deps ROLES): embedded data/models.json catalog with schema and stale test (pinned base_url, files with size and sha256; ids and paths reject .., absolute, \, :, .part). ModelManager list/path/pull/remove under <AULO_HOME>/models/<id>/: streams into .part while hashing, caps at the catalog size, fsyncs and renames atomically, refuses hash or size mismatch and deletes the partial, resumes via Range with Content-Range checks, 5 redirects max, timeouts. reqwest 0.13 (rustls), sha2. 14 wiremock tests including a corrupted download. Catalog seeded with Parakeet TDT v3 int8 pinned to HF commit 2bda32e. Left out: Silero VAD and KWS (GitHub release assets without published digests), Kokoro (378 files; needs a catalog generator), tar.bz2 archives.
