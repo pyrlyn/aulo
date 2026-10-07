@@ -183,3 +183,16 @@ Done when:
 - generated crate builds; CI fails on a breaking field change
 
 Outcome: crates/aulo-proto: build.rs (tonic-prost-build 0.14.6, returns Result) compiles all ten proto/aulo/v1 files, server and client; lib.rs exposes aulo::v1 via include_proto!; generated code passes workspace lints without allows. protoc from PROTOC or PATH. .github/workflows/proto.yml runs buf lint, format and breaking against the PR base (bufbuild/buf-action v1.6.0 and actions/checkout v7.0.1 pinned by SHA). Proven locally: renumbering UserTurn.text makes buf breaking exit 100. 2 round-trip tests. Follow-ups: the Rust CI workflow (T2.3) must install protoc; vendoring protoc is open; the workflow has not run on GitHub yet.
+
+### T2.2. Dependency-graph test
+
+Stage: S2 · Area: infra · Depends on: T2.1 · Blocks: 0 task(s)
+
+crates/aulo/tests/deps.rs reads cargo metadata and enforces crate roles: contracts have no I/O deps, only surfaces depend on clap/anyhow, one owner crate per heavy dependency (diesel, tonic, sherpa-onnx, wasmtime).
+
+
+Done when:
+
+- the test fails when a contract crate pulls tokio::fs or reqwest
+
+Outcome: crates/aulo/tests/deps.rs parses `cargo metadata --no-deps` (as cox does) against a ROLES table for all 27 spec §4.2 crates: every crate must have a role; dependencies point down only (contract < domain/adapter < assembly < surface, nothing depends on a surface, only a testkit on the testkit); contracts have no I/O deps (tokio, reqwest, hyper, cpal, diesel, wasmtime, uniffi, sherpa-onnx, chromiumoxide, ...); only aulo and aulo-ffi use clap/anyhow; one owner per heavy dependency (diesel -> aulo-store, prost -> aulo-proto, tonic -> aulo-proto/aulo-server/aulo-app, tonic-health/reflection -> aulo-server, sherpa-onnx, whisper, wasmtime, chromiumoxide, uniffi). A synthetic bad graph test asserts each message. Proven by temporarily adding tokio, clap and diesel to aulo-types.

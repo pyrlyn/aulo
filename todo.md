@@ -21,7 +21,6 @@
 - T1.18. Extract agent-host-config: register MCP servers in agent hosts
 - T1.19. runa: stream tokens as they are generated
 - T1.20. runa: library target for in-process local inference
-- T2.2. Dependency-graph test
 - T2.3. CI workflows
 - T2.6. Embedded default config
 - T2.10. aulo-store: full-text search over messages

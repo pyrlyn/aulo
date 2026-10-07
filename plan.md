@@ -29,7 +29,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.18 | todo | P2 | 2 | 0% | |
 | T1.19 | todo | P1 | 3 | 0% | |
 | T1.20 | todo | P2 | 3 | 0% | |
-| T2.2 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T2.3 | todo | P0 | 2 | 0% | |
 | T2.6 | todo | P1 | 1 | 0% | |
 | T2.10 | todo | P2 | 2 | 0% | |
@@ -400,18 +399,6 @@ Done when:
 - aulo can call runa's pool from a test
 
 ## S2. Workspace foundations
-
-### T2.2. Dependency-graph test
-
-Stage: S2 · Area: infra · Depends on: T2.1 · Blocks: 0 task(s)
-
-crates/aulo/tests/deps.rs reads cargo metadata and enforces crate roles: contracts have no I/O deps, only surfaces depend on clap/anyhow, one owner crate per heavy dependency (diesel, tonic, sherpa-onnx, wasmtime).
-
-Execution plan: 1. crates/aulo/tests/deps.rs using cargo_metadata (dev-dependency) over the workspace. 2. Roles from spec §4.2 crate table encoded as a small table in the test: contract crates (aulo-types, aulo-speech, aulo-proto contracts) have no I/O deps; only surface crates (aulo, aulo-ffi later) depend on clap/anyhow; one owner per heavy dependency (diesel -> aulo-store, tonic/prost -> aulo-proto, sherpa-onnx, wasmtime) — owners that do not exist yet are allowed to be absent. 3. Test fails with a message naming crate and dependency. 4. Verify by temporarily adding a forbidden dep (then revert).
-
-Done when:
-
-- the test fails when a contract crate pulls tokio::fs or reqwest
 
 ### T2.3. CI workflows
 
