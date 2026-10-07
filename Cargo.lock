@@ -457,7 +457,7 @@ dependencies = [
  "futures-util",
  "reqwest",
  "serde_json",
- "thiserror",
+ "thiserror 2.0.21",
  "tokio",
  "tokio-tungstenite",
  "tokio-util",
