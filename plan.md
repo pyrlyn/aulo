@@ -72,7 +72,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T6.6 | todo | P1 | 2 | 0% | |
 | T6.7 | todo | P2 | 3 | 0% | |
 | T7.2 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
-| T7.3 | todo | P0 | 3 | 0% | |
+| T7.3 | in progress | P0 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T7.4 | todo | P0 | 3 | 0% | |
 | T7.5 | todo | P1 | 2 | 0% | |
 | T7.6 | todo | P1 | 3 | 0% | |
@@ -84,7 +84,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T7.12 | todo | P2 | 2 | 0% | |
 | T7.13 | todo | P1 | 2 | 0% | |
 | T7.14 | todo | P2 | 2 | 0% | |
-| T7.15 | todo | P0 | 3 | 0% | |
+| T7.15 | in progress | P0 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T7.16 | todo | P2 | 2 | 0% | |
 | T8.1 | todo | P0 | 4 | 0% | |
 | T8.2 | todo | P0 | 2 | 0% | |
@@ -849,6 +849,8 @@ Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 4 task(s)
 
 Download speech models from Hugging Face with pinned SHA-256 (cox whisper-models.json pattern) into ~/.aulo/models, progress events, aulo models pull/ls/rm. Refuse a hash mismatch.
 
+Execution plan: 1. Model catalog file (models.json-like, committed, with schema per rust.md Config files) listing id, kind, files with URL, size and SHA-256 pinned to a Hugging Face revision. 2. Downloader (reqwest streaming, rustls) into <AULO_HOME>/models/<id>/ via a .part file, hashing while streaming, atomic rename, refuses a hash or size mismatch and deletes the partial; resumable via Range when supported; progress callback. 3. pull/ls/rm library API (CLI wiring later). 4. Tests against a local HTTP server fixture: success, hash mismatch refused, size cap, rm, ls; no real network in tests.
+
 Done when:
 
 - test: corrupted download is rejected
@@ -968,6 +970,8 @@ Done when:
 Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 1 task(s)
 
 Turns model text into speech input: strips markdown, replaces code blocks and long output with "it is on the screen", shortens URLs, expands units and numbers per language, splits sentences for streaming TTS, picks the voice by detected language.
+
+Execution plan: 1. Pure, allocation-bounded normalizer module (crate per spec, likely aulo-speech or aulo-voice): markdown stripped with pulldown-cmark, code blocks and long tool output replaced by a localized "it is on the screen" phrase, URLs shortened to host, units/numbers expanded for en and ru (simple rules, no heavy deps), sentence splitter for streaming TTS that emits on sentence boundaries with a max chunk length. 2. Input capped (untrusted model text). 3. Golden tests per language plus streaming split tests.
 
 Done when:
 
