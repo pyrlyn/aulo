@@ -358,6 +358,13 @@ Versions: crates.io API `max_stable_version` (or newest pre-release) and GitHub 
 | Remote: ElevenLabs | `elevenlabs_rs` https://github.com/rwxbytes/elevenlabs_rs | 0.7.1, 2026-07-27 | community | no official Rust SDK found |
 | Remote: OpenAI / xAI / Gemini TTS | `async-openai` 0.42.1 (2026-09-28) https://github.com/64bit/async-openai | — | yes | xAI Voice API is OpenAI-Realtime-shaped |
 
+Kokoro catalog entry `kokoro-multi-lang-v1_0` (T7.9), checked 2026-10-07:
+
+- Archive: release `tts-models` asset `kokoro-multi-lang-v1_0.tar.bz2` of https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models — GitHub API digest `sha256:c5f7e2d2caf082bc1d20fb70334a61d99d20b484500aad32e7cf84c128ea3298`, 349,906,910 bytes (asset updated 2026-09-08). Per-file sizes and SHA-256 in `crates/aulo-models/data/models.json` were computed from that archive (377 files, 401,239,297 bytes).
+- Download: the same files from https://huggingface.co/csukuangfj/kokoro-multi-lang-v1_0 at commit `f7b96bb6bef5c5da4d3aa4f4e0498fbbf62dc78b`; all 377 sizes and hashes (LFS SHA-256, git blob SHA-1) matched the archive.
+- Voice ids (sid 0–53): `scripts/kokoro/v1.0/generate_voices_bin.py` at https://github.com/k2-fsa/sherpa-onnx/tree/v1.13.8, matching the model's `speaker2id` metadata. Languages and grades: https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md. No Russian voice.
+- Licences: weights Apache-2.0 (https://huggingface.co/hexgrad/Kokoro-82M); `espeak-ng-data` GPL-3.0-or-later (spec §17 D9).
+
 ### 4.3 VAD, turn detection, wake word
 
 | Block | Repo | Latest | Maintained | Notes |

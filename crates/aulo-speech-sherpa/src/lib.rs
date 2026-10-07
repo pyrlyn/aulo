@@ -1,6 +1,11 @@
-//! Local speech engines on sherpa-onnx, the only crate that links it. Today:
-//! [`ParakeetStt`], NVIDIA Parakeet TDT 0.6B v3 (25 languages including ru
-//! and uk), decoded offline per VAD segment. The engine pushes no partials.
+//! Local speech engines on sherpa-onnx, the only crate that links it:
+//!
+//! - [`ParakeetStt`], NVIDIA Parakeet TDT 0.6B v3 (25 languages including ru
+//!   and uk), decoded offline per VAD segment. The engine pushes no partials.
+//! - [`KokoroTts`], Kokoro 82M v1.0 with 54 voices in 9 languages (no
+//!   Russian, so a Russian reply falls back to another engine). Each pushed
+//!   sentence is synthesized on its own, in order, so the first one plays
+//!   while the rest is generated.
 //!
 //! Facts below are from the T0.5 spike, `docs/spikes/sherpa-onnx.md`.
 //!
@@ -8,14 +13,24 @@
 //!
 //! [`ParakeetFactory::new`] takes the `aulo-models` catalog entry
 //! [`PARAKEET_MODEL_ID`] and its directory from `ModelManager::path`, and
-//! accepts no other model. Moonshine is not wired: sherpa-onnx 1.13.8 runs it
+//! accepts no other model; [`KokoroFactory::new`] does the same with
+//! [`KOKORO_MODEL_ID`]. Moonshine is not wired: sherpa-onnx 1.13.8 runs it
 //! only as an offline model, and the catalog has no hash-pinned Moonshine
 //! bundle yet.
+//!
+//! The Kokoro entry lists the 377 files of the official
+//! `kokoro-multi-lang-v1_0.tar.bz2` (tag `tts-models` of k2-fsa/sherpa-onnx).
+//! The archive matched the SHA-256 digest GitHub publishes for that release
+//! asset, and each file's SHA-256 was computed from it; every file also
+//! matched the Hugging Face mirror commit the entry downloads from, by size
+//! and by LFS SHA-256 or git blob id (checked 2026-10-07).
 //!
 //! # Attribution
 //!
 //! The Parakeet weights are CC-BY-4.0. [`PARAKEET_ATTRIBUTION`] is the
-//! notice to show wherever the model is offered or credited.
+//! notice to show wherever the model is offered or credited. The Kokoro
+//! weights are Apache-2.0; its bundle also carries espeak-ng's data, which is
+//! GPL-3.0 like the espeak-ng code linked here (spec §17 D9).
 //!
 //! # Build
 //!
@@ -42,13 +57,19 @@
 
 mod model;
 mod stt;
+mod tts;
 mod worker;
 
-pub use model::PARAKEET_MODEL_ID;
+pub use model::{KOKORO_MODEL_ID, PARAKEET_MODEL_ID};
 pub use stt::{
-    MAX_THREADS, MAX_TRANSCRIPT_BYTES, MAX_UTTERANCE_LIMIT, PARAKEET_ENGINE_ID, ParakeetConfig,
-    ParakeetFactory, ParakeetStt,
+    MAX_TRANSCRIPT_BYTES, MAX_UTTERANCE_LIMIT, PARAKEET_ENGINE_ID, ParakeetConfig, ParakeetFactory,
+    ParakeetStt,
 };
+pub use tts::{
+    CHUNK_SAMPLES, KOKORO_ENGINE_ID, KOKORO_SAMPLE_RATE_HZ, KokoroConfig, KokoroFactory, KokoroTts,
+    MAX_SPEECH_TEXT_BYTES,
+};
+pub use worker::MAX_THREADS;
 
 /// The CC-BY-4.0 notice for the Parakeet weights. The licence asks for the
 /// creator, a link to the licence and a note of changes.

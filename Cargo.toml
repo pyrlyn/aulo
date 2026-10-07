@@ -86,7 +86,7 @@ futures-util = { version = "0.3.34", default-features = false, features = ["sink
 tokio-tungstenite = { version = "0.30.0", default-features = false, features = ["connect", "rustls-tls-native-roots"] }
 # WAV encoding of the utterance sent to a transcription endpoint
 hound = "3.5.1"
-# local speech engines (Parakeet STT); owned by aulo-speech-sherpa. Exact pin: sherpa-onnx-sys pins
+# local speech engines (Parakeet STT, Kokoro TTS); owned by aulo-speech-sherpa. Exact pin: sherpa-onnx-sys pins
 # the same version and its build script downloads that release's native lib (spike T0.5, R2/R7)
 sherpa-onnx = "=1.13.8"
 # zero-I/O server-sent-events parser for streaming transcription replies

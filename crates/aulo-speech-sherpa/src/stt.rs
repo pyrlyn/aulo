@@ -1,7 +1,7 @@
 use std::mem;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::mpsc::{Receiver, TryRecvError};
+use std::sync::mpsc::{Receiver, SyncSender, TryRecvError, TrySendError, sync_channel};
 use std::sync::{Arc, OnceLock};
 use std::time::Duration;
 
@@ -13,7 +13,7 @@ use aulo_speech::{
 use sherpa_onnx::{OfflineRecognizer, OfflineRecognizerConfig, OfflineTransducerModelConfig};
 
 use crate::model::{PARAKEET_MODEL_ID, ParakeetFiles};
-use crate::worker::{Job, Reply, Worker, reply_channel};
+use crate::worker::{Job, Worker, check_threads};
 
 /// The id config uses to pick this engine (`[voice.stt] engine = ...`).
 pub const PARAKEET_ENGINE_ID: &str = "sherpa-parakeet";
@@ -27,9 +27,6 @@ pub const MAX_TRANSCRIPT_BYTES: usize = 16 * 1024;
 /// sized for it up front, and decoding memory grows with segment length.
 pub const MAX_UTTERANCE_LIMIT: Duration = Duration::from_secs(300);
 
-/// Most threads a decode may use; more than the cores only adds contention.
-pub const MAX_THREADS: u16 = 64;
-
 /// The 25 languages on the model card, checked 2026-10-07:
 /// <https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3>. The model detects
 /// which one it hears, so a language hint only selects the engine.
@@ -40,6 +37,50 @@ const LANGUAGES: [&str; 25] = [
 
 /// sherpa-onnx's name for the NeMo TDT transducer layout.
 const MODEL_TYPE: &str = "nemo_transducer";
+
+/// Utterances waiting behind the one being decoded.
+const JOB_QUEUE: usize = 4;
+
+/// One finished utterance to decode.
+#[derive(Debug)]
+pub(crate) struct SttJob {
+    samples: Vec<f32>,
+    cancelled: Arc<AtomicBool>,
+    reply: SyncSender<Reply>,
+}
+
+impl Job for SttJob {
+    fn cancelled(&self) -> bool {
+        self.cancelled.load(Ordering::Acquire)
+    }
+}
+
+/// The transcript, plus the audio buffer handed back so the engine reuses
+/// its allocation for the next utterance.
+#[derive(Debug)]
+struct Reply {
+    text: Option<String>,
+    samples: Vec<f32>,
+}
+
+/// Runs `decode` on the worker thread, one utterance per job.
+fn decoder<L, D>(load: L) -> Result<Worker<SttJob>, SpeechError>
+where
+    L: FnOnce() -> Result<D, SpeechError> + Send + 'static,
+    D: FnMut(&[f32]) -> Option<String>,
+{
+    Worker::spawn("aulo-sherpa-stt", JOB_QUEUE, move || {
+        let mut decode = load()?;
+        Ok(move |job: SttJob| {
+            let text = decode(&job.samples);
+            // The engine may have moved on; its receiver is gone then.
+            let _ = job.reply.try_send(Reply {
+                text,
+                samples: job.samples,
+            });
+        })
+    })
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParakeetConfig {
@@ -67,7 +108,7 @@ pub struct ParakeetFactory {
     files: ParakeetFiles,
     threads: u16,
     max_samples: usize,
-    worker: OnceLock<Result<Worker, SpeechError>>,
+    worker: OnceLock<Result<Worker<SttJob>, SpeechError>>,
 }
 
 impl ParakeetFactory {
@@ -75,9 +116,7 @@ impl ParakeetFactory {
     /// `ModelManager::path`. The files are validated here, before sherpa-onnx
     /// ever sees them.
     pub fn new(model: &Model, dir: &Path, config: ParakeetConfig) -> Result<Self, SpeechError> {
-        if config.threads == 0 || config.threads > MAX_THREADS {
-            return Err(SpeechError::invalid("threads", "1 to 64"));
-        }
+        check_threads(config.threads)?;
         if config.max_utterance.is_zero() || config.max_utterance > MAX_UTTERANCE_LIMIT {
             return Err(SpeechError::invalid("max utterance", "0 to 5 minutes"));
         }
@@ -106,7 +145,7 @@ impl ParakeetFactory {
             .worker
             .get_or_init(|| {
                 let (files, threads) = (self.files.clone(), self.threads);
-                Worker::spawn(move || load(files, threads))
+                decoder(move || load(files, threads))
             })
             .clone()?;
         Ok(Box::new(ParakeetStt::new(spec, worker, self.max_samples)))
@@ -170,14 +209,14 @@ enum State {
 #[derive(Debug)]
 pub struct ParakeetStt {
     info: EngineInfo,
-    worker: Worker,
+    worker: Worker<SttJob>,
     samples: Vec<f32>,
     max_samples: usize,
     state: State,
 }
 
 impl ParakeetStt {
-    fn new(spec: &EngineSpec, worker: Worker, max_samples: usize) -> Self {
+    fn new(spec: &EngineSpec, worker: Worker<SttJob>, max_samples: usize) -> Self {
         Self {
             info: EngineInfo {
                 id: spec.engine.clone(),
@@ -241,7 +280,8 @@ impl SttEngine for ParakeetStt {
         let State::Recording { turn, language } = mem::replace(&mut self.state, State::Idle) else {
             return Err(SpeechError::OutOfOrder("finish before begin"));
         };
-        let (reply, replies) = reply_channel();
+        // One slot: the worker sends exactly one reply per job.
+        let (reply, replies) = sync_channel(1);
         let cancelled = Arc::new(AtomicBool::new(false));
         let samples = mem::take(&mut self.samples);
         if samples.is_empty() {
@@ -251,10 +291,14 @@ impl SttEngine for ParakeetStt {
                 samples,
             });
         } else {
-            self.worker.submit(Job {
+            let job = SttJob {
                 samples,
                 cancelled: Arc::clone(&cancelled),
                 reply,
+            };
+            self.worker.submit(job).map_err(|error| match error {
+                TrySendError::Full(_) => SpeechError::failed("speech worker is busy"),
+                TrySendError::Disconnected(_) => SpeechError::unavailable("speech worker stopped"),
             })?;
         }
         self.state = State::Waiting {
@@ -333,7 +377,7 @@ mod tests {
     /// An engine over a fake decoder that "hears" the sample count, and
     /// waits on `gate` first so tests can hold a decode in flight.
     fn engine(gate: Arc<Mutex<()>>, text: Option<&'static str>) -> ParakeetStt {
-        let worker = Worker::spawn(move || {
+        let worker = decoder(move || {
             Ok(move |samples: &[f32]| {
                 let _held = gate.lock().unwrap();
                 text.map(|t| format!(" {t} {} ", samples.len()))

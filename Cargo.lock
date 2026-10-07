@@ -443,6 +443,7 @@ dependencies = [
  "aulo-models",
  "aulo-speech",
  "hound",
+ "serde_json",
  "sherpa-onnx",
  "tempfile",
 ]
