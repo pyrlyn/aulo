@@ -56,7 +56,6 @@
 - T6.7. Opus for remote audio streams
 - T7.5. STT: whisper.cpp via whisper-rs
 - T7.8. STT: Apple SpeechAnalyzer (macOS 26+)
-- T7.9. TTS: sherpa-onnx (Kokoro, Matcha, VITS)
 - T7.11. TTS: Windows system voices
 - T7.16. Speech benchmarks
 - T8.1. aulo-voice: conversation pipeline

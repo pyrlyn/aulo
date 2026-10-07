@@ -18,3 +18,4 @@ Not approved. Nothing here moves to `roadmap.md` or `plan.md` without the creato
 - **sherpa-onnx in a child process.** Removes spike risk R5: an onnxruntime C++ exception or a model damaged in place still aborts the daemon (T7.4).
 - **Checksum the sherpa-onnx prebuilt archive.** The sherpa-onnx-sys build script downloads it without a digest (spike risk R2); vendor it or verify it in our own build step.
 - **Shared reply scaffolding in aulo-speech-system.** The macOS, espeak and Windows engines repeat the same push/poll state, caps, overflow and generation fence (noted in T7.11); one module would remove the copies.
+- **Per-engine sherpa workers.** The Kokoro and Parakeet engines from one factory share a worker thread, so an engine that stops polling without cancelling stalls the others on a full audio queue (T7.9).

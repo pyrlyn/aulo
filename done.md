@@ -456,3 +456,16 @@ Done when:
 - recorded-session test
 
 Outcome: DeepgramStt in aulo-speech-cloud over the live listen WebSocket, reusing the T7.14 tokio-tungstenite stack and net helpers instead of the official deepgram crate (it pulls a second tokio-tungstenite 0.28 with its own rustls roots, tokio full, and has no message-size cap). Token header never in the URL, linear16 16 kHz frames from a bounded 64-chunk queue, KeepAlive after 4 s of quiet, CloseStream on finish with a bounded wait; cumulative Partials and one Final after finish (speech_final does not end the turn; Finalize not sent). language None sends multi. 401/402/403/429 and connect failures map to Unavailable, server text never echoed, message, byte and transcript caps. Tested against a synthetic recorded session only.
+
+### T7.9. TTS: sherpa-onnx (Kokoro, Matcha, VITS)
+
+Stage: S7 · Area: speech · Depends on: T7.3, T0.5 · Blocks: 1 task(s)
+
+
+Default local TTS. Kokoro (Apache-2.0 weights) with voice list; sentence-chunked streaming synthesis so the first sentence plays while the rest is generated.
+
+Done when:
+
+- time-to-first-audio test within the budget
+
+Outcome: KokoroTts in aulo-speech-sherpa (sherpa-kokoro, kokoro-multi-lang-v1_0, 24 kHz): 54 speakers with names and nine languages from the primary sources, per-text phoneme language, one job per sentence in order through the generic worker shared with Parakeet, 100 ms chunks through a per-reply channel of 8, instant cancel, text caps and cleaning; Russian and unknown voices return Unsupported for fallback. Bundle files validated before sherpa sees them, load checks 24 kHz and 54 speakers, then a warm-up. Catalog entry of 377 files with SHA-256 computed from the official k2-fsa archive (digest matched) and cross-checked against the Hugging Face commit; licence labelled Apache-2.0 AND GPL-3.0-or-later. Time to first audio 0.24 s (en) and 0.16 s (es) on 4 threads, under the 0.3 s budget. About 547 non-test lines, over the 500 cap.
