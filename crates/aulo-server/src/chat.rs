@@ -22,7 +22,7 @@ use aulo_proto::aulo::v1::{
 use aulo_store::{Store, StoreError};
 use tonic::{Request, Response, Status};
 
-use input::{ChatCursor, MessageCursor};
+use input::{ChatCursor, MessageCursor, SearchCursor};
 
 /// Serves chat CRUD and message history. Clone-cheap: clones share one store.
 #[derive(Debug, Clone)]
@@ -216,11 +216,41 @@ impl ChatService for ChatApi {
         }))
     }
 
-    // Full-text search arrives with the FTS index (T2.10).
     async fn search_messages(
         &self,
-        _request: Request<SearchMessagesRequest>,
+        request: Request<SearchMessagesRequest>,
     ) -> Result<Response<SearchMessagesResponse>, Status> {
-        Err(Status::unimplemented("message search is not available yet"))
+        let req = request.into_inner();
+        let query = input::search_query(&req.query)?;
+        let chat_id = req.chat_id.as_deref().map(input::chat_id).transpose()?;
+        let size = input::page_size(req.page_size);
+        let after = SearchCursor::parse(&req.page_token)?;
+        let (mut hits, calls) = self
+            .with_store("search_messages", move |s| {
+                let fail = |e: StoreError| storage("search_messages", &e);
+                let hits = s
+                    .search_messages(
+                        &query,
+                        chat_id.as_deref(),
+                        after.as_ref().map(|c| (c.rank, c.id.as_str())),
+                        input::fetch_limit(size),
+                    )
+                    .map_err(fail)?;
+                let ids: Vec<String> = hits
+                    .iter()
+                    .take(size)
+                    .map(|h| h.message.id.clone())
+                    .collect();
+                let calls = s.list_tool_calls_for(&ids).map_err(fail)?;
+                Ok((hits, calls))
+            })
+            .await?;
+        let next_page_token = input::trim_page(&mut hits, size)
+            .map(|h| SearchCursor::encode(h.rank, &h.message.id))
+            .unwrap_or_default();
+        Ok(Response::new(SearchMessagesResponse {
+            messages: convert::messages(hits.into_iter().map(|h| h.message).collect(), calls),
+            next_page_token,
+        }))
     }
 }

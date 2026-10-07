@@ -71,6 +71,17 @@ pub(super) fn model(m: &ModelRef) -> Result<String, Status> {
     Ok(format!("{}{MODEL_SEPARATOR}{}", m.provider, m.model))
 }
 
+/// Search text is matched as plain words by the store; here it is only bounded.
+pub(super) fn search_query(raw: &str) -> Result<String, Status> {
+    if raw.len() > aulo_store::MAX_QUERY_BYTES {
+        return Err(invalid("query is longer than 1 KiB"));
+    }
+    if raw.trim().is_empty() {
+        return Err(invalid("query must not be empty"));
+    }
+    Ok(raw.to_owned())
+}
+
 /// Page size 0 means the default; anything above the cap is clamped.
 pub(super) fn page_size(requested: u32) -> usize {
     match usize::try_from(requested).unwrap_or(MAX_PAGE_SIZE) {
@@ -157,6 +168,36 @@ impl MessageCursor {
             None => Ok(None),
             Some(id) if is_ulid(id) => Ok(Some(Self(id.to_owned()))),
             Some(_) => Err(bad_token()),
+        }
+    }
+}
+
+/// Position after a search hit in `(rank, id)` order, best match first.
+#[derive(Debug, PartialEq)]
+pub(super) struct SearchCursor {
+    pub rank: f64,
+    pub id: String,
+}
+
+impl SearchCursor {
+    pub(super) fn encode(rank: f64, id: &str) -> String {
+        // `{:e}` round-trips every finite f64 exactly in a few bytes, unlike plain
+        // `{}`, which would print a tiny rank as hundreds of zeros.
+        format!("s1.{rank:e}.{id}")
+    }
+
+    pub(super) fn parse(token: &str) -> Result<Option<Self>, Status> {
+        let Some(body) = token_body(token, "s1.")? else {
+            return Ok(None);
+        };
+        let (rank, id) = body.rsplit_once('.').ok_or_else(bad_token)?;
+        // "inf" and "nan" parse as floats but are not ranks this server hands out.
+        match rank.parse::<f64>() {
+            Ok(rank) if rank.is_finite() && is_ulid(id) => Ok(Some(Self {
+                rank,
+                id: id.to_owned(),
+            })),
+            _ => Err(bad_token()),
         }
     }
 }

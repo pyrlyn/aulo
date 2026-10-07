@@ -637,17 +637,149 @@ async fn deleting_a_chat_removes_its_messages() {
     assert_eq!(code(result), Code::NotFound);
 }
 
-#[tokio::test]
-async fn search_is_not_implemented_yet() {
-    let mut f = fixture().await;
-    let result = f
-        .client
+async fn search(
+    f: &mut Fixture,
+    query: &str,
+    chat_id: Option<&str>,
+    page_size: u32,
+    page_token: &str,
+) -> Result<aulo_proto::aulo::v1::SearchMessagesResponse, Status> {
+    f.client
         .search_messages(SearchMessagesRequest {
-            query: "hello".into(),
-            ..Default::default()
+            query: query.into(),
+            page_size,
+            page_token: page_token.into(),
+            chat_id: chat_id.map(str::to_owned),
         })
-        .await;
-    assert_eq!(code(result), Code::Unimplemented);
+        .await
+        .map(tonic::Response::into_inner)
+}
+
+#[tokio::test]
+async fn search_finds_messages_and_drops_deleted_ones() {
+    let mut f = fixture().await;
+    let a = f.create("a").await;
+    let b = f.create("b").await;
+    let (hit, tool_msg) = f.store(|s| {
+        let hit = s
+            .append_message(&a.id, "user", "Remember the Zebra")
+            .unwrap();
+        let tool_msg = s.append_message(&b.id, "assistant", "zebra facts").unwrap();
+        s.record_tool_call(&tool_msg.id, "lookup", "{}", Some("ok"), "succeeded")
+            .unwrap();
+        s.append_message(&a.id, "user", "nothing here").unwrap();
+        (hit, tool_msg)
+    });
+
+    let all = search(&mut f, "zebra", None, 0, "").await.unwrap();
+    assert_eq!(all.messages.len(), 2);
+    assert!(all.next_page_token.is_empty());
+    let found = all.messages.iter().find(|m| m.id == tool_msg.id).unwrap();
+    assert_eq!(found.chat_id, b.id);
+    assert_eq!(found.role(), MessageRole::Assistant);
+    assert_eq!(found.tool_calls.len(), 1);
+
+    let only_a = search(&mut f, "zebra", Some(&a.id), 0, "").await.unwrap();
+    assert_eq!(only_a.messages.len(), 1);
+    assert_eq!(only_a.messages[0].id, hit.id);
+    assert_eq!(only_a.messages[0].content, "Remember the Zebra");
+
+    f.client
+        .delete_chat(DeleteChatRequest { chat_id: b.id })
+        .await
+        .unwrap();
+    let left = search(&mut f, "zebra", None, 0, "").await.unwrap();
+    assert_eq!(left.messages.len(), 1);
+    assert_eq!(left.messages[0].id, hit.id);
+}
+
+#[tokio::test]
+async fn search_pages_cover_every_hit_once() {
+    let mut f = fixture().await;
+    let chat = f.create("t").await;
+    let ids: Vec<String> = f.store(|s| {
+        (0..5)
+            .map(|i| {
+                let pad = "pad ".repeat(i);
+                s.append_message(&chat.id, "user", &format!("needle {pad}"))
+                    .unwrap()
+                    .id
+            })
+            .collect()
+    });
+    let mut got = Vec::new();
+    let mut token = String::new();
+    let mut pages = 0;
+    loop {
+        let page = search(&mut f, "needle", None, 2, &token).await.unwrap();
+        pages += 1;
+        got.extend(page.messages.into_iter().map(|m| m.id));
+        token = page.next_page_token;
+        if token.is_empty() {
+            break;
+        }
+    }
+    assert_eq!(pages, 3);
+    got.sort();
+    assert_eq!(got, ids);
+}
+
+#[tokio::test]
+async fn hostile_search_text_is_a_plain_query() {
+    let mut f = fixture().await;
+    let chat = f.create("t").await;
+    f.store(|s| s.append_message(&chat.id, "user", "plain words").unwrap());
+    for q in [
+        "\"",
+        "*",
+        "NEAR(",
+        "OR",
+        "-",
+        "col:",
+        "content: x",
+        "a OR",
+        "\0",
+        "x\" OR \"y",
+    ] {
+        let found = search(&mut f, q, None, 0, "").await;
+        assert!(found.is_ok(), "{q:?}");
+    }
+    assert_eq!(
+        search(&mut f, "plain OR", None, 0, "")
+            .await
+            .unwrap()
+            .messages
+            .len(),
+        0
+    );
+}
+
+#[tokio::test]
+async fn search_rejects_bad_input_without_echoing_it() {
+    let mut f = fixture().await;
+    let chat = f.create("t").await;
+    f.store(|s| s.append_message(&chat.id, "user", "word").unwrap());
+    let page = search(&mut f, "word", None, 1, "").await.unwrap();
+    assert!(page.next_page_token.is_empty());
+    let too_long = "w".repeat(1025);
+    let cases = [
+        ("", None, ""),
+        ("   ", None, ""),
+        (too_long.as_str(), None, ""),
+        ("word", Some("not-a-ulid"), ""),
+        ("word", None, "garbage"),
+        ("word", None, "s1.nan.01J00000000000000000000000"),
+        ("word", None, "s1.inf.01J00000000000000000000000"),
+        ("word", None, "s1.1.5"),
+        ("word", None, "s1.1"),
+        ("word", None, "m1.01J00000000000000000000000"),
+        ("word", None, "c1.5.01J00000000000000000000000"),
+    ];
+    for (q, chat_id, token) in cases {
+        let err = search(&mut f, q, chat_id, 0, token).await.unwrap_err();
+        assert_eq!(err.code(), Code::InvalidArgument, "{q:.20} {token}");
+        assert!(!err.message().contains("garbage"));
+    }
 }
 
 #[tokio::test]

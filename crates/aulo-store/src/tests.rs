@@ -20,7 +20,7 @@ fn migrations_apply_revert_and_reapply() {
     );
 
     let reverted = s.conn.revert_all_migrations(MIGRATIONS).unwrap();
-    assert_eq!(reverted.len(), 2);
+    assert_eq!(reverted.len(), 3);
     // The DSL cannot inspect sqlite_master; a failing query proves the table is gone.
     assert!(chats::table.count().get_result::<i64>(&mut s.conn).is_err());
     assert!(usage::table.count().get_result::<i64>(&mut s.conn).is_err());

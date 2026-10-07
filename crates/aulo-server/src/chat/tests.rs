@@ -4,7 +4,7 @@ use aulo_proto::aulo::v1::ModelRef;
 use tonic::Code;
 
 use super::convert;
-use super::input::{self, ChatCursor, MessageCursor};
+use super::input::{self, ChatCursor, MessageCursor, SearchCursor};
 use super::{StoreError, storage};
 
 const ID: &str = "01J00000000000000000000000";
@@ -39,6 +39,24 @@ fn cursors_round_trip() {
     assert_eq!(MessageCursor::parse(&token).unwrap().unwrap().0, ID);
     assert_eq!(ChatCursor::parse("").unwrap(), None);
     assert_eq!(MessageCursor::parse("").unwrap(), None);
+}
+
+#[test]
+fn search_cursor_round_trips_exact_ranks() {
+    for rank in [-1.234_567_890_123_456_7e-6, -0.0, 0.0, -9.5, 1e-300, -3.0e5] {
+        let token = SearchCursor::encode(rank, ID);
+        assert!(token.len() < 64, "{token}");
+        let cursor = SearchCursor::parse(&token).unwrap().unwrap();
+        assert_eq!(
+            cursor,
+            SearchCursor {
+                rank,
+                id: ID.into()
+            }
+        );
+    }
+    assert_eq!(SearchCursor::parse("").unwrap(), None);
+    assert!(SearchCursor::parse("s1.1e999.01J00000000000000000000000").is_err());
 }
 
 #[test]

@@ -4,6 +4,7 @@
 mod models;
 mod safety;
 mod schema;
+mod search;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -14,6 +15,7 @@ use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use ulid::Generator;
 
 pub use models::{AuditRow, Bot, Chat, Grant, Message, ToolCall, Usage};
+pub use search::{MAX_QUERY_BYTES, SearchHit};
 
 use schema::{bots, chats, messages, tool_calls, usage};
 
