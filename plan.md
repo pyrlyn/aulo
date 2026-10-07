@@ -27,7 +27,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.17 | in progress | P1 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.18 | in progress | P2 | 2 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.19 | in progress | P1 | 3 | 80% | Claude Code / claude-sonnet-5-5 |
-| T1.20 | todo | P2 | 3 | 0% | |
+| T1.20 | in progress | P2 | 3 | 5% | Claude Code / claude-sonnet-5-5 |
 | T2.3 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T3.7 | todo | P0 | 3 | 0% | |
 | T4.1 | todo | P0 | 3 | 0% | |
@@ -391,6 +391,8 @@ Done when:
 Stage: S1 · Area: shared · Depends on: T1.19 · Blocks: 0 task(s)
 
 runa is bin-only (serve, pool and mcp are pub(crate)). Expose a library crate (for example runa-serve) so aulod can embed local inference without a second process.
+
+Execution plan: tracked in runa as P16.2 (branch p16-2-lib, stacked on P16.1); expose a narrow library API for the pool and a generation stream, with an integration test outside the runa binary.
 
 Done when:
 
