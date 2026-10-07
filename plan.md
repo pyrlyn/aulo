@@ -32,7 +32,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T2.10 | todo | P2 | 2 | 0% | |
 | T3.4 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T3.5 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
-| T3.6 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T3.7 | todo | P0 | 3 | 0% | |
 | T3.8 | todo | P0 | 3 | 0% | |
 | T3.9 | todo | P2 | 3 | 0% | |
@@ -429,18 +428,6 @@ Execution plan: 1. aulo-server ChatService impl over aulo-store (Store behind a 
 Done when:
 
 - grpc integration tests for every RPC
-
-### T3.6. aulod binary
-
-Stage: S3 · Area: api · Depends on: T3.3 · Blocks: 2 task(s)
-
-clap surface: aulod run, --config, --listen; single-instance lock per home; pidfile; SIGINT/SIGTERM shutdown.
-
-Execution plan: 1. crates/aulo `aulod` bin: clap with `run` (default), `--config <path>`, `--listen <addr>`; loads aulo-config, inits aulo-telemetry, binds aulo-server listeners (UDS always, TCP if configured) and serves until SIGINT/SIGTERM (ctrl-c on Windows) via CancellationToken. 2. Single instance per AULO_HOME: an exclusive advisory lock (fs4 or the crate rust.md lists) on <home>/run/aulod.lock held for the process lifetime, pidfile written next to it; a second instance exits non-zero with a clear message naming the pid. 3. trycmd fixtures for --help, --version and the second-instance message (use a temp AULO_HOME). Keep `aulo` (CLI) untouched except shared code.
-
-Done when:
-
-- second instance exits with a clear message; trycmd fixtures
 
 ### T3.7. aulo CLI: text chat client
 

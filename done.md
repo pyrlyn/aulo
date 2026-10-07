@@ -287,3 +287,16 @@ Done when:
 - test passes; trycmd fixture for config show
 
 Outcome: aulo-config embeds config/default.toml as DEFAULT_TOML (## prose, # commented-out settings; unset keys show an example marked unset by default); tests check it parses to Config::default() commented and uncommented, and a schema walk fails when a Config key has no line. Config::to_toml_redacted and Loaded::render_origins mask every string through aulo_telemetry::redact plus URL userinfo. crates/aulo gains a clap skeleton with `aulo config show [--origin]` and `aulo config default`; errors name the file. trycmd fixtures. Follow-ups: aulo-config now depends on aulo-telemetry for redaction (move to text-sanitize when T1.11 lands); keys print alphabetically.
+
+### T3.6. aulod binary
+
+Stage: S3 · Area: api · Depends on: T3.3 · Blocks: 2 task(s)
+
+clap surface: aulod run, --config, --listen; single-instance lock per home; pidfile; SIGINT/SIGTERM shutdown.
+
+
+Done when:
+
+- second instance exits with a clear message; trycmd fixtures
+
+Outcome: aulod [run] [--config DIR] [--listen ADDR]; std File::try_lock single-instance lock with pidfile under <home>/run (0700/0600), SIGINT/SIGTERM graceful shutdown, UDS always and loopback-only TCP; trycmd fixtures for help, version and second instance. --config takes a directory holding config.toml; log level fixed at info until a logging config section exists.
