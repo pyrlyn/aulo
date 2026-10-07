@@ -31,7 +31,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T2.3 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T2.10 | todo | P2 | 2 | 0% | |
 | T3.4 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
-| T3.5 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T3.7 | todo | P0 | 3 | 0% | |
 | T3.8 | todo | P0 | 3 | 0% | |
 | T3.9 | todo | P2 | 3 | 0% | |
@@ -416,18 +415,6 @@ Execution plan: 1. aulo-server auth module: a tonic interceptor/tower layer appl
 Done when:
 
 - tests: TCP without token is rejected; UDS from owner is accepted
-
-### T3.5. aulo-server: ChatService
-
-Stage: S3 · Area: api · Depends on: T3.3, T2.8 · Blocks: 5 task(s)
-
-Implement chat CRUD and message listing over aulo-store with pagination.
-
-Execution plan: 1. aulo-server ChatService impl over aulo-store (Store behind a Mutex or spawn_blocking; the store is sync). 2. Map proto <-> store types (ids as ULID strings validated on input, ModelRef <-> model string per T3.1 note, Timestamp from Unix ms), page_token as an opaque keyset cursor, page size default 50 clamp 200, title cap 200 bytes; errors map to NOT_FOUND / INVALID_ARGUMENT without leaking internals. 3. SearchMessages returns UNIMPLEMENTED until T2.10. 4. gRPC integration tests over UDS for every RPC including pagination and invalid input.
-
-Done when:
-
-- grpc integration tests for every RPC
 
 ### T3.7. aulo CLI: text chat client
 

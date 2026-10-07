@@ -300,3 +300,16 @@ Done when:
 - second instance exits with a clear message; trycmd fixtures
 
 Outcome: aulod [run] [--config DIR] [--listen ADDR]; std File::try_lock single-instance lock with pidfile under <home>/run (0700/0600), SIGINT/SIGTERM graceful shutdown, UDS always and loopback-only TCP; trycmd fixtures for help, version and second instance. --config takes a directory holding config.toml; log level fixed at info until a logging config section exists.
+
+### T3.5. aulo-server: ChatService
+
+Stage: S3 · Area: api · Depends on: T3.3, T2.8 · Blocks: 5 task(s)
+
+Implement chat CRUD and message listing over aulo-store with pagination.
+
+
+Done when:
+
+- grpc integration tests for every RPC
+
+Outcome: ChatApi over Arc<Mutex<Store>> on spawn_blocking: Create/List/Get/Rename/Delete chats and ListMessages with keyset page tokens, canonical id parsing, title and ModelRef validation, generic INTERNAL errors; SearchMessages UNIMPLEMENTED until T2.10. Model stored as provider/model; role and status strings user|assistant|tool and running|succeeded|failed|denied|cancelled until aulo-types gets enums.
