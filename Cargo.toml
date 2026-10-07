@@ -70,6 +70,8 @@ block2 = "0.6.2"
 windows = { version = "0.62.2", default-features = false }
 # fixed-size lock-free SPSC rings between platform audio callbacks and engine polls (spec §5.3)
 ringbuf = "0.5.2"
+# benchmarks of the deterministic parts of the speech harness (WER, resampling, measurement)
+divan = "0.1.21"
 # snapshot tests (golden speech text per language)
 insta = "1.49.0"
 # markdown to plain text for the speakable-text normalizer

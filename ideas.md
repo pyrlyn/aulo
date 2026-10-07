@@ -19,3 +19,4 @@ Not approved. Nothing here moves to `roadmap.md` or `plan.md` without the creato
 - **Checksum the sherpa-onnx prebuilt archive.** The sherpa-onnx-sys build script downloads it without a digest (spike risk R2); vendor it or verify it in our own build step.
 - **Shared reply scaffolding in aulo-speech-system.** The macOS, espeak and Windows engines repeat the same push/poll state, caps, overflow and generation fence (noted in T7.11); one module would remove the copies.
 - **Per-engine sherpa workers.** The Kokoro and Parakeet engines from one factory share a worker thread, so an engine that stops polling without cancelling stalls the others on a full audio queue (T7.9).
+- **One word error rate.** `aulo-speech-bench` has its own word-level `WordErrors` (case, punctuation, `ё` and `’` normalised) and runa-media has `word_error_rate`; once a shared crate exists both should use it (T7.16).

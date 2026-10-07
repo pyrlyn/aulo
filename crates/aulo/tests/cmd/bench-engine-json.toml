@@ -1,0 +1,9 @@
+bin.name = "aulo"
+args = ["bench", "speech", "--engine", "sherpa-kokoro", "--json"]
+fs.cwd = "empty.in"
+fs.sandbox = true
+env.add.AULO_HOME = "."
+stdout = """
+[{"engine":"sherpa-kokoro","kind":"tts","reason":"model `kokoro-multi-lang-v1_0` is not installed","status":"unavailable"}]
+"""
+stderr = ""

@@ -1,0 +1,10 @@
+bin.name = "aulo"
+args = ["bench", "speech", "--engine", "sherpa-parakeet"]
+fs.cwd = "empty.in"
+fs.sandbox = true
+env.add.AULO_HOME = "."
+stdout = """
+kind  engine           WER  RTF  first ms  note
+stt   sherpa-parakeet  -    -    -         unavailable: model `parakeet-tdt-0.6b-v3-int8` is not installed
+"""
+stderr = ""

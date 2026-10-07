@@ -206,6 +206,7 @@ Crate roles follow rust.md: contracts, domain, adapters, assembly, surfaces, tes
 | `aulo-speech-whisper` | adapter | whisper.cpp STT |
 | `aulo-speech-system` | adapter | macOS, Windows and Linux system voices; Apple SpeechAnalyzer |
 | `aulo-speech-cloud` | adapter | OpenAI-compatible STT/TTS, Deepgram, ElevenLabs |
+| `aulo-speech-bench` | adapter | Word error rate, real-time factor and time to first audio per speech engine (`aulo bench speech`) |
 | `aulo-realtime` | adapter | Realtime speech-to-speech fronts (OpenAI, Gemini, xAI) |
 | `aulo-voice` | domain | Conversation pipeline, turn-taking, barge-in, fillers, voice commands |
 | `aulo-providers` | assembly | LLM providers from config (llm-* crates), tiers, local presets |

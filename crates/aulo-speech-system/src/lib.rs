@@ -37,6 +37,8 @@ mod language;
 
 mod resample;
 
+pub use resample::Resampler;
+
 mod wav;
 
 mod winspeech;

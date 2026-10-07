@@ -15,6 +15,8 @@ serde_json.workspace = true
 sherpa-onnx.workspace = true
 
 [dev-dependencies]
+# The shared word error rate; a dev-only cycle, since the benchmark crate depends on this one.
+aulo-speech-bench = { path = "../aulo-speech-bench" }
 hound.workspace = true
 tempfile.workspace = true
 

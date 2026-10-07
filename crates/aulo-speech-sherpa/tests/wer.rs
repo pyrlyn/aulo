@@ -17,6 +17,7 @@ use aulo_speech::{
     AudioFormat, AudioFrame, EngineId, EngineSpec, SpeechRate, SttPoll, Transcript, TranscriptKind,
     TurnId,
 };
+use aulo_speech_bench::WordErrors;
 use aulo_speech_sherpa::{PARAKEET_ENGINE_ID, PARAKEET_MODEL_ID, ParakeetConfig, ParakeetFactory};
 
 const MODEL_DIR_ENV: &str = "AULO_PARAKEET_DIR";
@@ -67,7 +68,7 @@ fn parakeet_word_error_rate_is_under_the_threshold() {
         })
         .unwrap();
 
-    let (mut errors, mut words) = (0, 0);
+    let mut total = WordErrors::default();
     for (file, language, reference) in FIXTURES {
         let samples = read_wav(&fixture(file));
         let turn = TurnId::new();
@@ -85,13 +86,15 @@ fn parakeet_word_error_rate_is_under_the_threshold() {
             std::thread::sleep(Duration::from_millis(10));
         }
         assert_eq!((out.kind, out.turn_id), (TranscriptKind::Final, turn));
-        let (wrong, total) = word_errors(&out.text, reference);
-        eprintln!("{file}: {wrong}/{total} words wrong: {:?}", out.text);
-        errors += wrong;
-        words += total;
+        let one = WordErrors::between(&out.text, reference);
+        eprintln!(
+            "{file}: {}/{} words wrong: {:?}",
+            one.errors, one.words, out.text
+        );
+        total += one;
     }
-    let wer = errors as f64 / words as f64;
-    eprintln!("WER {wer:.3} over {words} words");
+    let wer = total.rate().unwrap();
+    eprintln!("WER {wer:.3} over {} words", total.words);
     assert!(wer <= MAX_WER, "WER {wer:.3} is above {MAX_WER}");
 }
 
@@ -112,40 +115,4 @@ fn read_wav(path: &Path) -> Vec<f32> {
         .samples::<i16>()
         .map(|s| f32::from(s.unwrap()) / f32::from(i16::MAX))
         .collect()
-}
-
-/// Case, punctuation and `ё` do not count as errors.
-fn normalize(text: &str) -> Vec<String> {
-    text.to_lowercase()
-        .replace('ё', "е")
-        .split(|c: char| !c.is_alphanumeric() && c != '\'')
-        .filter(|w| !w.is_empty())
-        .map(str::to_owned)
-        .collect()
-}
-
-/// Word-level Levenshtein distance (substitutions, insertions, deletions)
-/// and the reference length, the two terms of WER.
-fn word_errors(hypothesis: &str, reference: &str) -> (usize, usize) {
-    let (hyp, reference) = (normalize(hypothesis), normalize(reference));
-    let mut row: Vec<usize> = (0..=hyp.len()).collect();
-    for (i, want) in reference.iter().enumerate() {
-        let mut diagonal = row[0];
-        row[0] = i + 1;
-        for (j, got) in hyp.iter().enumerate() {
-            let substitute = diagonal + usize::from(want != got);
-            diagonal = row[j + 1];
-            row[j + 1] = substitute.min(row[j] + 1).min(diagonal + 1);
-        }
-    }
-    (row[hyp.len()], reference.len())
-}
-
-#[test]
-fn word_errors_count_edits_not_formatting() {
-    assert_eq!(word_errors("Open the door.", "open the DOOR"), (0, 3));
-    assert_eq!(word_errors("open door", "open the door"), (1, 3));
-    assert_eq!(word_errors("open a big door", "open the door"), (2, 3));
-    assert_eq!(word_errors("ещё", "еще"), (0, 1));
-    assert_eq!(word_errors("", "open the door"), (3, 3));
 }

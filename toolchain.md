@@ -27,17 +27,18 @@ Only what the project uses today. Crates are added by the task that wires each o
 | clap | local | https://github.com/clap-rs/clap | Command-line parsing for `aulo` (`aulo config show`, `aulo config default`) and `aulod` |
 | diesel | local | https://github.com/diesel-rs/diesel | Typed SQLite access in `aulo-store` (no raw SQL) |
 | diesel_migrations | local | https://github.com/diesel-rs/diesel | Embedded, filename-keyed schema migrations |
+| divan | local (dev) | https://github.com/nvzqz/divan | Benchmarks of the deterministic speech-harness parts (word error rate, resampling, measurement against fake engines) in `aulo-speech-bench` |
 | figment | local | https://github.com/SergioBenitez/Figment | Layered config with per-key provenance |
 | futures-util | local | https://github.com/rust-lang/futures-rs | Splits the ElevenLabs and Deepgram WebSockets into read and write halves (`StreamExt`, `SinkExt`) in `aulo-speech-cloud`, so a slow audio consumer never stalls the text sent and results are read while audio is written |
 | getrandom | local | https://github.com/rust-random/getrandom | OS randomness for the 256-bit `aulod` API token (`aulo-server`) |
-| hound | local | https://github.com/ruuda/hound | Encodes the buffered utterance as 16-bit PCM WAV for the upload in `aulo-speech-cloud`; decodes the WAV streams of `espeak-ng --stdout` and WinRT `SpeechSynthesizer` in `aulo-speech-system`; reads fixture WAVs in the `aulo-speech-sherpa` and `aulo-speech-system` tests |
+| hound | local | https://github.com/ruuda/hound | Encodes the buffered utterance as 16-bit PCM WAV for the upload in `aulo-speech-cloud`; decodes the WAV streams of `espeak-ng --stdout` and WinRT `SpeechSynthesizer` in `aulo-speech-system`; reads fixture WAVs in the `aulo-speech-sherpa` and `aulo-speech-system` tests; decodes the embedded fixture clips in `aulo-speech-bench` |
 | hyper-util | local (dev) | https://github.com/hyperium/hyper-util | `TokioIo` adapter for the gRPC client over a Unix socket in `aulo-server` tests |
 | insta | local (dev) | https://github.com/mitsuhiko/insta | Snapshot tests of the speakable-text normalizer (`aulo-voice`) |
 | keyring | local | https://github.com/open-source-cooperative/keyring-rs | OS keychain that holds the `aulod` API token (`aulo-server`) |
 | libsqlite3-sys | local | https://github.com/rusqlite/rusqlite | Bundled SQLite for Diesel |
 | objc2 | local (macOS) | https://github.com/madsmtm/objc2 | Objective-C runtime (`Retained`, downcasts) for the macOS system voices (`aulo-speech-system`) |
 | objc2-avf-audio | local (macOS) | https://github.com/madsmtm/objc2 | `AVSpeechSynthesizer`, `AVSpeechSynthesisVoice` and `AVAudioPCMBuffer` bindings (`aulo-speech-system`) |
-| objc2-foundation | local (macOS) | https://github.com/madsmtm/objc2 | `NSString`, `NSArray`, `NSNumber` for AVFoundation calls; `NSLocale`, `NSOperationQueue` and `NSError` for speech recognition; `NSRunLoop` in the synthesis test (`aulo-speech-system`) |
+| objc2-foundation | local (macOS) | https://github.com/madsmtm/objc2 | `NSString`, `NSArray`, `NSNumber` for AVFoundation calls; `NSLocale`, `NSOperationQueue` and `NSError` for speech recognition; `NSRunLoop` in the synthesis test (`aulo-speech-system`); `NSDate` and `NSRunLoop` for the main run loop that `aulo bench speech` pumps (`aulo-speech-bench`) |
 | objc2-speech | local (macOS) | https://github.com/madsmtm/objc2 | `SFSpeechRecognizer` forced on-device for the macOS system STT (`aulo-speech-system`); `SpeechAnalyzer` is Swift-only |
 | opentelemetry | local | https://github.com/open-telemetry/opentelemetry-rust | OTel API for the optional OTLP trace export in `aulo-telemetry` (`otlp` feature) |
 | opentelemetry-otlp | local | https://github.com/open-telemetry/opentelemetry-rust | OTLP/HTTP span exporter, `otlp` feature only |
@@ -54,14 +55,14 @@ Only what the project uses today. Crates are added by the task that wires each o
 | schemars | local | https://github.com/GREsau/schemars | JSON Schema generated from the config types |
 | semver | local | https://github.com/dtolnay/semver | Plugin manifest versions (`aulo-plugin`) |
 | serde | local | https://github.com/serde-rs/serde | Serialization of ids, events and config; reply parsing in `aulo-speech-cloud` |
-| serde_json | local | https://github.com/serde-rs/json | Config schema output and overrides; round-trip tests; `cargo metadata` parsing in the dependency-graph test; reply and SSE event parsing and speech request bodies in `aulo-speech-cloud`; Kokoro per-text `lang` option in `aulo-speech-sherpa` |
+| serde_json | local | https://github.com/serde-rs/json | Config schema output and overrides; round-trip tests; `cargo metadata` parsing in the dependency-graph test; reply and SSE event parsing and speech request bodies in `aulo-speech-cloud`; Kokoro per-text `lang` option in `aulo-speech-sherpa`; `aulo bench speech --json` output in `aulo-speech-bench` |
 | sha2 | local | https://github.com/RustCrypto/hashes | SHA-256 of model files, hashed while they download; the API token is held only as its SHA-256 |
 | sherpa-onnx | local | https://github.com/k2-fsa/sherpa-onnx | Local speech engines, only in `aulo-speech-sherpa` (Parakeet TDT v3 STT, Kokoro TTS); exact pin `=1.13.8` because `sherpa-onnx-sys` downloads the native lib of its own release |
 | sse-core | local | https://github.com/PizzasBear/sse-rs | Zero-I/O server-sent-events parser for streaming transcription replies in `aulo-speech-cloud` (`eventsource-stream` has had no release since 2022) |
 | subtle | local | https://github.com/dalek-cryptography/subtle | Constant-time comparison of the API token digest (`aulo-server`) |
 | tempfile | local (dev) | https://github.com/Stebalien/tempfile | Temporary databases and directories in tests |
 | thiserror | local | https://github.com/dtolnay/thiserror | Typed errors in library crates |
-| tokio | local | https://github.com/tokio-rs/tokio | Async runtime; Unix socket, named pipe and TCP listeners in `aulo-server`; SIGINT/SIGTERM shutdown in `aulod` |
+| tokio | local | https://github.com/tokio-rs/tokio | Async runtime; Unix socket, named pipe and TCP listeners in `aulo-server`; SIGINT/SIGTERM shutdown in `aulod`; one-worker runtime that runs the cloud engines under `aulo bench speech` (`aulo-speech-bench`) |
 | tokio-rustls | local (dev) | https://github.com/rustls/tokio-rustls | TLS stream under the pinned gRPC client in the `aulo-server` tests |
 | tokio-stream | local | https://github.com/tokio-rs/tokio | Listener streams for tonic `serve_with_incoming` in `aulo-server` |
 | tokio-tungstenite | local | https://github.com/snapview/tokio-tungstenite | WebSocket client (rustls, platform trust roots) for the ElevenLabs `stream-input` speech API and the Deepgram live transcription API in `aulo-speech-cloud`; also the local WebSocket fixture server in its tests (spec D4) |

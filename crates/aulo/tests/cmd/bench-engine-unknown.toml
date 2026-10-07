@@ -1,0 +1,10 @@
+bin.name = "aulo"
+args = ["bench", "speech", "--engine", "nope"]
+status.code = 1
+fs.cwd = "empty.in"
+fs.sandbox = true
+env.add.AULO_HOME = "."
+stdout = ""
+stderr = """
+Error: no speech engine `nope`; run `aulo bench speech` to list them
+"""

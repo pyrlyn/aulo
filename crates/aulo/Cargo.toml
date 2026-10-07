@@ -7,6 +7,8 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 publish.workspace = true
+# `cargo run -p aulo -- <command>` runs the CLI, not the daemon.
+default-run = "aulo"
 
 [[bin]]
 name = "aulo"
@@ -20,6 +22,7 @@ path = "src/bin/aulod.rs"
 anyhow.workspace = true
 aulo-config = { path = "../aulo-config" }
 aulo-server = { path = "../aulo-server" }
+aulo-speech-bench = { path = "../aulo-speech-bench" }
 aulo-telemetry = { path = "../aulo-telemetry" }
 clap.workspace = true
 # Builds the `--listen` override for the config loader and parses `cargo metadata` in the

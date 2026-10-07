@@ -1,8 +1,6 @@
 //! Linear-interpolation resampling for the engines whose synthesizer reports
 //! its own sample rate only once audio arrives, after the engine has already
-//! declared one.
-
-#![cfg_attr(not(any(windows, target_os = "macos")), allow(dead_code))]
+//! declared one. Public so the speech benchmarks can time it.
 
 /// Rates closer than this are treated as equal and passed through untouched.
 const SAME_RATE_EPSILON_HZ: f64 = 0.5;
@@ -11,7 +9,7 @@ const SAME_RATE_EPSILON_HZ: f64 = 0.5;
 /// rate, so this only runs when a buffer disagrees with the declared format;
 /// linear is enough for speech.
 #[derive(Debug, Clone)]
-pub(crate) struct Resampler {
+pub struct Resampler {
     /// Input samples per output sample; `None` passes samples through.
     step: Option<f64>,
     /// Time of the next output sample, in input samples after `prev`.
@@ -20,7 +18,7 @@ pub(crate) struct Resampler {
 }
 
 impl Resampler {
-    pub(crate) fn new(input_hz: f64, output_hz: u32) -> Self {
+    pub fn new(input_hz: f64, output_hz: u32) -> Self {
         let output_hz = f64::from(output_hz);
         let differs = (input_hz - output_hz).abs() >= SAME_RATE_EPSILON_HZ && output_hz > 0.0;
         Self {
@@ -30,7 +28,7 @@ impl Resampler {
         }
     }
 
-    pub(crate) fn push(&mut self, sample: f32, mut emit: impl FnMut(f32)) {
+    pub fn push(&mut self, sample: f32, mut emit: impl FnMut(f32)) {
         let Some(step) = self.step else {
             return emit(sample);
         };
