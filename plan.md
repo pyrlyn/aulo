@@ -65,11 +65,11 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T6.7 | todo | P2 | 3 | 0% | |
 | T7.4 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T7.5 | todo | P1 | 2 | 0% | |
-| T7.7 | todo | P2 | 3 | 0% | |
+| T7.7 | in progress | P2 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T7.8 | todo | P2 | 3 | 0% | |
 | T7.9 | todo | P0 | 3 | 0% | |
 | T7.11 | todo | P2 | 3 | 0% | |
-| T7.12 | todo | P2 | 2 | 0% | |
+| T7.12 | in progress | P2 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T7.14 | in progress | P2 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T7.16 | todo | P2 | 2 | 0% | |
 | T8.1 | todo | P0 | 4 | 0% | |
@@ -484,7 +484,7 @@ Done when:
 
 ### T4.8. Converse RPC and chat persistence
 
-Stage: S4 · Area: agent · Depends on: T4.6, T3.5 · Blocks: 10 task(s)
+Stage: S4 · Area: agent · Depends on: T4.6, T3.5 · Blocks: 11 task(s)
 
 SessionService.Converse drives aulo-agent; every turn, tool call and usage row is persisted; a chat resumes after a daemon restart.
 
@@ -764,6 +764,8 @@ Done when:
 
 Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 0 task(s)
 
+Execution plan: 1. In aulo-speech-cloud, an SttEngine over Deepgram live streaming (WebSocket) with interim results as Partials and is_final/speech_final as Final; use the official deepgram crate if it is maintained and fits, otherwise the shared WebSocket client with the reason in the commit. 2. Reuse the net module rules (endpoint validation, key handling, error mapping, caps, bounded queues, cancel). 3. Recorded-session test with a local WebSocket server. 4. Verify clippy, fmt, workspace tests.
+
 Official deepgram crate, streaming over WebSocket with interim results.
 
 Done when:
@@ -803,6 +805,8 @@ Done when:
 ### T7.12. TTS: Linux speech-dispatcher / espeak-ng
 
 Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 0 task(s)
+
+Execution plan: 1. New Linux-only engine in aulo-speech-system: espeak-ng subprocess writing raw PCM to stdout (`--stdout`), text over stdin, voices from `--voices`; speech-dispatcher only if it can return audio rather than play it. 2. Bounded reads into the poll queue, kill on cancel, no shell. 3. Tests with a fake espeak-ng script on PATH everywhere, plus a real test gated on the binary being present (Linux runner). 4. Verify clippy, fmt, workspace tests.
 
 Speech-dispatcher (SSIP) or espeak-ng subprocess as the zero-download fallback voice.
 
@@ -1657,7 +1661,7 @@ Done when:
 
 ### T13.6. Client examples from the protos
 
-Stage: S13 · Area: server · Depends on: T3.2 · Blocks: 0 task(s)
+Stage: S13 · Area: server · Depends on: T3.2, T4.8 · Blocks: 0 task(s)
 
 buf generate examples for Python and TypeScript clients (text chat and voice stream).
 
