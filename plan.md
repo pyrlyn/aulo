@@ -35,7 +35,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T2.6 | todo | P1 | 1 | 0% | |
 | T2.7 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T2.10 | todo | P2 | 2 | 0% | |
-| T3.1 | in progress | P0 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T3.2 | todo | P0 | 2 | 0% | |
 | T3.3 | todo | P0 | 3 | 0% | |
 | T3.4 | todo | P0 | 3 | 0% | |
@@ -472,18 +471,6 @@ Done when:
 - search test finds a message by a word
 
 ## S3. gRPC API and daemon
-
-### T3.1. aulo-proto: v1 service definitions
-
-Stage: S3 · Area: api · Depends on: T2.4 · Blocks: 2 task(s)
-
-proto/aulo/v1/*.proto: ChatService (Create/List/Get/Rename/Delete chats, ListMessages), SessionService (bidi Converse: client submissions, server events), VoiceService (bidi Talk: PCM frames and control in; transcripts, state, TTS audio out), ApprovalService, ConfigService (providers, models, voices, devices), McpService, PluginService, AuditService. buf.yaml with lint rules.
-
-Execution plan: 1. proto/aulo/v1/*.proto per spec §6/§7 (chat, session, voice, approval, config, mcp, plugin, audit) with common.proto for ids and events mirroring aulo-types AuloEvent. 2. buf.yaml (v2, STANDARD lint, FILE breaking) and buf.gen.yaml if needed. 3. `buf lint` and `buf build` pass. 4. No Rust codegen here (T3.2 owns aulo-proto crate wiring) unless the card requires it.
-
-Done when:
-
-- buf lint passes; spec.md API section matches the protos
 
 ### T3.2. aulo-proto: code generation and breaking-change check
 

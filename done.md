@@ -117,3 +117,16 @@ Done when:
 - migrations and CRUD tests pass
 
 Outcome: Migration 2026-10-07-000100_grants_audit: grants (subject, scope, decision, nullable expires_at; index on subject+scope) and append-only audit (seq AUTOINCREMENT, UNIQUE prev_hash so two writers cannot fork the chain, hash, kind, payload). Store gains put/list/revoke grants, list_active_grants (expiry filtered in the Diesel query), append_audit (RETURNING via diesel returning_clauses_for_sqlite_3_35), last_audit, list_audit_after. Hashing and chain verification stay in aulo-policy (T5.9). 12 tests. Follow-ups: duplicate subject+scope grants are kept (T5.x decides precedence); no DB triggers block audit UPDATE/DELETE.
+
+### T3.1. aulo-proto: v1 service definitions
+
+Stage: S3 · Area: api · Depends on: T2.4 · Blocks: 2 task(s)
+
+proto/aulo/v1/*.proto: ChatService (Create/List/Get/Rename/Delete chats, ListMessages), SessionService (bidi Converse: client submissions, server events), VoiceService (bidi Talk: PCM frames and control in; transcripts, state, TTS audio out), ApprovalService, ConfigService (providers, models, voices, devices), McpService, PluginService, AuditService. buf.yaml with lint rules.
+
+
+Done when:
+
+- buf lint passes; spec.md API section matches the protos
+
+Outcome: proto/buf.yaml (v2, STANDARD lint, FILE breaking) and proto/aulo/v1/{common,event,chat,session,voice,approval,config,mcp,plugin,audit}.proto: ChatService, SessionService.Converse (bidi), VoiceService.Talk (bidi, 16 KiB audio frames, 32 KiB TTS chunks), ApprovalService, ConfigService (GetConfig JSON, SetConfig RFC 7386 merge patch), McpService, PluginService, AuditService (Export streams JSONL). Event oneof mirrors AuloEvent 1:1 plus agent-loop events. Size caps, untrusted fields and per-service scopes documented in comments. buf lint, build and format clean (buf 1.73.0). spec §5.2/§11 aligned (SetVoice on VoiceService; Converse/Talk Request/Response names). Follow-ups: ApprovalDecision adds DENY_ONCE; Chat.model is ModelRef while the store has one string (T3.5); daemon must enforce needs_click on Decide (T5.3).
