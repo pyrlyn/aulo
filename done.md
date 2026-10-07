@@ -170,3 +170,16 @@ Done when:
 - contract tests with fake engines
 
 Outcome: crates/aulo-speech: object-safe, Send, synchronous push-then-poll traits SttEngine (begin/push/finish/poll/cancel; exactly one Final per utterance), TtsEngine (voices, begin -> AudioFormat, push_text, poll into a caller-owned slice, cancel for barge-in), Vad, KeywordSpotter, TurnDetector. Sync because async_trait boxes a future per call on the audio path; cloud and plugin engines use bounded queues and return Overflow. AudioFrame borrows samples (16 kHz mono PIPELINE format), EngineInfo with validated EngineId and Capabilities (streaming, languages, offline, needs_network), SpeechRate 0.5-2.0. One shared SpeechError instead of associated types (a dyn registry needs one type anyway); should_fall_back() drives fail-open; engine error text capped at 512 bytes. 24 tests with fake engines. Follow-ups: T7.2 owns engine factories and maps out-of-range config rate to an error.
+
+### T3.2. aulo-proto: code generation and breaking-change check
+
+Stage: S3 · Area: api · Depends on: T3.1 · Blocks: 3 task(s)
+
+tonic-build/prost code generation; CI runs buf breaking against main.
+
+
+Done when:
+
+- generated crate builds; CI fails on a breaking field change
+
+Outcome: crates/aulo-proto: build.rs (tonic-prost-build 0.14.6, returns Result) compiles all ten proto/aulo/v1 files, server and client; lib.rs exposes aulo::v1 via include_proto!; generated code passes workspace lints without allows. protoc from PROTOC or PATH. .github/workflows/proto.yml runs buf lint, format and breaking against the PR base (bufbuild/buf-action v1.6.0 and actions/checkout v7.0.1 pinned by SHA). Proven locally: renumbering UserTurn.text makes buf breaking exit 100. 2 round-trip tests. Follow-ups: the Rust CI workflow (T2.3) must install protoc; vendoring protoc is open; the workflow has not run on GitHub yet.

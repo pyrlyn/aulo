@@ -33,7 +33,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T2.3 | todo | P0 | 2 | 0% | |
 | T2.6 | todo | P1 | 1 | 0% | |
 | T2.10 | todo | P2 | 2 | 0% | |
-| T3.2 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T3.3 | todo | P0 | 3 | 0% | |
 | T3.4 | todo | P0 | 3 | 0% | |
 | T3.5 | todo | P0 | 2 | 0% | |
@@ -445,18 +444,6 @@ Done when:
 - search test finds a message by a word
 
 ## S3. gRPC API and daemon
-
-### T3.2. aulo-proto: code generation and breaking-change check
-
-Stage: S3 · Area: api · Depends on: T3.1 · Blocks: 3 task(s)
-
-tonic-build/prost code generation; CI runs buf breaking against main.
-
-Execution plan: 1. crates/aulo-proto: build.rs with tonic-prost-build 0.14.6 compiling proto/aulo/v1/*.proto (server and client), protoc found via PATH or protoc-bin-vendored if that is the maintained norm; lib.rs re-exports `aulo::v1`. 2. Workspace deps tonic, tonic-prost, prost, prost-types at latest. 3. .github/workflows/proto.yml: bufbuild/buf-action lint, format and breaking against main on pull requests. 4. Verify: crate builds, clippy, a test that encodes/decodes an Event; local `buf breaking --against .git#branch=main` fails on a deliberate field-number change (revert after).
-
-Done when:
-
-- generated crate builds; CI fails on a breaking field change
 
 ### T3.3. aulo-server: tonic server scaffold
 
