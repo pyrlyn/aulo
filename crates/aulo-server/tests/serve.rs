@@ -4,6 +4,8 @@
 // Helpers outside #[test] fns are not covered by allow-unwrap-in-tests.
 #![allow(clippy::unwrap_used)]
 
+mod common;
+
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -11,11 +13,9 @@ use std::time::Duration;
 use aulo_server::{
     ApiServer, CancellationToken, Limits, Listen, ServerError, TcpListen, bind, local_socket_path,
 };
-use hyper_util::rt::TokioIo;
-use tokio::net::UnixStream;
-use tokio::task::JoinHandle;
+use common::{connect, start};
 use tonic::Code;
-use tonic::transport::{Channel, Endpoint};
+use tonic::transport::Endpoint;
 use tonic_health::pb::HealthCheckRequest;
 use tonic_health::pb::health_check_response::ServingStatus;
 use tonic_health::pb::health_client::HealthClient;
@@ -23,41 +23,6 @@ use tonic_reflection::pb::v1::ServerReflectionRequest;
 use tonic_reflection::pb::v1::server_reflection_client::ServerReflectionClient;
 use tonic_reflection::pb::v1::server_reflection_request::MessageRequest;
 use tonic_reflection::pb::v1::server_reflection_response::MessageResponse;
-use tower::service_fn;
-
-struct Running {
-    _home: tempfile::TempDir,
-    socket: PathBuf,
-    shutdown: CancellationToken,
-    task: JoinHandle<Result<(), ServerError>>,
-}
-
-async fn start(limits: Limits) -> Running {
-    let home = tempfile::tempdir().unwrap();
-    let socket = local_socket_path(home.path());
-    let bound = bind(&Listen::Unix(socket.clone())).await.unwrap();
-    let shutdown = CancellationToken::new();
-    let server = ApiServer::new(limits).unwrap();
-    let task = tokio::spawn(server.serve(vec![bound], shutdown.clone()));
-    Running {
-        _home: home,
-        socket,
-        shutdown,
-        task,
-    }
-}
-
-// The URI is required by the builder but ignored: the connector dials the socket.
-async fn connect(socket: &Path) -> Channel {
-    let socket = socket.to_owned();
-    Endpoint::from_static("http://[::]:50051")
-        .connect_with_connector(service_fn(move |_| {
-            let socket = socket.clone();
-            async move { Ok::<_, std::io::Error>(TokioIo::new(UnixStream::connect(socket).await?)) }
-        }))
-        .await
-        .unwrap()
-}
 
 fn mode(path: &Path) -> u32 {
     std::fs::metadata(path).unwrap().permissions().mode() & 0o777

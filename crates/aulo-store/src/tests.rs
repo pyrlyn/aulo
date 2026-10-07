@@ -234,3 +234,61 @@ fn audit_rejects_a_forked_chain() {
     assert!(s.append_audit("genesis", "h0b", "k", "{}").is_err());
     assert_eq!(s.list_audit_after(0, 10).unwrap().len(), 1);
 }
+
+#[test]
+fn chats_paginate_by_keyset_even_when_activity_moves() {
+    let (_dir, mut s) = open();
+    let bot = s.create_bot("b").unwrap();
+    let ids: Vec<_> = (0..5)
+        .map(|i| {
+            let bot = (i % 2 == 0).then_some(bot.id.as_str());
+            s.create_chat(bot, "t", "m").unwrap().id
+        })
+        .collect();
+    let all: Vec<_> = s.list_chats(10, 0).unwrap();
+    let cursor = |c: &Chat| (c.updated_at, c.id.clone());
+
+    let page1 = s.list_chats_page(None, None, 2).unwrap();
+    assert_eq!(page1, all[..2]);
+    let (u, id) = cursor(&page1[1]);
+    // A newer chat appearing mid-pagination must not shift the next page.
+    s.create_chat(None, "late", "m").unwrap();
+    let page2 = s.list_chats_page(None, Some((u, &id)), 2).unwrap();
+    assert_eq!(page2, all[2..4]);
+    let (u, id) = cursor(&page2[1]);
+    let page3 = s.list_chats_page(None, Some((u, &id)), 2).unwrap();
+    assert_eq!(page3, all[4..]);
+
+    let of_bot = s.list_chats_page(Some(&bot.id), None, 10).unwrap();
+    let want: Vec<_> = [&ids[0], &ids[2], &ids[4]].into_iter().collect();
+    assert_eq!(of_bot.len(), 3);
+    assert!(of_bot.iter().all(|c| want.contains(&&c.id)));
+}
+
+#[test]
+fn tool_calls_load_for_many_messages_at_once() {
+    let (_dir, mut s) = open();
+    let chat = s.create_chat(None, "t", "m").unwrap();
+    let a = s.append_message(&chat.id, "assistant", "a").unwrap();
+    let b = s.append_message(&chat.id, "assistant", "b").unwrap();
+    let c = s.append_message(&chat.id, "assistant", "c").unwrap();
+    s.record_tool_call(&a.id, "one", "{}", None, "running")
+        .unwrap();
+    s.record_tool_call(&b.id, "two", "{}", None, "running")
+        .unwrap();
+    s.record_tool_call(&c.id, "three", "{}", None, "running")
+        .unwrap();
+    let got = s
+        .list_tool_calls_for(&[a.id.clone(), b.id.clone()])
+        .unwrap();
+    let names: Vec<_> = got.iter().map(|t| t.name.as_str()).collect();
+    assert_eq!(names, ["one", "two"]);
+    assert!(s.list_tool_calls_for(&[]).unwrap().is_empty());
+}
+
+#[test]
+fn an_unknown_bot_is_a_missing_reference() {
+    let (_dir, mut s) = open();
+    let err = s.create_chat(Some("missing"), "t", "m").unwrap_err();
+    assert!(err.is_missing_reference(), "{err}");
+}

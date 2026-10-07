@@ -13,6 +13,8 @@ workspace = true
 
 [dependencies]
 aulo-proto = { path = "../aulo-proto" }
+aulo-store = { path = "../aulo-store" }
+aulo-types = { path = "../aulo-types" }
 thiserror.workspace = true
 tokio = { workspace = true, features = ["net", "rt", "sync", "time"] }
 tokio-stream = { workspace = true, features = ["net"] }

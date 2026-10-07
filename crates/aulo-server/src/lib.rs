@@ -5,6 +5,7 @@
 //! are exposed. Authentication (T3.4) and TLS (T3.8) plug in at the TCP
 //! listener, which refuses non-loopback addresses until they exist.
 
+mod chat;
 mod error;
 mod limits;
 mod listener;
@@ -12,6 +13,7 @@ mod listener;
 mod pipe;
 mod server;
 
+pub use chat::ChatApi;
 pub use error::ServerError;
 pub use limits::{Limits, MessageLimits};
 pub use listener::{Bound, Listen, TcpListen, bind, local_socket_path};

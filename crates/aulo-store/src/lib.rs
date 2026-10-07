@@ -31,6 +31,21 @@ pub enum StoreError {
     Migrate(String),
 }
 
+impl StoreError {
+    /// True when a write named a row that does not exist (a foreign-key violation),
+    /// so callers can answer "not found" without matching on Diesel types.
+    #[must_use]
+    pub fn is_missing_reference(&self) -> bool {
+        matches!(
+            self,
+            Self::Query(diesel::result::Error::DatabaseError(
+                diesel::result::DatabaseErrorKind::ForeignKeyViolation,
+                _
+            ))
+        )
+    }
+}
+
 /// One SQLite connection. Methods take `&mut self`; the daemon shares a store
 /// behind its own lock rather than this crate hiding one.
 pub struct Store {
@@ -131,6 +146,33 @@ impl Store {
             .load(&mut self.conn)?)
     }
 
+    /// Keyset pagination in the same order as [`Store::list_chats`]: only chats
+    /// strictly after `after` (the `(updated_at, id)` of the previous page's last
+    /// chat), optionally of one bot. Offsets would skip or repeat chats as their
+    /// `updated_at` changes between pages.
+    pub fn list_chats_page(
+        &mut self,
+        bot_id: Option<&str>,
+        after: Option<(i64, &str)>,
+        limit: i64,
+    ) -> Result<Vec<Chat>, StoreError> {
+        let mut q = chats::table.into_boxed();
+        if let Some(bot_id) = bot_id {
+            q = q.filter(chats::bot_id.eq(bot_id));
+        }
+        if let Some((updated_at, id)) = after {
+            q = q.filter(
+                chats::updated_at
+                    .lt(updated_at)
+                    .or(chats::updated_at.eq(updated_at).and(chats::id.lt(id))),
+            );
+        }
+        Ok(q.order((chats::updated_at.desc(), chats::id.desc()))
+            .limit(limit)
+            .select(Chat::as_select())
+            .load(&mut self.conn)?)
+    }
+
     /// Returns `false` when no chat has that id.
     pub fn rename_chat(&mut self, id: &str, title: &str) -> Result<bool, StoreError> {
         let n = diesel::update(chats::table.find(id))
@@ -213,6 +255,19 @@ impl Store {
             .values(&call)
             .execute(&mut self.conn)?;
         Ok(call)
+    }
+
+    /// Tool calls of several messages in one query, oldest first, so a page of
+    /// messages costs one round trip instead of one per message.
+    pub fn list_tool_calls_for(
+        &mut self,
+        message_ids: &[String],
+    ) -> Result<Vec<ToolCall>, StoreError> {
+        Ok(tool_calls::table
+            .filter(tool_calls::message_id.eq_any(message_ids))
+            .order(tool_calls::id.asc())
+            .select(ToolCall::as_select())
+            .load(&mut self.conn)?)
     }
 
     pub fn list_tool_calls(&mut self, message_id: &str) -> Result<Vec<ToolCall>, StoreError> {

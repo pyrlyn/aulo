@@ -178,6 +178,8 @@ name = "aulo-server"
 version = "0.0.0"
 dependencies = [
  "aulo-proto",
+ "aulo-store",
+ "aulo-types",
  "hyper-util",
  "tempfile",
  "thiserror",
