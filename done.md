@@ -443,3 +443,16 @@ Done when:
 - test on the Linux runner with espeak-ng installed
 
 Outcome: espeak module in aulo-speech-system (compiles and is tested on every OS; exported as the Linux system engine): one espeak-ng process per sentence with text on stdin, no shell, voice ids only from --voices, sample rate probed from the WAV header and checked per utterance, decoding through hound into a fixed 2^18-sample ring with backpressure and counted drops, cancel and Drop kill and reap the child, a generation fence against stale audio. speech-dispatcher left out: it plays audio itself and would bypass aulo-audio and AEC. The binary path is trusted startup config, never EngineSpec.model. Linux CI installs espeak-ng; the real-binary test is unverified until CI runs. About 584 non-test lines, over the 500 cap.
+
+### T7.7. STT: Deepgram streaming
+
+Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 0 task(s)
+
+
+Official deepgram crate, streaming over WebSocket with interim results.
+
+Done when:
+
+- recorded-session test
+
+Outcome: DeepgramStt in aulo-speech-cloud over the live listen WebSocket, reusing the T7.14 tokio-tungstenite stack and net helpers instead of the official deepgram crate (it pulls a second tokio-tungstenite 0.28 with its own rustls roots, tokio full, and has no message-size cap). Token header never in the URL, linear16 16 kHz frames from a bounded 64-chunk queue, KeepAlive after 4 s of quiet, CloseStream on finish with a bounded wait; cumulative Partials and one Final after finish (speech_final does not end the turn; Finalize not sent). language None sends multi. 401/402/403/429 and connect failures map to Unavailable, server text never echoed, message, byte and transcript caps. Tested against a synthetic recorded session only.
