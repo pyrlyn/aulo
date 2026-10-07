@@ -81,9 +81,9 @@ impl std::fmt::Debug for Capture {
 }
 
 impl Capture {
-    /// [`Capture::start`] after asking `probe`: a refused microphone fails with
-    /// [`AudioError::Permission`] before any device is opened, instead of
-    /// recording silence.
+    /// [`Capture::start`] after asking `probe`: a refused or never-asked
+    /// microphone fails with [`AudioError::Permission`] before any device is
+    /// opened, instead of recording silence or prompting from the daemon.
     pub fn start_checked<P: MicPermissionProbe, B: InputBackend>(
         probe: &P,
         backend: &B,
@@ -304,7 +304,11 @@ mod tests {
     #[test]
     fn a_refused_microphone_fails_before_any_device_is_opened() {
         let fake = backend();
-        for refusal in [MicPermission::Denied, MicPermission::Restricted] {
+        for refusal in [
+            MicPermission::Denied,
+            MicPermission::Restricted,
+            MicPermission::NotDetermined,
+        ] {
             let probe = FakeProbe::new(refusal);
             let err =
                 Capture::start_checked(&probe, &fake, &DeviceSelector::Default, 1).unwrap_err();
@@ -317,11 +321,7 @@ mod tests {
     #[test]
     fn every_other_permission_starts_the_capture() {
         let fake = backend();
-        for answer in [
-            MicPermission::Granted,
-            MicPermission::NotDetermined,
-            MicPermission::Unknown,
-        ] {
+        for answer in [MicPermission::Granted, MicPermission::Unknown] {
             let probe = FakeProbe::new(answer);
             let capture = Capture::start_checked(&probe, &fake, &DeviceSelector::Default, 1);
             assert_eq!(capture.unwrap().device_name(), "Built-in Microphone");
