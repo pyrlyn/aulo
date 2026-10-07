@@ -169,6 +169,8 @@ fn changes(fake: &Fake) -> Vec<&str> {
         .collect()
 }
 
+// launchd and systemd only run on Unix; on Windows `Path::join` writes `\`.
+#[cfg(unix)]
 #[test]
 fn launchd_install_and_uninstall_are_idempotent() {
     let (backend, spec, mut fake) = (launchd::Launchd, spec(), Fake::default());
@@ -398,6 +400,8 @@ impl ServiceManager for Missing {
 
 const AWKWARD: &str = r#"/opt/my apps/"q" & <x> 'y' 50% $HOME\bin/aulod"#;
 
+// launchd and systemd only run on Unix; on Windows `Path::join` writes `\`.
+#[cfg(unix)]
 #[test]
 fn plist_escapes_xml_and_keeps_the_path_as_one_argument() {
     let plist = launchd::render(&spec_at(AWKWARD, true));
@@ -418,6 +422,8 @@ fn plist_without_a_pinned_home_has_no_environment() {
     assert!(plist.starts_with("<?xml"));
 }
 
+// launchd and systemd only run on Unix; on Windows `Path::join` writes `\`.
+#[cfg(unix)]
 #[test]
 fn unit_quotes_the_command_and_doubles_specifiers() {
     let unit = systemd::render(&spec_at(AWKWARD, true));
