@@ -200,6 +200,7 @@ Crate roles follow rust.md: contracts, domain, adapters, assembly, surfaces, tes
 | `aulo-config` | adapter (config owner) | Typed config, JSON Schema, layers, provenance |
 | `aulo-store` | adapter (diesel owner) | SQLite: bots, chats, messages, tool calls, usage, grants, audit, memory |
 | `aulo-telemetry` | adapter | Logs, traces, redaction |
+| `aulo-models` | adapter | Speech model catalog with pinned SHA-256, verifying downloader, pull/ls/rm (T7.3) |
 | `aulo-audio` | adapter | Capture, playback, AEC, devices |
 | `aulo-speech-sherpa` | adapter (sherpa-onnx owner) | VAD, KWS, Parakeet/Moonshine STT, Kokoro/Matcha/VITS TTS |
 | `aulo-speech-whisper` | adapter | whisper.cpp STT |

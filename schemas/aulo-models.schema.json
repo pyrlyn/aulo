@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Catalog",
+  "description": "The set of models aulo knows how to download.",
+  "type": "object",
+  "properties": {
+    "models": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Model"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "models"
+  ],
+  "$defs": {
+    "Model": {
+      "description": "A model: a directory of files that are installed together.",
+      "type": "object",
+      "properties": {
+        "base_url": {
+          "description": "Immutable location (a Hugging Face commit or a release tag) ending in `/`.",
+          "type": "string"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ModelFile"
+          },
+          "minItems": 1
+        },
+        "id": {
+          "description": "Directory name under `<AULO_HOME>/models/`.",
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+        },
+        "kind": {
+          "$ref": "#/$defs/ModelKind"
+        },
+        "license": {
+          "description": "SPDX identifier; shown before a download because some licences need attribution.",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "license",
+        "base_url",
+        "files"
+      ]
+    },
+    "ModelFile": {
+      "description": "One downloadable file. The size is also the download cap.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "description": "Path relative to the model directory and to `base_url`; no `..`.",
+          "type": "string"
+        },
+        "sha256": {
+          "description": "Lowercase hex SHA-256 of the file.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "size": {
+          "description": "Exact size in bytes.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "size",
+        "sha256"
+      ]
+    },
+    "ModelKind": {
+      "description": "Which speech role a model fills.",
+      "type": "string",
+      "enum": [
+        "stt",
+        "tts",
+        "vad",
+        "kws"
+      ]
+    }
+  }
+}

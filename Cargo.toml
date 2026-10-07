@@ -50,6 +50,8 @@ insta = "1.49.0"
 pulldown-cmark = { version = "0.13.4", default-features = false }
 # secret patterns for the log redaction layer
 regex = "1.13.1"
+# streaming HTTPS model downloads in aulo-models (rustls, no system OpenSSL)
+reqwest = { version = "0.13.5", default-features = false, features = ["rustls"] }
 # serialization of config, events and stored rows
 serde = { version = "1.0.229", features = ["derive"] }
 # plugin manifest versions (semver.org precedence and validation)
@@ -58,12 +60,16 @@ semver = { version = "1.0.28", features = ["serde"] }
 serde_json = "1.0.151"
 # temporary dirs in tests
 tempfile = "3.27.0"
+# SHA-256 of downloaded model files, hashed while streaming
+sha2 = "0.11.0"
 # typed errors in library crates
 thiserror = "2.0.21"
 # async runtime for the daemon
 tokio = "1.53.2"
 # config file format
 toml = "1.1.6"
+# local HTTP fixture server in the aulo-models tests
+wiremock = "0.6.5"
 # structured logs
 tracing = "0.1.44"
 # daily-rotating, non-blocking log files with a bounded file count
