@@ -1,0 +1,120 @@
+syntax = "proto3";
+
+package aulo.v1;
+
+import "aulo/v1/common.proto";
+
+// Providers, models, audio devices and the configuration. Reads need `read`;
+// every write needs `admin`.
+service ConfigService {
+  rpc ListProviders(ListProvidersRequest) returns (ListProvidersResponse);
+  // Stores the key in the OS keychain. Write-only: no RPC ever returns a key,
+  // and the key must not appear in logs, audit rows or events. A remote client
+  // should only call it over TLS.
+  rpc SetProviderKey(SetProviderKeyRequest) returns (SetProviderKeyResponse);
+  // The catalog merged with what the provider's server reports as served.
+  rpc ListModels(ListModelsRequest) returns (ListModelsResponse);
+  rpc ListAudioDevices(ListAudioDevicesRequest) returns (ListAudioDevicesResponse);
+  // Picks the audio device for a direction; the choice persists. An unplugged
+  // device falls back to the default with a Notice.
+  rpc SetDevice(SetDeviceRequest) returns (SetDeviceResponse);
+  rpc GetConfig(GetConfigRequest) returns (GetConfigResponse);
+  rpc SetConfig(SetConfigRequest) returns (SetConfigResponse);
+}
+
+message Provider {
+  // Section name under [providers.*]. At most 64 bytes.
+  string id = 1;
+  // Wire family, for example "openai", "anthropic" or "openai-compatible".
+  string kind = 2;
+  // Absent for hosted providers with a fixed endpoint.
+  optional string base_url = 3;
+  // Whether a credential is available (keychain or env). The value is never
+  // sent.
+  bool key_set = 4;
+}
+
+message Model {
+  ModelRef ref = 1;
+  // Untrusted: comes from a provider's server. At most 128 bytes.
+  string display_name = 2;
+  // True when the provider's server reports it as served right now, as opposed
+  // to only being in the catalog.
+  bool served = 3;
+}
+
+enum AudioDirection {
+  AUDIO_DIRECTION_UNSPECIFIED = 0;
+  AUDIO_DIRECTION_INPUT = 1;
+  AUDIO_DIRECTION_OUTPUT = 2;
+}
+
+message AudioDevice {
+  // Stable id of the device on this host. At most 256 bytes.
+  string id = 1;
+  // Untrusted: the OS or driver supplies it.
+  string name = 2;
+  AudioDirection direction = 3;
+  bool is_default = 4;
+}
+
+message ListProvidersRequest {}
+
+message ListProvidersResponse {
+  repeated Provider providers = 1;
+}
+
+message SetProviderKeyRequest {
+  string provider_id = 1;
+  // At most 4 KiB. Never echoed, logged or audited.
+  string key = 2;
+}
+
+message SetProviderKeyResponse {}
+
+message ListModelsRequest {
+  // Only this provider.
+  optional string provider_id = 1;
+  uint32 page_size = 2;
+  string page_token = 3;
+}
+
+message ListModelsResponse {
+  repeated Model models = 1;
+  string next_page_token = 2;
+}
+
+message ListAudioDevicesRequest {}
+
+message ListAudioDevicesResponse {
+  repeated AudioDevice devices = 1;
+}
+
+message SetDeviceRequest {
+  AudioDirection direction = 1;
+  // Empty selects the system default.
+  string device_id = 2;
+}
+
+message SetDeviceResponse {}
+
+message GetConfigRequest {}
+
+message GetConfigResponse {
+  // The effective configuration as JSON that validates against
+  // schemas/aulo.schema.json. Secrets are never part of it; inline keys are
+  // rejected by the config loader.
+  string config_json = 1;
+}
+
+message SetConfigRequest {
+  // An RFC 7386 JSON merge patch applied to the user layer (~/.aulo/config.toml)
+  // and validated against the schema before it is written; unknown keys are
+  // rejected. At most 64 KiB.
+  string merge_patch_json = 1;
+}
+
+message SetConfigResponse {
+  // The effective configuration after the patch, as in GetConfigResponse.
+  string config_json = 1;
+}

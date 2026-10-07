@@ -10,6 +10,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | gh | brew / mise | Creates labels, milestones and issues from `plan.md` | https://github.com/cli/cli |
 | rustc, cargo, rustfmt, clippy | mise (`mise.toml`, 1.99.0) | Build, format and lint the workspace | https://github.com/rust-lang/rust |
 | just | mise (`mise.toml`) | Task runner (`justfile`) | https://github.com/casey/just |
+| buf (1.73.0) | brew | Lints and builds the protos, `buf format`, breaking-change check (`proto/buf.yaml`) | https://github.com/bufbuild/buf |
 | mise | brew | Pins the Rust toolchain and just | https://github.com/jdx/mise |
 
 ## cargo

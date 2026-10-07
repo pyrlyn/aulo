@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package aulo.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// The append-only, hash-chained audit log of tool calls, approvals, egress and
+// plugin loads. Read only: no RPC writes or deletes rows. Scope: `admin`,
+// because payloads can contain what a user asked the agent to do.
+service AuditService {
+  // Oldest first (seq ascending).
+  rpc Query(QueryRequest) returns (QueryResponse);
+  // Recomputes the whole hash chain.
+  rpc Verify(VerifyRequest) returns (VerifyResponse);
+  // Streams rows as JSON Lines, one AuditEntry per line, in chunks.
+  rpc Export(ExportRequest) returns (stream ExportResponse);
+}
+
+message AuditEntry {
+  // Position in the chain, assigned by the database.
+  uint64 seq = 1;
+  // Hex digests; hash covers prev_hash and the row's content.
+  string prev_hash = 2;
+  string hash = 3;
+  // Row kind, for example "tool_call" or "approval".
+  string kind = 4;
+  // JSON object. Untrusted: it quotes model-chosen arguments and tool output.
+  string payload_json = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message QueryRequest {
+  uint32 page_size = 1;
+  string page_token = 2;
+  // Only rows of this kind.
+  optional string kind = 3;
+  // Only rows created at or after / before these instants.
+  optional google.protobuf.Timestamp since = 4;
+  optional google.protobuf.Timestamp until = 5;
+}
+
+message QueryResponse {
+  repeated AuditEntry entries = 1;
+  string next_page_token = 2;
+}
+
+message VerifyRequest {}
+
+message VerifyResponse {
+  bool ok = 1;
+  uint64 rows_checked = 2;
+  // Set when ok is false: the first row whose hash does not match.
+  optional uint64 first_bad_seq = 3;
+}
+
+message ExportRequest {
+  // Inclusive bounds on seq; absent means from the first or to the last row.
+  optional uint64 from_seq = 1;
+  optional uint64 to_seq = 2;
+}
+
+message ExportResponse {
+  // A slice of the JSON Lines stream, at most 64 KiB. A row may span chunks;
+  // concatenate in order.
+  bytes chunk = 1;
+}

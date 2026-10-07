@@ -264,7 +264,7 @@ When a realtime provider is selected for the voice tier:
 - **Overrides.**
   - A bot can override the choice, and a chat can override the bot.
 - **How to switch.**
-  - `ConfigService.SetVoice`;
+  - `VoiceService.SetVoice`;
   - `aulo voice use <engine> [voice]`;
   - the desktop picker with a preview;
   - a local voice command ("use voice Anna").
@@ -415,8 +415,8 @@ Also:
 | Service | Key RPCs |
 | --- | --- |
 | `ChatService` | CreateChat, ListChats, GetChat, RenameChat, DeleteChat, ListMessages, SearchMessages |
-| `SessionService` | `Converse(stream Submission) returns (stream Event)`: user turns, approvals, interrupts, model switches in; text deltas, tool calls, approvals, notices out |
-| `VoiceService` | `Talk(stream TalkIn) returns (stream TalkOut)`: audio frames and control in; state, partial/final transcripts and TTS audio out. StartListening, StopListening, SetVoice, ListVoices |
+| `SessionService` | `Converse(stream ConverseRequest) returns (stream ConverseResponse)`: attach, user turns, approvals, interrupts, model switches, takeover-done in; `Event`s (text deltas, tool calls, approvals, notices) out |
+| `VoiceService` | `Talk(stream TalkRequest) returns (stream TalkResponse)`: start, audio frames and control in; state, partial/final transcripts and TTS audio out. StartListening, StopListening, SetVoice, ListVoices |
 | `ApprovalService` | ListPending, Decide, ListGrants, RevokeGrant |
 | `ConfigService` | ListProviders, SetProviderKey (write-only), ListModels, ListAudioDevices, SetDevice, GetConfig, SetConfig |
 | `McpService` | ListServers, ServerStatus, Enable, Disable, Restart |

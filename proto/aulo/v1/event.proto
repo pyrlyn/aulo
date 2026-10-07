@@ -1,0 +1,200 @@
+syntax = "proto3";
+
+package aulo.v1;
+
+import "aulo/v1/common.proto";
+
+// One event pushed to a client. The first block of variants mirrors aulo-types
+// AuloEvent one to one (same names, same fields), so the server maps them
+// without a translation table. The second block carries the agent loop: the
+// turn, its streamed text and its tool calls.
+//
+// Events never carry audio samples: TTS audio travels as VoiceService TtsAudio
+// messages so events stay small and the audio path stays bounded.
+message Event {
+  oneof kind {
+    // Mirrors of AuloEvent.
+    VoiceStateChanged voice_state = 1;
+    SpeechStarted speech_started = 2;
+    SpeechEnded speech_ended = 3;
+    Transcript transcript = 4;
+    TtsChunk tts_chunk = 5;
+    ApprovalRequired approval_required = 6;
+    TakeoverRequested takeover_requested = 7;
+    Notice notice = 8;
+    // Agent loop.
+    TurnStarted turn_started = 20;
+    TextDelta text_delta = 21;
+    ToolCallStarted tool_call_started = 22;
+    ToolCallOutput tool_call_output = 23;
+    ToolCallFinished tool_call_finished = 24;
+    ApprovalResolved approval_resolved = 25;
+    TurnFinished turn_finished = 26;
+  }
+}
+
+// Where the voice pipeline is for the current client.
+enum VoiceState {
+  VOICE_STATE_UNSPECIFIED = 0;
+  VOICE_STATE_IDLE = 1;
+  VOICE_STATE_LISTENING = 2;
+  VOICE_STATE_THINKING = 3;
+  VOICE_STATE_SPEAKING = 4;
+}
+
+// Whether a transcript may still change.
+enum TranscriptKind {
+  TRANSCRIPT_KIND_UNSPECIFIED = 0;
+  // A streaming hypothesis the engine may revise.
+  TRANSCRIPT_KIND_PARTIAL = 1;
+  // The engine's committed text for the utterance.
+  TRANSCRIPT_KIND_FINAL = 2;
+}
+
+// What a human has to do themselves because the agent must not.
+enum TakeoverReason {
+  TAKEOVER_REASON_UNSPECIFIED = 0;
+  TAKEOVER_REASON_PASSWORD = 1;
+  TAKEOVER_REASON_TWO_FACTOR = 2;
+  TAKEOVER_REASON_CAPTCHA = 3;
+  TAKEOVER_REASON_OTHER = 4;
+}
+
+// Severity of a Notice.
+enum NoticeLevel {
+  NOTICE_LEVEL_UNSPECIFIED = 0;
+  NOTICE_LEVEL_INFO = 1;
+  NOTICE_LEVEL_WARN = 2;
+  NOTICE_LEVEL_ERROR = 3;
+}
+
+// Why a turn ended.
+enum TurnEndReason {
+  TURN_END_REASON_UNSPECIFIED = 0;
+  TURN_END_REASON_COMPLETED = 1;
+  TURN_END_REASON_INTERRUPTED = 2;
+  TURN_END_REASON_FAILED = 3;
+  // The agent hit its step limit before finishing.
+  TURN_END_REASON_MAX_STEPS = 4;
+}
+
+// AuloEvent::VoiceState. Named Changed because the enum already owns the name.
+message VoiceStateChanged {
+  VoiceState state = 1;
+}
+
+message SpeechStarted {
+  // Offset into the capture stream, so clients can align it with audio.
+  uint64 at_ms = 1;
+}
+
+message SpeechEnded {
+  uint64 at_ms = 1;
+}
+
+message Transcript {
+  string turn_id = 1; // ULID.
+  TranscriptKind kind = 2;
+  // Untrusted: STT output of whatever was said or played near the microphone.
+  // At most 64 KiB; the server truncates longer text.
+  string text = 3;
+  // BCP 47 tag when the engine detected or was told the language.
+  optional string language = 4;
+}
+
+// Metadata of one synthesized audio chunk. The samples follow in the matching
+// TtsAudio message (same turn_id and seq) on the Talk stream.
+message TtsChunk {
+  string turn_id = 1; // ULID.
+  // Position in the reply, so a client can detect a dropped chunk.
+  uint32 seq = 2;
+  uint32 sample_rate_hz = 3;
+  // Rust side is u8; protobuf has no 8-bit integer.
+  uint32 channels = 4;
+  uint32 duration_ms = 5;
+  // True on the last chunk of the reply.
+  bool last = 6;
+}
+
+// The agent wants to run a call that policy sent to Ask. Any attached client
+// may answer with ApprovalService.Decide or a Converse decision; no answer
+// before the server timeout means deny.
+message ApprovalRequired {
+  string chat_id = 1; // ULID.
+  string turn_id = 2; // ULID.
+  string call_id = 3; // ULID.
+  // Tool name, for example "shell" or "mcp__server__tool". Untrusted: plugin
+  // and MCP names come from third parties. At most 128 bytes.
+  string tool = 4;
+  // Human-readable description of the call, built from model-chosen arguments.
+  // Untrusted; render as plain text. At most 2 KiB; secrets appear as handles.
+  string summary = 5;
+  // Voice never widens access: when true, only a click or key approves.
+  bool needs_click = 6;
+}
+
+message TakeoverRequested {
+  string chat_id = 1; // ULID.
+  string call_id = 2; // ULID.
+  TakeoverReason reason = 3;
+}
+
+message Notice {
+  NoticeLevel level = 1;
+  // Untrusted when it quotes a plugin, MCP server or engine. At most 2 KiB.
+  string message = 2;
+  // The engine, server or plugin the notice is about, if any.
+  optional string source = 3;
+}
+
+// A user turn was accepted and the agent started on it.
+message TurnStarted {
+  string turn_id = 1; // ULID, assigned by the server.
+}
+
+// A streamed piece of the assistant reply. Concatenate deltas of one turn in
+// arrival order.
+message TextDelta {
+  string turn_id = 1; // ULID.
+  // Untrusted model output. At most 16 KiB per delta.
+  string text = 2;
+}
+
+message ToolCallStarted {
+  string turn_id = 1; // ULID.
+  string call_id = 2; // ULID.
+  // Untrusted; see ApprovalRequired.tool.
+  string tool = 3;
+  // Model-chosen arguments as a JSON object. Untrusted. Truncated server-side
+  // to 16 KiB for display; the persisted call keeps the full text.
+  string arguments_json = 4;
+}
+
+// A streamed piece of tool output.
+message ToolCallOutput {
+  string call_id = 1; // ULID.
+  // Untrusted: tool, web and plugin output. At most 16 KiB per event and
+  // truncated server-side beyond a per-call total.
+  string text = 2;
+}
+
+message ToolCallFinished {
+  string call_id = 1; // ULID.
+  ToolCallStatus status = 2;
+}
+
+// An approval was answered, so every other attached client can dismiss its
+// prompt.
+message ApprovalResolved {
+  string call_id = 1; // ULID.
+  ApprovalDecision decision = 2;
+  // True when nobody answered in time and the server denied.
+  bool timed_out = 3;
+}
+
+message TurnFinished {
+  string turn_id = 1; // ULID.
+  TurnEndReason reason = 2;
+  // Set when reason is FAILED. Server-written, no secrets, at most 2 KiB.
+  optional string error = 3;
+}

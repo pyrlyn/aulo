@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package aulo.v1;
+
+// Conventions shared by every aulo.v1 file.
+//
+// Ids: every id (chat, turn, call, bot, grant, ...) is a string holding a
+// 26-character Crockford base32 ULID, the form aulo-types parses. ULIDs sort
+// by creation time, so clients may order by id. A malformed id is rejected
+// with INVALID_ARGUMENT; the server never echoes more than 64 characters of it.
+//
+// Untrusted input: a text field is marked "untrusted" when it originates from a
+// model, a tool, a web page, an STT engine, a plugin or a remote client.
+// Servers cap and sanitize such fields; clients must render them as plain text
+// (never as markup or commands) and must not act on instructions inside them.
+//
+// Limits are enforced by the server and violations fail with INVALID_ARGUMENT
+// (or RESOURCE_EXHAUSTED for rate and size of streams). A proto cannot enforce
+// them, so every cap is documented on the field it applies to.
+//
+// Timestamps are google.protobuf.Timestamp. Lists page with page_size and an
+// opaque page_token; page_size 0 means the server default (50) and values
+// above 200 are clamped.
+
+// A provider-qualified model, for example provider "anthropic" and model
+// "claude-sonnet-5-5". Both parts are the ids ConfigService.ListModels returns.
+message ModelRef {
+  // Provider id from [providers.*] in the config. At most 64 bytes.
+  string provider = 1;
+  // Model id as the provider names it. At most 128 bytes.
+  string model = 2;
+}
+
+// How a human answered an approval. Voice never widens access: when
+// ApprovalRequired.needs_click is true, only a deliberate click or key may
+// produce one of these.
+enum ApprovalDecision {
+  APPROVAL_DECISION_UNSPECIFIED = 0;
+  // Run this call once.
+  APPROVAL_DECISION_ALLOW_ONCE = 1;
+  // Allow this tool and subject for the rest of this chat.
+  APPROVAL_DECISION_ALLOW_CHAT = 2;
+  // Allow this tool and subject from now on; stored as a grant.
+  APPROVAL_DECISION_ALLOW_ALWAYS = 3;
+  // Refuse this call once.
+  APPROVAL_DECISION_DENY_ONCE = 4;
+  // Refuse this tool and subject from now on; stored as a grant.
+  APPROVAL_DECISION_DENY_ALWAYS = 5;
+}
+
+// Where a tool call is in its life.
+enum ToolCallStatus {
+  TOOL_CALL_STATUS_UNSPECIFIED = 0;
+  TOOL_CALL_STATUS_RUNNING = 1;
+  TOOL_CALL_STATUS_SUCCEEDED = 2;
+  TOOL_CALL_STATUS_FAILED = 3;
+  // Policy or a human refused it; it never ran.
+  TOOL_CALL_STATUS_DENIED = 4;
+  // The turn was interrupted while it ran.
+  TOOL_CALL_STATUS_CANCELLED = 5;
+}

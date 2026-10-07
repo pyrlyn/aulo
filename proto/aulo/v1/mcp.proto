@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package aulo.v1;
+
+// The MCP servers aulo is a client of. Reads need `read`; Enable, Disable and
+// Restart need `control`. A broken server is a notice and a FAILED state, never
+// an RPC error for the others. Enable, Disable and Restart messages carry the
+// service name because PluginService has RPCs of the same names and message
+// names are package-wide.
+service McpService {
+  rpc ListServers(ListServersRequest) returns (ListServersResponse);
+  // One server with its tool names and recent stderr.
+  rpc ServerStatus(ServerStatusRequest) returns (ServerStatusResponse);
+  rpc Enable(McpServiceEnableRequest) returns (McpServiceEnableResponse);
+  rpc Disable(McpServiceDisableRequest) returns (McpServiceDisableResponse);
+  rpc Restart(McpServiceRestartRequest) returns (McpServiceRestartResponse);
+}
+
+enum McpServerState {
+  MCP_SERVER_STATE_UNSPECIFIED = 0;
+  MCP_SERVER_STATE_DISABLED = 1;
+  MCP_SERVER_STATE_STARTING = 2;
+  MCP_SERVER_STATE_READY = 3;
+  MCP_SERVER_STATE_FAILED = 4;
+}
+
+message McpServer {
+  // Key under [mcp.servers]. At most 64 bytes.
+  string name = 1;
+  McpServerState state = 2;
+  // Why the server is FAILED. Untrusted: it can quote the server's own output.
+  // At most 2 KiB.
+  optional string last_error = 3;
+}
+
+message ListServersRequest {}
+
+message ListServersResponse {
+  repeated McpServer servers = 1;
+}
+
+message ServerStatusRequest {
+  string name = 1;
+}
+
+message ServerStatusResponse {
+  McpServer server = 1;
+  // Tool names as the model sees them (mcp__server__tool). Untrusted: the
+  // server chooses them.
+  repeated string tools = 2;
+  // The last lines the server wrote to stderr, oldest first. Untrusted; the
+  // server keeps at most 100 lines of 4 KiB each.
+  repeated string recent_stderr = 3;
+}
+
+message McpServiceEnableRequest {
+  string name = 1;
+}
+
+message McpServiceEnableResponse {
+  McpServer server = 1;
+}
+
+message McpServiceDisableRequest {
+  string name = 1;
+}
+
+message McpServiceDisableResponse {
+  McpServer server = 1;
+}
+
+message McpServiceRestartRequest {
+  string name = 1;
+}
+
+message McpServiceRestartResponse {
+  McpServer server = 1;
+}

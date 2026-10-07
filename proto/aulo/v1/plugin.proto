@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package aulo.v1;
+
+// Installed plugins (spec section 9). Scope: List needs `read`; every other
+// RPC needs `admin`, because a plugin is code that runs on the host.
+service PluginService {
+  rpc List(PluginServiceListRequest) returns (PluginServiceListResponse);
+  // Installs from a local path or a git URL and leaves the plugin disabled
+  // until Enable. The manifest is validated and the plugin's declared
+  // capabilities are shown for approval before anything runs.
+  rpc Install(PluginServiceInstallRequest) returns (PluginServiceInstallResponse);
+  rpc Enable(PluginServiceEnableRequest) returns (PluginServiceEnableResponse);
+  rpc Disable(PluginServiceDisableRequest) returns (PluginServiceDisableResponse);
+  rpc Remove(PluginServiceRemoveRequest) returns (PluginServiceRemoveResponse);
+}
+
+// How the host runs the plugin.
+enum PluginKind {
+  PLUGIN_KIND_UNSPECIFIED = 0;
+  PLUGIN_KIND_MCP_PROCESS = 1;
+  PLUGIN_KIND_GRPC_PROCESS = 2;
+  PLUGIN_KIND_WASM = 3;
+}
+
+message Plugin {
+  // Manifest id. At most 64 bytes.
+  string id = 1;
+  // Untrusted: the plugin's own manifest text. At most 128 bytes.
+  string name = 2;
+  string version = 3;
+  PluginKind kind = 4;
+  bool enabled = 5;
+}
+
+message PluginServiceListRequest {}
+
+message PluginServiceListResponse {
+  repeated Plugin plugins = 1;
+}
+
+message PluginServiceInstallRequest {
+  // A filesystem path on the daemon's host or a git URL. Untrusted; at most
+  // 2 KiB. A relative path is rejected.
+  string source = 1;
+}
+
+message PluginServiceInstallResponse {
+  Plugin plugin = 1;
+}
+
+message PluginServiceEnableRequest {
+  string id = 1;
+}
+
+message PluginServiceEnableResponse {
+  Plugin plugin = 1;
+}
+
+message PluginServiceDisableRequest {
+  string id = 1;
+}
+
+message PluginServiceDisableResponse {
+  Plugin plugin = 1;
+}
+
+message PluginServiceRemoveRequest {
+  string id = 1;
+}
+
+message PluginServiceRemoveResponse {}

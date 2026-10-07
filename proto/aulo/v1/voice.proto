@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package aulo.v1;
+
+import "aulo/v1/event.proto";
+
+// Server-side voice pipeline for clients that have no audio stack of their own
+// (remote clients) or want the daemon's. Scope: `voice`; SetVoice also needs
+// `control`.
+service VoiceService {
+  // The client streams microphone audio and control; the server runs VAD, STT,
+  // the agent and TTS and streams back state, transcripts and synthesized
+  // audio. The first request must be a Start; anything else closes the stream
+  // with FAILED_PRECONDITION. The stream carries only events about this
+  // client's voice session: VoiceStateChanged, SpeechStarted, SpeechEnded,
+  // Transcript, TtsChunk, Notice, ApprovalRequired and TakeoverRequested.
+  rpc Talk(stream TalkRequest) returns (stream TalkResponse);
+  // Push-to-talk for the daemon's own microphone (local mode). Does nothing
+  // useful for remote clients, which use TalkControl on their stream.
+  rpc StartListening(StartListeningRequest) returns (StartListeningResponse);
+  rpc StopListening(StopListeningRequest) returns (StopListeningResponse);
+  // Lists the voices of the active or named TTS engine.
+  rpc ListVoices(ListVoicesRequest) returns (ListVoicesResponse);
+  // Takes effect from the next utterance; a sentence being spoken finishes.
+  rpc SetVoice(SetVoiceRequest) returns (SetVoiceResponse);
+}
+
+enum AudioFormat {
+  AUDIO_FORMAT_UNSPECIFIED = 0;
+  // Signed 16-bit little-endian PCM, 16 kHz, mono: the default for remote
+  // clients. Opus is added later as another value (T6.7).
+  AUDIO_FORMAT_PCM_S16LE_16KHZ_MONO = 1;
+}
+
+// Push-to-talk and playback control inside a Talk stream.
+enum TalkControl {
+  TALK_CONTROL_UNSPECIFIED = 0;
+  TALK_CONTROL_START_LISTENING = 1;
+  TALK_CONTROL_STOP_LISTENING = 2;
+}
+
+message TalkRequest {
+  oneof input {
+    TalkStart start = 1;
+    // One frame of microphone audio in the format given in Start, ideally
+    // 20 ms (640 bytes of PCM). At most 16 KiB (512 ms); a larger frame closes
+    // the stream. The server buffers audio in a fixed-size ring and counts
+    // overflow, so a client that sends faster than real time loses audio.
+    bytes audio = 2;
+    TalkControl control = 3;
+  }
+}
+
+message TalkResponse {
+  oneof output {
+    Event event = 1;
+    TtsAudio tts_audio = 2;
+  }
+}
+
+message TalkStart {
+  // The chat that receives the final transcripts. ULID.
+  string chat_id = 1;
+  // Format of every audio frame that follows.
+  AudioFormat format = 2;
+}
+
+// Synthesized speech. Sample rate, channel count and duration come in the
+// TtsChunk event with the same turn_id and seq, which is sent first.
+message TtsAudio {
+  string turn_id = 1; // ULID.
+  uint32 seq = 2;
+  // Signed 16-bit little-endian PCM. At most 32 KiB per message.
+  bytes pcm_s16le = 3;
+}
+
+message StartListeningRequest {}
+message StartListeningResponse {}
+message StopListeningRequest {}
+message StopListeningResponse {}
+
+message Voice {
+  // TTS engine id from [voice.tts], for example "kokoro".
+  string engine = 1;
+  // Engine-specific voice id. At most 128 bytes.
+  string id = 2;
+  // Display name; untrusted when a plugin engine supplies it.
+  string name = 3;
+  // BCP 47 tag.
+  string language = 4;
+}
+
+message ListVoicesRequest {
+  // Defaults to the active engine.
+  optional string engine = 1;
+}
+
+message ListVoicesResponse {
+  repeated Voice voices = 1;
+}
+
+message SetVoiceRequest {
+  string engine = 1;
+  string voice_id = 2;
+  // Where the override applies. Absent means the global default; a chat
+  // override beats a bot override.
+  oneof target {
+    string bot_id = 3;
+    string chat_id = 4;
+  }
+}
+
+message SetVoiceResponse {}

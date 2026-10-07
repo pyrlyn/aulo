@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package aulo.v1;
+
+import "aulo/v1/common.proto";
+import "aulo/v1/event.proto";
+import "google/protobuf/timestamp.proto";
+
+// Human answers to the questions policy asks, and the standing grants those
+// answers create. Scope: `control`.
+service ApprovalService {
+  // Approvals still waiting, oldest first. Lets a client that attached late
+  // show prompts it missed.
+  rpc ListPending(ListPendingRequest) returns (ListPendingResponse);
+  // Answers one pending approval. Always a deliberate click or key from the
+  // client's own UI: spoken answers are resolved inside the daemon and never
+  // arrive here, so a client must not forward a spoken yes for a call whose
+  // needs_click is true. An unknown or already answered call_id fails with
+  // NOT_FOUND.
+  rpc Decide(DecideRequest) returns (DecideResponse);
+  rpc ListGrants(ListGrantsRequest) returns (ListGrantsResponse);
+  rpc RevokeGrant(RevokeGrantRequest) returns (RevokeGrantResponse);
+}
+
+enum GrantDecision {
+  GRANT_DECISION_UNSPECIFIED = 0;
+  GRANT_DECISION_ALLOW = 1;
+  GRANT_DECISION_DENY = 2;
+}
+
+// A standing answer stored by an ALLOW_ALWAYS or DENY_ALWAYS decision.
+message Grant {
+  string id = 1; // ULID.
+  // What the grant covers, written by aulo-policy; opaque to clients, which
+  // show it and never build one.
+  string subject = 2;
+  string scope = 3;
+  GrantDecision decision = 4;
+  // Absent means it never expires.
+  optional google.protobuf.Timestamp expires_at = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message ListPendingRequest {
+  // Only this chat.
+  optional string chat_id = 1;
+}
+
+message ListPendingResponse {
+  repeated ApprovalRequired approvals = 1;
+}
+
+message DecideRequest {
+  string call_id = 1; // ULID.
+  ApprovalDecision decision = 2;
+}
+
+message DecideResponse {}
+
+message ListGrantsRequest {
+  uint32 page_size = 1;
+  string page_token = 2;
+}
+
+message ListGrantsResponse {
+  repeated Grant grants = 1;
+  string next_page_token = 2;
+}
+
+message RevokeGrantRequest {
+  string grant_id = 1; // ULID.
+}
+
+message RevokeGrantResponse {}

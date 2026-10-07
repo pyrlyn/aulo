@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package aulo.v1;
+
+import "aulo/v1/common.proto";
+import "aulo/v1/event.proto";
+
+// Text conversation with the agent. Scope: `chat`; an Interrupt with
+// all=true needs `control`.
+service SessionService {
+  // One stream drives one chat. The first request must be an Attach; anything
+  // else closes the stream with FAILED_PRECONDITION. The server answers with
+  // events of that chat only. Several clients may attach to one chat; each
+  // sees every event of it. History before the attach is read with
+  // ChatService.ListMessages, not replayed here.
+  rpc Converse(stream ConverseRequest) returns (stream ConverseResponse);
+}
+
+// A client submission. Names follow the agent loop's Submission type.
+message ConverseRequest {
+  oneof submission {
+    Attach attach = 1;
+    UserTurn user_turn = 2;
+    DecideApproval decide_approval = 3;
+    Interrupt interrupt = 4;
+    SwitchModel switch_model = 5;
+    TakeoverDone takeover_done = 6;
+  }
+}
+
+message ConverseResponse {
+  Event event = 1;
+}
+
+// Binds the stream to a chat. Must be the first message and may be sent once.
+message Attach {
+  string chat_id = 1; // ULID.
+}
+
+// A user message. The server answers with TurnStarted.
+message UserTurn {
+  // At most 64 KiB; longer text is rejected, not truncated, so a client never
+  // sends a prompt the user did not write.
+  string text = 1;
+}
+
+// Answers an ApprovalRequired. The same decision as ApprovalService.Decide;
+// both reach one approval queue and the first answer wins.
+message DecideApproval {
+  string call_id = 1; // ULID.
+  ApprovalDecision decision = 2;
+}
+
+// Stops the running turn and its tool calls within 200 ms.
+message Interrupt {
+  // Kill switch: stop every running turn, tool call and speech on the daemon,
+  // not only this chat. Requires the `control` scope.
+  bool all = 1;
+}
+
+// Changes the model for this chat from the next turn on.
+message SwitchModel {
+  ModelRef model = 1;
+}
+
+// The human finished what a TakeoverRequested asked for; the turn resumes only
+// after this arrives.
+message TakeoverDone {
+  string call_id = 1; // ULID.
+}
