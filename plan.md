@@ -26,7 +26,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.16 | todo | P1 | 3 | 0% | |
 | T1.17 | in progress | P1 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.18 | in progress | P2 | 2 | 60% | Claude Code / claude-sonnet-5-5 |
-| T1.19 | todo | P1 | 3 | 0% | |
+| T1.19 | in progress | P1 | 3 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.20 | todo | P2 | 3 | 0% | |
 | T2.3 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T3.7 | todo | P0 | 3 | 0% | |
@@ -377,6 +377,8 @@ Done when:
 ### T1.19. runa: stream tokens as they are generated
 
 Stage: S1 · Area: shared · Depends on: none · Blocks: 1 task(s)
+
+Execution plan: tracked in runa as P16.1 (branch runa-p16-aulo-tasks, local until a runa PR is approved); stream GenEvents from the generation task to the SSE body through a bounded channel, keep the non-streaming path, add a timed test. T1.20 is runa P16.2.
 
 runa serve builds the whole reply before replaying it as SSE (serve.rs generate_events), so time to first token equals generation time. Change it to stream GenEvents as they arrive. Work happens in the runa repository; aulo only tracks it.
 
