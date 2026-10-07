@@ -7,8 +7,9 @@ The aulo daemon
 Usage: aulod [OPTIONS] [COMMAND]
 
 Commands:
-  run   Run the daemon in the foreground (the default)
-  help  Print this message or the help of the given subcommand(s)
+  run      Run the daemon in the foreground (the default)
+  service  Manage aulod as a user service that starts at login
+  help     Print this message or the help of the given subcommand(s)
 
 Options:
       --config <DIR>   Directory holding config.toml (default: AULO_HOME)

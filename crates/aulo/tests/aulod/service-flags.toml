@@ -1,0 +1,6 @@
+bin.name = "aulod"
+args = ["--listen", "127.0.0.1:7777", "service", "status"]
+status.code = 1
+stderr = """
+aulod: --config, --listen and --home do not apply to `service`; use AULO_HOME and config.toml
+"""

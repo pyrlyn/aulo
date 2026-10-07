@@ -1,0 +1,19 @@
+bin.name = "aulod"
+args = ["service", "--help"]
+status.code = 0
+stdout = """
+Manage aulod as a user service that starts at login
+
+Usage: aulod service [OPTIONS] <COMMAND>
+
+Commands:
+  install    Install and start aulod as a user service that starts at login
+  uninstall  Stop and remove the user service; succeeds when none is installed
+  status     Show whether the user service is installed and running
+  help       Print this message or the help of the given subcommand(s)
+
+Options:
+      --config <DIR>   Directory holding config.toml (default: AULO_HOME)
+      --listen <ADDR>  TCP address for remote clients; overrides daemon.listen
+  -h, --help           Print help
+"""

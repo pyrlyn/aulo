@@ -3,6 +3,7 @@
 
 mod instance;
 mod serve;
+pub mod service;
 
 use std::net::SocketAddr;
 use std::path::PathBuf;
@@ -14,13 +15,19 @@ use aulo_telemetry::Settings;
 /// What the command line decided; everything else comes from the config.
 #[derive(Debug)]
 pub struct Options {
+    /// Overrides `AULO_HOME`. Only the Windows service uses it, because a
+    /// scheduled task cannot carry environment variables.
+    pub home: Option<PathBuf>,
     pub config_dir: Option<PathBuf>,
     pub listen: Option<SocketAddr>,
 }
 
 pub fn run(options: Options) -> Result<()> {
-    let home =
-        aulo_config::aulo_home().context("cannot find the aulo home: set AULO_HOME or HOME")?;
+    let home = options
+        .home
+        .clone()
+        .or_else(aulo_config::aulo_home)
+        .context("cannot find the aulo home: set AULO_HOME or HOME")?;
     // First, so a second instance reports the running one and does not touch
     // its logs or sockets.
     let _instance = instance::Instance::acquire(&home)?;
