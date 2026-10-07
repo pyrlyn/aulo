@@ -29,10 +29,12 @@ Only what the project uses today. Crates are added by the task that wires each o
 | prost-types | local | https://github.com/tokio-rs/prost | Well-known protobuf types (`Timestamp`) used by the generated code |
 | regex | local | https://github.com/rust-lang/regex | Credential and secret-pair patterns in the log redaction |
 | schemars | local | https://github.com/GREsau/schemars | JSON Schema generated from the config types |
+| semver | local | https://github.com/dtolnay/semver | Plugin manifest versions (`aulo-plugin`) |
 | serde | local | https://github.com/serde-rs/serde | Serialization of ids, events and config |
 | serde_json | local | https://github.com/serde-rs/json | Config schema output and overrides; round-trip tests; `cargo metadata` parsing in the dependency-graph test |
 | tempfile | local (dev) | https://github.com/Stebalien/tempfile | Temporary databases and directories in tests |
 | thiserror | local | https://github.com/dtolnay/thiserror | Typed errors in library crates |
+| toml | local | https://github.com/toml-rs/toml | Parses `aulo-plugin.toml` in `aulo-plugin` (the manifest module owns that file) |
 | tonic | local | https://github.com/hyperium/tonic | gRPC server and client runtime, only in `aulo-proto` |
 | tonic-prost | local | https://github.com/hyperium/tonic | Prost codec for tonic |
 | tonic-prost-build | local (build) | https://github.com/hyperium/tonic | Generates server and client code from the protos |
