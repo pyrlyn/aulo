@@ -65,7 +65,6 @@
 - T6.5. Echo cancellation elsewhere (webrtc-audio-processing)
 - T6.6. Microphone permission handling
 - T6.7. Opus for remote audio streams
-- T7.1. aulo-speech: engine contracts
 - T7.2. Engine registry and runtime switching
 - T7.3. Model manager
 - T7.4. STT: sherpa-onnx (Parakeet TDT v3, Moonshine)

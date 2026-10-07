@@ -157,3 +157,16 @@ Done when:
 - a test proves a key-like value is redacted
 
 Outcome: crates/aulo-telemetry: init(&Settings) -> Guard installs an EnvFilter (AULO_LOG over the level), a daily-rotating JSON file layer (tracing-appender, 14 files kept, non-blocking) and an ANSI-free stderr layer. Redaction runs on the finished line: secret-named JSON keys and name=value pairs, bearer tokens and common key shapes (sk-, ghp_, github_pat_, xox*, AKIA, AIza, JWT) are masked; if the patterns fail to compile everything is masked. Optional otlp feature (opentelemetry 0.33, plain HTTP) with a span processor that masks attributes before export. 16 tests. Follow-ups: mask secret-handle shapes after T5.10; aulo-config has no log-level key yet; invalid AULO_LOG is an error, not a warning.
+
+### T7.1. aulo-speech: engine contracts
+
+Stage: S7 · Area: speech · Depends on: T2.4 · Blocks: 11 task(s)
+
+Traits: SttEngine (push frames, partial and final transcripts), TtsEngine (stream text in, audio chunks out, voices, rate), Vad, KeywordSpotter, TurnDetector. Capabilities: streaming, languages, offline, needs network.
+
+
+Done when:
+
+- contract tests with fake engines
+
+Outcome: crates/aulo-speech: object-safe, Send, synchronous push-then-poll traits SttEngine (begin/push/finish/poll/cancel; exactly one Final per utterance), TtsEngine (voices, begin -> AudioFormat, push_text, poll into a caller-owned slice, cancel for barge-in), Vad, KeywordSpotter, TurnDetector. Sync because async_trait boxes a future per call on the audio path; cloud and plugin engines use bounded queues and return Overflow. AudioFrame borrows samples (16 kHz mono PIPELINE format), EngineInfo with validated EngineId and Capabilities (streaming, languages, offline, needs_network), SpeechRate 0.5-2.0. One shared SpeechError instead of associated types (a dyn registry needs one type anyway); should_fall_back() drives fail-open; engine error text capped at 512 bytes. 24 tests with fake engines. Follow-ups: T7.2 owns engine factories and maps out-of-range config rate to an error.

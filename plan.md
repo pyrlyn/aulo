@@ -73,7 +73,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T6.5 | todo | P1 | 3 | 0% | |
 | T6.6 | todo | P1 | 2 | 0% | |
 | T6.7 | todo | P2 | 3 | 0% | |
-| T7.1 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T7.2 | todo | P0 | 3 | 0% | |
 | T7.3 | todo | P0 | 3 | 0% | |
 | T7.4 | todo | P0 | 3 | 0% | |
@@ -856,18 +855,6 @@ Done when:
 - round-trip test within the SNR target
 
 ## S7. Speech engines
-
-### T7.1. aulo-speech: engine contracts
-
-Stage: S7 · Area: speech · Depends on: T2.4 · Blocks: 11 task(s)
-
-Traits: SttEngine (push frames, partial and final transcripts), TtsEngine (stream text in, audio chunks out, voices, rate), Vad, KeywordSpotter, TurnDetector. Capabilities: streaming, languages, offline, needs network.
-
-Execution plan: 1. crates/aulo-speech: sync, allocation-aware traits SttEngine, TtsEngine, Vad, KeywordSpotter, TurnDetector with associated error types; audio frame types (16 kHz mono f32 slices, sample rate in metadata). 2. Capabilities struct (streaming, languages, offline, needs_network) and an EngineInfo for the registry. 3. Uses aulo-types (TurnId, TranscriptKind) where events overlap; no engine implementations. 4. Tests with a fake engine per trait proving object safety and the push/poll contract.
-
-Done when:
-
-- contract tests with fake engines
 
 ### T7.2. Engine registry and runtime switching
 
