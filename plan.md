@@ -12,14 +12,14 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.2 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.3 | in progress | P0 | 3 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.4 | in progress | P0 | 3 | 5% | Claude Code / claude-sonnet-5-5 |
-| T1.5 | todo | P0 | 2 | 0% | |
+| T1.5 | in progress | P0 | 2 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.6 | todo | P0 | 3 | 0% | |
 | T1.7 | todo | P1 | 3 | 0% | |
 | T1.8 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.9 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.10 | in progress | P0 | 2 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.11 | todo | P1 | 2 | 0% | |
-| T1.12 | in progress | P0 | 4 | 5% | Claude Code / claude-sonnet-5-5 |
+| T1.12 | in progress | P0 | 4 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.13 | in progress | P0 | 3 | 50% | Claude Code / claude-sonnet-5-5 |
 | T1.14 | todo | P1 | 2 | 0% | |
 | T1.15 | in progress | P0 | 4 | 5% | Claude Code / claude-sonnet-5-5 |
@@ -216,6 +216,8 @@ Done when:
 ### T1.5. Extract llm-catalog: model catalog and prices
 
 Stage: S1 · Area: shared · Depends on: T1.1 · Blocks: 2 task(s)
+
+Execution plan: in a packages/crates worktree branched from t1-1-llm-wire, create llm-catalog (publish = false, dual licence, rust-version 1.98) from cox-models: built-in rows, config overlay, prices.toml, overlay of served models, with Catalog::load, get and effort_for tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption (T1.6) waits for publication.
 
 Move cox-models (built-in rows, config overlay, prices.toml, overlay of served models) into packages/crates/llm-catalog.
 
