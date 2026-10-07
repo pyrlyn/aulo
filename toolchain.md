@@ -30,7 +30,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | regex | local | https://github.com/rust-lang/regex | Credential and secret-pair patterns in the log redaction |
 | schemars | local | https://github.com/GREsau/schemars | JSON Schema generated from the config types |
 | serde | local | https://github.com/serde-rs/serde | Serialization of ids, events and config |
-| serde_json | local | https://github.com/serde-rs/json | Config schema output and overrides; round-trip tests |
+| serde_json | local | https://github.com/serde-rs/json | Config schema output and overrides; round-trip tests; `cargo metadata` parsing in the dependency-graph test |
 | tempfile | local (dev) | https://github.com/Stebalien/tempfile | Temporary databases and directories in tests |
 | thiserror | local | https://github.com/dtolnay/thiserror | Typed errors in library crates |
 | tonic | local | https://github.com/hyperium/tonic | gRPC server and client runtime, only in `aulo-proto` |
