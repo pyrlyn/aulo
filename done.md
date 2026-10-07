@@ -482,3 +482,16 @@ Done when:
 - aulo bench speech prints a table
 
 Outcome: Outcome: new crate aulo-speech-bench (WER as a small word-level Levenshtein, since the only crates.io candidate rwer 0.2.2 is new and heavy; embedded fixture clips; push/poll timing harness; engine discovery; table and JSON report) and `aulo bench speech [--engine ID] [--json]`. Unavailable engines get a row with the reason; cloud engines are built only when their key is set. divan benches for WER, decode, resampling and the harness. The sherpa WER test now uses the shared WordErrors. Parakeet and Kokoro rows are untested end to end without local models; ElevenLabs model and voice ids are unverified.
+
+### T8.10. aulo-realtime: OpenAI realtime voice client
+
+Stage: S8 · Area: voice · Depends on: T1.3 · Blocks: 1 task(s)
+
+WebSocket client (tokio-tungstenite) for OpenAI realtime voice models (GPT-Live / Realtime), mapping their events to aulo-types; ephemeral client tokens for remote clients.
+
+
+Done when:
+
+- recorded-session test
+
+Outcome: New crate aulo-realtime: tokio-tungstenite client for the OpenAI Realtime and GPT-Live voice sockets, events mapped to aulo-types, client-secret minting for remote clients; ApiKey and the loopback endpoint check shared from aulo-types. Recorded-session tests replay fixtures shaped from the docs (no live key). About 840 non-test lines, kept as one task by the creator's decision. Checks: cargo test --workspace 475 passed; clippy -D warnings and fmt clean. Note for T8.11: a remote client must not talk to the model directly, because a client connection can override a minted session's instructions and tools.

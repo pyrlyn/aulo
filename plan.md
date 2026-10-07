@@ -74,7 +74,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T8.7 | todo | P1 | 3 | 0% | |
 | T8.8 | todo | P1 | 2 | 0% | |
 | T8.9 | todo | P1 | 3 | 0% | |
-| T8.10 | in progress | P1 | 4 | 0% | Claude Code / claude-sonnet-5-5 |
 | T8.11 | todo | P1 | 4 | 0% | |
 | T8.12 | todo | P2 | 3 | 0% | |
 | T8.13 | todo | P2 | 3 | 0% | |
@@ -886,18 +885,6 @@ Approvals can be answered by voice ("yes" / "no") for low and medium risk. Destr
 Done when:
 
 - test: destructive action ignores a spoken yes
-
-### T8.10. aulo-realtime: OpenAI realtime voice client
-
-Stage: S8 · Area: voice · Depends on: T1.3 · Blocks: 1 task(s)
-
-WebSocket client (tokio-tungstenite) for OpenAI realtime voice models (GPT-Live / Realtime), mapping their events to aulo-types; ephemeral client tokens for remote clients.
-
-Execution plan: new crate aulo-realtime, a tokio-tungstenite client for the OpenAI realtime API using llm-openai types where they fit (path dependency until published; branch stays unmerged until then), events mapped to aulo-types, ephemeral client tokens; recorded-session test.
-
-Done when:
-
-- recorded-session test
 
 ### T8.11. Two-brain mode: realtime front consults the agent
 

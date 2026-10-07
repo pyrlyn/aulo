@@ -66,7 +66,6 @@
 - T8.7. End-of-turn detection
 - T8.8. Progress fillers and earcons
 - T8.9. Voice approvals with limits
-- T8.10. aulo-realtime: OpenAI realtime voice client
 - T8.11. Two-brain mode: realtime front consults the agent
 - T8.12. Realtime: Gemini Live adapter
 - T8.13. Realtime: xAI Voice Agent adapter
