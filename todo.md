@@ -123,7 +123,6 @@
 - T10.6. MCP server over streamable HTTP
 - T10.7. Register aulo in agent hosts
 - T10.8. cox tools through cox mcp
-- T11.1. Plugin manifest
 - T11.2. Plugin host: discovery and grants
 - T11.3. Process plugins over MCP stdio
 - T11.4. Streaming plugins over gRPC (speech engines, providers)

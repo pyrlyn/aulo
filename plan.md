@@ -131,7 +131,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T10.6 | todo | P1 | 3 | 0% | |
 | T10.7 | todo | P2 | 2 | 0% | |
 | T10.8 | todo | P1 | 1 | 0% | |
-| T11.1 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T11.2 | todo | P0 | 3 | 0% | |
 | T11.3 | todo | P0 | 2 | 0% | |
 | T11.4 | todo | P1 | 3 | 0% | |
@@ -1441,18 +1440,6 @@ Done when:
 - preset documented; fixture test lists cox tools
 
 ## S11. Plugins, skills and hooks
-
-### T11.1. Plugin manifest
-
-Stage: S11 · Area: plugins · Depends on: T2.5 · Blocks: 1 task(s)
-
-aulo-plugin.toml with schemars schema: id, version, kinds (tools, stt, tts, llm-provider, skills, hooks), requested capabilities (net hosts, fs roots, exec, audio), entry (mcp-process, grpc-process, wasm).
-
-Execution plan: 1. crates/aulo-plugin-manifest (or a module in the plugin crate the spec names): PluginManifest types for aulo-plugin.toml with serde(deny_unknown_fields) and schemars, following rust.md Config files. 2. Fields: id, version (semver), kinds, capabilities (net hosts, fs roots, exec, audio), entry (mcp-process, grpc-process, wasm) with validation (id charset, non-empty kinds, entry matches kinds). 3. Committed schemas/aulo-plugin.schema.json with a stale test. 4. Tests: valid example, unknown key rejected with file name, invalid id, schema stale.
-
-Done when:
-
-- schema test; invalid manifest names the file
 
 ### T11.2. Plugin host: discovery and grants
 

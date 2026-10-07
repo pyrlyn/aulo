@@ -196,3 +196,16 @@ Done when:
 - the test fails when a contract crate pulls tokio::fs or reqwest
 
 Outcome: crates/aulo/tests/deps.rs parses `cargo metadata --no-deps` (as cox does) against a ROLES table for all 27 spec §4.2 crates: every crate must have a role; dependencies point down only (contract < domain/adapter < assembly < surface, nothing depends on a surface, only a testkit on the testkit); contracts have no I/O deps (tokio, reqwest, hyper, cpal, diesel, wasmtime, uniffi, sherpa-onnx, chromiumoxide, ...); only aulo and aulo-ffi use clap/anyhow; one owner per heavy dependency (diesel -> aulo-store, prost -> aulo-proto, tonic -> aulo-proto/aulo-server/aulo-app, tonic-health/reflection -> aulo-server, sherpa-onnx, whisper, wasmtime, chromiumoxide, uniffi). A synthetic bad graph test asserts each message. Proven by temporarily adding tokio, clap and diesel to aulo-types.
+
+### T11.1. Plugin manifest
+
+Stage: S11 · Area: plugins · Depends on: T2.5 · Blocks: 1 task(s)
+
+aulo-plugin.toml with schemars schema: id, version, kinds (tools, stt, tts, llm-provider, skills, hooks), requested capabilities (net hosts, fs roots, exec, audio), entry (mcp-process, grpc-process, wasm).
+
+
+Done when:
+
+- schema test; invalid manifest names the file
+
+Outcome: crates/aulo-plugin (manifest module): PluginManifest::load/from_toml for aulo-plugin.toml (id, semver version, kinds set, optional entry mcp-process/grpc-process/wasm, capabilities net/fs_read/fs_write/exec/audio), deny_unknown_fields everywhere, committed schemas/aulo-plugin.schema.json with a stale test. Untrusted-input guards: 64 KiB read cap, id [a-z][a-z0-9]*(-[a-z0-9]+)* up to 32 chars, entry must match kinds (streaming kinds need grpc-process, tools mcp-process or wasm), relative entry paths without .., host-only net patterns (no bare * or *.tld), absolute fs roots, control characters and lengths capped; errors name the file and escape echoed values. 20 tests. Open: manifest types for aulo-plugin-sdk (T11.5), exec as bool vs allowlist (T11.2), no name/description yet (T11.10).
