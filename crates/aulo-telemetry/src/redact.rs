@@ -26,12 +26,13 @@ const SECRET_NAME_PARTS: &[&str] = &[
 ];
 
 /// Credential shapes that are masked wherever they appear, even under an innocent field name:
-/// bearer headers, provider API keys, forge tokens, cloud keys and JWTs.
+/// bearer headers, provider API keys, forge tokens, aulod API tokens, cloud keys and JWTs.
 const VALUE_PATTERN: &str = concat!(
     r"(?i)\bbearer\s+[A-Za-z0-9._~+/=-]{8,}",
     r"|\b(?:sk|pk|rk)-[A-Za-z0-9_-]{16,}",
     r"|\bgh[pousr]_[A-Za-z0-9]{20,}",
     r"|\bgithub_pat_[A-Za-z0-9_]{20,}",
+    r"|\baulo_[0-9a-f]{16,}",
     r"|\bxox[abprs]-[A-Za-z0-9-]{10,}",
     r"|\bAKIA[0-9A-Z]{16}\b",
     r"|\bAIza[0-9A-Za-z_-]{35}",

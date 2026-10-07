@@ -214,9 +214,11 @@ async fn tcp_on_loopback_serves_health() {
     .unwrap();
     let addr = bound.tcp_addr().unwrap();
     let shutdown = CancellationToken::new();
+    let token = aulo_server::auth::ApiToken::generate().unwrap();
     let task = tokio::spawn(
         ApiServer::new(Limits::default())
             .unwrap()
+            .with_token(&token)
             .serve(vec![bound], shutdown.clone()),
     );
     let channel = Endpoint::from_shared(format!("http://{addr}"))
@@ -224,7 +226,15 @@ async fn tcp_on_loopback_serves_health() {
         .connect()
         .await
         .unwrap();
-    let response = HealthClient::new(channel)
+    let bearer: tonic::metadata::MetadataValue<_> =
+        format!("Bearer {}", token.reveal()).parse().unwrap();
+    let response =
+        HealthClient::with_interceptor(channel, move |mut request: tonic::Request<()>| {
+            request
+                .metadata_mut()
+                .insert("authorization", bearer.clone());
+            Ok(request)
+        })
         .check(HealthCheckRequest::default())
         .await
         .unwrap()

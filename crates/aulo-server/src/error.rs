@@ -22,6 +22,8 @@ pub enum ServerError {
          bind to 127.0.0.1 or ::1"
     )]
     UnauthenticatedRemote(SocketAddr),
+    #[error("refusing to serve TCP without an API token; install one with ApiServer::with_token")]
+    TcpWithoutToken,
     #[error("{action} {target}: {source}")]
     Io {
         action: &'static str,

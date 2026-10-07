@@ -34,9 +34,10 @@ pub enum Listen {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TcpListen {
     pub addr: SocketAddr,
-    /// Set only once the caller has installed token authentication (T3.4)
-    /// and TLS (T3.8). Until then a non-loopback address is refused, so the
-    /// API is never reachable from the network unauthenticated.
+    /// Set only once TLS (T3.8) is configured. `ApiServer::serve` already
+    /// refuses any TCP listener without a token, but a token alone is not
+    /// enough off loopback: without TLS it would cross the network in clear.
+    /// Until then a non-loopback address is refused.
     pub remote_auth_configured: bool,
 }
 

@@ -23,8 +23,10 @@ Only what the project uses today. Crates are added by the task that wires each o
 | diesel | local | https://github.com/diesel-rs/diesel | Typed SQLite access in `aulo-store` (no raw SQL) |
 | diesel_migrations | local | https://github.com/diesel-rs/diesel | Embedded, filename-keyed schema migrations |
 | figment | local | https://github.com/SergioBenitez/Figment | Layered config with per-key provenance |
+| getrandom | local | https://github.com/rust-random/getrandom | OS randomness for the 256-bit `aulod` API token (`aulo-server`) |
 | hyper-util | local (dev) | https://github.com/hyperium/hyper-util | `TokioIo` adapter for the gRPC client over a Unix socket in `aulo-server` tests |
 | insta | local (dev) | https://github.com/mitsuhiko/insta | Snapshot tests of the speakable-text normalizer (`aulo-voice`) |
+| keyring | local | https://github.com/open-source-cooperative/keyring-rs | OS keychain that holds the `aulod` API token (`aulo-server`) |
 | libsqlite3-sys | local | https://github.com/rusqlite/rusqlite | Bundled SQLite for Diesel |
 | opentelemetry | local | https://github.com/open-telemetry/opentelemetry-rust | OTel API for the optional OTLP trace export in `aulo-telemetry` (`otlp` feature) |
 | opentelemetry-otlp | local | https://github.com/open-telemetry/opentelemetry-rust | OTLP/HTTP span exporter, `otlp` feature only |
@@ -34,11 +36,13 @@ Only what the project uses today. Crates are added by the task that wires each o
 | pulldown-cmark | local | https://github.com/pulldown-cmark/pulldown-cmark | Markdown events for the speakable-text normalizer (`aulo-voice`); no HTML renderer |
 | regex | local | https://github.com/rust-lang/regex | Credential and secret-pair patterns in the log redaction |
 | reqwest | local | https://github.com/seanmonstar/reqwest | Streaming HTTPS downloads (rustls) of speech models in `aulo-models` |
+| rustix | local | https://github.com/bytecodealliance/rustix | Daemon euid for the local-socket peer check in `aulo-server`, without hand-written `unsafe` |
 | schemars | local | https://github.com/GREsau/schemars | JSON Schema generated from the config types |
 | semver | local | https://github.com/dtolnay/semver | Plugin manifest versions (`aulo-plugin`) |
 | serde | local | https://github.com/serde-rs/serde | Serialization of ids, events and config |
 | serde_json | local | https://github.com/serde-rs/json | Config schema output and overrides (`aulod --listen`); round-trip tests; `cargo metadata` parsing in the dependency-graph test |
-| sha2 | local | https://github.com/RustCrypto/hashes | SHA-256 of model files, hashed while they download |
+| sha2 | local | https://github.com/RustCrypto/hashes | SHA-256 of model files, hashed while they download; the API token is held only as its SHA-256 |
+| subtle | local | https://github.com/dalek-cryptography/subtle | Constant-time comparison of the API token digest (`aulo-server`) |
 | tempfile | local (dev) | https://github.com/Stebalien/tempfile | Temporary databases and directories in tests |
 | thiserror | local | https://github.com/dtolnay/thiserror | Typed errors in library crates |
 | tokio | local | https://github.com/tokio-rs/tokio | Async runtime; Unix socket, named pipe and TCP listeners in `aulo-server`; SIGINT/SIGTERM shutdown in `aulod` |

@@ -78,6 +78,14 @@ tokio-stream = "0.1.19"
 tokio-util = "0.7.19"
 # config file format
 toml = "1.1.6"
+# OS randomness for the 256-bit API token
+getrandom = "0.4.3"
+# OS keychain that holds the API token
+keyring = "4.2.0"
+# daemon euid for the local-socket peer check, without hand-written unsafe
+rustix = { version = "1.1.5", features = ["process"] }
+# constant-time comparison of the API token
+subtle = "2.6.1"
 # service_fn connector for the gRPC client over a Unix socket in tests
 tower = "0.5.3"
 # local HTTP fixture server in the aulo-models tests

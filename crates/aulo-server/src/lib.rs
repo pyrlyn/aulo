@@ -2,9 +2,11 @@
 //! reflection and graceful shutdown.
 //!
 //! Service implementations come from callers; this crate only decides how they
-//! are exposed. Authentication (T3.4) and TLS (T3.8) plug in at the TCP
-//! listener, which refuses non-loopback addresses until they exist.
+//! are exposed. Every listener authenticates its clients ([`auth`]); TLS
+//! (T3.8) plugs in at the TCP listener, which refuses non-loopback addresses
+//! until it exists.
 
+pub mod auth;
 mod chat;
 mod error;
 mod limits;

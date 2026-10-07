@@ -10,11 +10,12 @@ use tokio_util::sync::CancellationToken;
 use tonic::body::Body;
 use tonic::codegen::{Service, http};
 use tonic::server::NamedService;
-use tonic::service::{Routes, RoutesBuilder};
+use tonic::service::{InterceptorLayer, Routes, RoutesBuilder};
 use tonic::transport::Server;
 use tonic_health::ServingStatus;
 use tonic_health::server::HealthReporter;
 
+use crate::auth::{self, ApiToken, TokenVerifier};
 use crate::error::ServerError;
 use crate::limits::{Limits, MessageLimits};
 use crate::listener::{Bound, BoundKind};
@@ -26,6 +27,7 @@ pub struct ApiServer {
     routes: RoutesBuilder,
     health: HealthReporter,
     services: Vec<&'static str>,
+    token: Option<TokenVerifier>,
 }
 
 impl fmt::Debug for ApiServer {
@@ -33,6 +35,7 @@ impl fmt::Debug for ApiServer {
         f.debug_struct("ApiServer")
             .field("limits", &self.limits)
             .field("services", &self.services)
+            .field("token_installed", &self.token.is_some())
             .finish_non_exhaustive()
     }
 }
@@ -57,7 +60,16 @@ impl ApiServer {
             routes,
             health,
             services: Vec::new(),
+            token: None,
         })
+    }
+
+    /// The bearer token TCP clients must present. Without one, `serve`
+    /// refuses TCP listeners rather than serve them unauthenticated.
+    #[must_use]
+    pub fn with_token(mut self, token: &ApiToken) -> Self {
+        self.token = Some(TokenVerifier::new(token));
+        self
     }
 
     /// Mounts a generated service with this server's message limits applied.
@@ -97,6 +109,9 @@ impl ApiServer {
         listeners: Vec<Bound>,
         shutdown: CancellationToken,
     ) -> Result<(), ServerError> {
+        if self.token.is_none() && listeners.iter().any(|l| l.tcp_addr().is_some()) {
+            return Err(ServerError::TcpWithoutToken);
+        }
         for name in std::iter::once("").chain(self.services.iter().copied()) {
             self.health
                 .set_service_status(name, ServingStatus::Serving)
@@ -110,6 +125,7 @@ impl ApiServer {
                 self.limits,
                 routes.clone(),
                 listener,
+                self.token.clone(),
                 stop.clone(),
             ));
         }
@@ -162,33 +178,44 @@ fn builder(limits: Limits) -> Server {
         .timeout(limits.request_timeout)
 }
 
-// T3.4 adds authentication here: the local socket trusts its owner, the TCP
-// branch gets the token interceptor (and T3.8 the TLS config).
+// Each listener gets its own check: the local socket trusts its owner, TCP
+// requires the token (and T3.8 adds the TLS config there).
 async fn serve_one(
     limits: Limits,
     routes: Routes,
     listener: Bound,
+    token: Option<TokenVerifier>,
     stop: CancellationToken,
 ) -> Result<(), ServerError> {
     let signal = stop.clone().cancelled_owned();
-    let router = builder(limits).add_routes(routes);
+    let server = builder(limits);
     match listener.0 {
         #[cfg(unix)]
         BoundKind::Unix(listener, _file) => {
             let incoming = tokio_stream::wrappers::UnixListenerStream::new(listener);
-            router
+            let check = auth::local_owner(auth::daemon_uid());
+            server
+                .layer(InterceptorLayer::new(check))
+                .add_routes(routes)
                 .serve_with_incoming_shutdown(incoming, signal)
                 .await?;
         }
         #[cfg(windows)]
         BoundKind::NamedPipe(first, name) => {
             let incoming = crate::pipe::incoming(first, name, stop);
-            router
+            server
+                .layer(InterceptorLayer::new(auth::local_pipe))
+                .add_routes(routes)
                 .serve_with_incoming_shutdown(incoming, signal)
                 .await?;
         }
         BoundKind::Tcp(incoming, _) => {
-            router
+            // `serve` checked this already; checking again keeps this
+            // branch closed if a caller ever reaches it another way.
+            let verifier = token.ok_or(ServerError::TcpWithoutToken)?;
+            server
+                .layer(InterceptorLayer::new(auth::bearer(verifier)))
+                .add_routes(routes)
                 .serve_with_incoming_shutdown(incoming, signal)
                 .await?;
         }

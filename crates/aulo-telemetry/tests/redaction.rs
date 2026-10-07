@@ -34,6 +34,7 @@ fn bearer_and_provider_keys_are_masked_anywhere() {
         "sk-ant-api03-abcdefghijklmnop",
         "ghp_abcdefghijklmnopqrstuvwxyz",
         "github_pat_11ABCDEFG0123456789abc",
+        "aulo_0123456789abcdef0123456789abcdef",
         "xoxb-1234567890-abcdef",
         "AKIAIOSFODNN7EXAMPLE",
         "eyJhbGciOiJIUzI1.eyJzdWIiOiIxMjM0.SflKxwRJSMeKKF2QT4",
