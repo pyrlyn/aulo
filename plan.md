@@ -55,14 +55,14 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T5.11 | todo | P1 | 2 | 0% | |
 | T5.12 | todo | P1 | 3 | 0% | |
 | T5.13 | todo | P1 | 2 | 0% | |
-| T6.1 | todo | P0 | 3 | 0% | |
+| T6.1 | in progress | P0 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T6.2 | todo | P0 | 2 | 0% | |
 | T6.3 | todo | P1 | 2 | 0% | |
 | T6.4 | todo | P1 | 4 | 0% | |
 | T6.5 | todo | P1 | 3 | 0% | |
 | T6.6 | todo | P1 | 2 | 0% | |
 | T6.7 | todo | P2 | 3 | 0% | |
-| T7.5 | todo | P1 | 2 | 0% | |
+| T7.5 | in progress | P1 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T7.8 | in progress | P2 | 3 | 90% | Claude Code / claude-opus-5-5 |
 | T7.11 | in progress | P2 | 3 | 90% | Claude Code / claude-sonnet-5-5 |
 | T8.1 | todo | P0 | 4 | 0% | |
@@ -74,7 +74,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T8.7 | todo | P1 | 3 | 0% | |
 | T8.8 | todo | P1 | 2 | 0% | |
 | T8.9 | todo | P1 | 3 | 0% | |
-| T8.10 | todo | P1 | 4 | 0% | |
+| T8.10 | in progress | P1 | 4 | 0% | Claude Code / claude-sonnet-5-5 |
 | T8.11 | todo | P1 | 4 | 0% | |
 | T8.12 | todo | P2 | 3 | 0% | |
 | T8.13 | todo | P2 | 3 | 0% | |
@@ -687,6 +687,8 @@ Stage: S6 · Area: audio · Depends on: T1.13, T2.4 · Blocks: 3 task(s)
 
 speech-capture behind an aulo trait: device by name or default, 16 kHz mono f32 frames of 20 ms into a lock-free ring buffer (ringbuf), overflow counted, never blocks the audio thread.
 
+Execution plan: new crate aulo-audio with a capture trait over speech-capture (path dependency on the extracted crate until it is published; branch stays unmerged until then), device by name or default, 20 ms 16 kHz mono frames into a ringbuf, overflow counter; fake-device tests.
+
 Done when:
 
 - test with a fake device; manual check on macOS
@@ -758,6 +760,8 @@ Done when:
 Stage: S7 · Area: speech · Depends on: T7.3, T1.13 · Blocks: 0 task(s)
 
 Whisper backend reusing the speech-capture whisper feature (cox-voice Transcriber).
+
+Execution plan: whisper STT engine in aulo-speech-system (or its own crate) over speech-capture's `whisper` feature (path dependency until the crate is published; branch stays unmerged until then), registered as an engine; fixture transcription test.
 
 Done when:
 
@@ -884,6 +888,8 @@ Done when:
 Stage: S8 · Area: voice · Depends on: T1.3 · Blocks: 1 task(s)
 
 WebSocket client (tokio-tungstenite) for OpenAI realtime voice models (GPT-Live / Realtime), mapping their events to aulo-types; ephemeral client tokens for remote clients.
+
+Execution plan: new crate aulo-realtime, a tokio-tungstenite client for the OpenAI realtime API using llm-openai types where they fit (path dependency until published; branch stays unmerged until then), events mapped to aulo-types, ephemeral client tokens; recorded-session test.
 
 Done when:
 
