@@ -1,6 +1,6 @@
 [package]
 name = "aulo-audio"
-description = "aulo audio I/O: microphone capture as 16 kHz mono frames in a lock-free ring, optional Opus codec"
+description = "aulo audio I/O: microphone capture as 16 kHz mono frames in a lock-free ring, streaming playback with volume and immediate stop, optional Opus codec"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
