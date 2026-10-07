@@ -2,14 +2,16 @@
 //! No shell is involved and the arguments are fixed flags plus a voice id
 //! that came from espeak-ng's own listing; the text goes over stdin.
 
-use std::io::{self, BufReader, Read, Write};
+use std::io::{self, BufRead, BufReader, Read, Write};
 use std::path::Path;
 use std::process::{Child, ChildStdout, Command, ExitStatus, Stdio};
 use std::thread;
 use std::time::{Duration, Instant};
 
 use aulo_speech::SpeechError;
-use hound::{SampleFormat, WavReader};
+use hound::WavReader;
+
+use crate::wav;
 
 /// Samples handed to the sink at once, so a cancel is noticed within a few ms.
 const CHUNK_SAMPLES: usize = 2048;
@@ -18,8 +20,8 @@ const MAX_LISTING_BYTES: u64 = 256 * 1024;
 /// How long a child that closed its output may take to exit before it is killed.
 const REAP_GRACE: Duration = Duration::from_secs(1);
 const REAP_POLL: Duration = Duration::from_millis(2);
-const I16_SCALE: f32 = 32768.0;
 const MONO: u16 = 1;
+const SOURCE: &str = "espeak-ng";
 const PROBE_TEXT: &str = ".";
 
 fn spawn_error(binary: &Path, error: &io::Error) -> SpeechError {
@@ -117,16 +119,12 @@ pub(super) fn probe_sample_rate(binary: &Path) -> Result<u32, SpeechError> {
 }
 
 fn damaged(what: &str) -> SpeechError {
-    SpeechError::failed(&format!("espeak-ng wrote {what}"))
+    SpeechError::failed(&format!("{SOURCE} wrote {what}"))
 }
 
 fn open_wav<R: Read>(reader: R) -> Result<WavReader<R>, SpeechError> {
-    let wav = WavReader::new(reader).map_err(|_| damaged("no valid WAV header"))?;
-    let spec = wav.spec();
-    if spec.sample_format != SampleFormat::Int || spec.bits_per_sample != 16 {
-        return Err(damaged("audio that is not 16-bit PCM"));
-    }
-    if spec.channels != MONO {
+    let wav = wav::open(reader, SOURCE)?;
+    if wav.spec().channels != MONO {
         return Err(damaged("audio that is not mono"));
     }
     Ok(wav)
@@ -141,36 +139,23 @@ fn open_wav<R: Read>(reader: R) -> Result<WavReader<R>, SpeechError> {
 pub(super) fn stream_samples(
     stdout: ChildStdout,
     expected_hz: u32,
-    mut sink: impl FnMut(&[f32]) -> bool,
+    sink: impl FnMut(&[f32]) -> bool,
 ) -> Result<bool, SpeechError> {
-    let mut wav = open_wav(BufReader::new(stdout))?;
+    let mut reader = BufReader::new(stdout);
+    // Nothing at all is how espeak-ng answers text with nothing to say; the
+    // exit status tells that apart from a crash.
+    let buffered = reader
+        .fill_buf()
+        .map_err(|_| damaged("an unreadable stream"))?;
+    if buffered.is_empty() {
+        return Ok(true);
+    }
+    let wav = open_wav(reader)?;
     let rate = wav.spec().sample_rate;
     if rate != expected_hz {
         return Err(SpeechError::failed(&format!(
-            "espeak-ng wrote {rate} Hz audio, expected {expected_hz} Hz"
+            "{SOURCE} wrote {rate} Hz audio, expected {expected_hz} Hz"
         )));
     }
-    let mut chunk = [0.0_f32; CHUNK_SAMPLES];
-    let mut len = 0;
-    for sample in wav.samples::<i16>() {
-        match sample {
-            Ok(value) => {
-                chunk[len] = f32::from(value) / I16_SCALE;
-                len += 1;
-                if len == CHUNK_SAMPLES {
-                    if !sink(&chunk) {
-                        return Ok(false);
-                    }
-                    len = 0;
-                }
-            }
-            // On a pipe the header cannot know the length, so the stream really
-            // ends at end of file, which hound reports as an I/O error (a
-            // short read is not `UnexpectedEof`). A child that died is told
-            // apart from one that finished by its exit status.
-            Err(hound::Error::IoError(_)) => break,
-            Err(_) => return Err(damaged("a damaged sample stream")),
-        }
-    }
-    Ok(len == 0 || sink(&chunk[..len]))
+    wav::stream(wav, SOURCE, expected_hz, CHUNK_SAMPLES, true, sink)
 }

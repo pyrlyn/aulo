@@ -31,7 +31,8 @@ use objc2_foundation::NSString;
 use ringbuf::traits::{Observer, Producer};
 use ringbuf::{HeapProd, HeapRb, Obs};
 
-use super::convert::{Resampler, av_rate, first_channel, i16_to_f32};
+use super::convert::{av_rate, first_channel, i16_to_f32};
+use crate::resample::Resampler;
 
 /// How often a worker with queued sentences looks for ring space again.
 const DISPATCH_TICK: Duration = Duration::from_millis(10);

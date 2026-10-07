@@ -18,7 +18,7 @@ use ringbuf::{HeapCons, HeapProd, HeapRb};
 
 use super::engine::ENGINE_ID;
 use super::recognizer;
-use super::voices::best_match;
+use crate::language::best_match;
 
 /// Longest transcript handed to the pipeline, in bytes. Recognizer output
 /// is untrusted text that ends up in a prompt; a minute of speech is about a

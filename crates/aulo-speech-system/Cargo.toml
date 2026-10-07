@@ -54,6 +54,16 @@ objc2-speech = { workspace = true, features = [
 [dev-dependencies]
 tempfile = { workspace = true }
 
+[target.'cfg(windows)'.dependencies]
+windows = { workspace = true, features = [
+    "Foundation",
+    "Foundation_Collections",
+    "Media_Core",
+    "Media_SpeechSynthesis",
+    "Storage_Streams",
+    "Win32_System_WinRT",
+] }
+
 [target.'cfg(target_os = "macos")'.dev-dependencies]
 aulo-voice = { path = "../aulo-voice" }
 # The synthesis test pumps the main run loop, where AVSpeechSynthesizer delivers audio.

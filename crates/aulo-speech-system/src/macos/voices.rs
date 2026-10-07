@@ -1,17 +1,16 @@
 //! The installed voices, read once when the engine loads so `voices()` never
 //! calls into AVFoundation, and the rule that picks one for a language.
 
-use std::cmp::Reverse;
-
 use aulo_speech::Voice;
 use objc2_avf_audio::{AVSampleRateKey, AVSpeechSynthesisVoice, AVSpeechSynthesisVoiceQuality};
 use objc2_foundation::NSNumber;
+
+use crate::language::best_match;
 
 /// Rate of most macOS voices; used when a voice does not report its own.
 pub(super) const FALLBACK_RATE_HZ: u32 = 22_050;
 /// No speech voice runs faster; a larger reported rate is not trusted.
 const MAX_RATE_HZ: f64 = 192_000.0;
-const SUBTAG_SEPARATOR: char = '-';
 
 /// What `Voice` does not carry but the engine needs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -82,30 +81,6 @@ pub(super) fn choose(voices: &[Voice], meta: &[VoiceMeta], language: &str) -> Op
         candidates.map(|(voice, meta)| (voice.language.as_deref(), meta.quality)),
         language,
     )
-}
-
-/// The same rule over any `(tag, rank)` list, so the recognizer picks its
-/// locale exactly as the synthesizer picks its voice.
-pub(super) fn best_match<'a>(
-    candidates: impl Iterator<Item = (Option<&'a str>, isize)>,
-    language: &str,
-) -> Option<usize> {
-    let wanted = primary(language);
-    candidates
-        .enumerate()
-        .filter_map(|(index, (tag, rank))| {
-            let tag = tag?;
-            let exact = tag.eq_ignore_ascii_case(language);
-            let close = exact || primary(tag).eq_ignore_ascii_case(wanted);
-            // Lower index wins a tie, hence the reversed index in the key.
-            close.then_some((exact, rank, Reverse(index)))
-        })
-        .max()
-        .map(|(_, _, Reverse(index))| index)
-}
-
-fn primary(tag: &str) -> &str {
-    tag.split(SUBTAG_SEPARATOR).next().unwrap_or(tag)
 }
 
 #[cfg(test)]

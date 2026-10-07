@@ -32,3 +32,14 @@ pub use macos::{ENGINE_ID, MAX_TRANSCRIPT_BYTES, SystemStt, SystemTts, factory, 
 
 #[cfg(target_os = "linux")]
 pub use espeak::{ENGINE_ID, EspeakTts as SystemTts, factory};
+
+mod language;
+
+mod resample;
+
+mod wav;
+
+mod winspeech;
+
+#[cfg(windows)]
+pub use winspeech::{ENGINE_ID, SystemTts, factory};
