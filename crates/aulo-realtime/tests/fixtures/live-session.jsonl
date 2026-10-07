@@ -1,0 +1,7 @@
+{"type":"session.started","event_id":"event_L1","session":{"id":"sess_L1","model":"gpt-live-1"}}
+{"type":"session.input_transcript.delta","event_id":"event_L2","delta":"What is","start_ms":1000,"end_ms":1200}
+{"type":"session.input_transcript.delta","event_id":"event_L3","delta":" the time","start_ms":1200,"end_ms":1500}
+{"type":"session.output_transcript.delta","event_id":"event_L4","delta":"It is ","start_ms":1800,"end_ms":2000}
+{"type":"session.output_audio.delta","event_id":"event_L5","delta":"AQACAA=="}
+{"type":"session.usage.updated","event_id":"event_L6","usage":{"seconds":3},"context_window":{"usage_ratio":0.01}}
+{"type":"session.closed","event_id":"event_L7","usage":{"seconds":12},"reason":"client_close"}

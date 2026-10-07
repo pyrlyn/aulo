@@ -146,6 +146,48 @@ malware lure, not OpenAI (GitHub API, cd 2026-10-07; OpenAI's org is `github.com
   https://developers.openai.com/api/docs/changelog.
 - Realtime API (`gpt-realtime-2.1` is the previous generation per GPT-Live docs). Transcription: GPT Transcribe and
   GPT Live Transcribe (2026-07-28); `whisper-1` and `gpt-4o-*-transcribe` shut down 2027-02-26 — changelog above.
+- **Realtime and GPT-Live wire protocols** (checked 2026-10-07; implemented in `aulo-realtime`, T8.10). Primary sources:
+  OpenAI's API docs (markdown form: append `.md`), the API reference pages and the openai-python SDK.
+  - Realtime WebSocket: `wss://api.openai.com/v1/realtime?model=gpt-realtime-2.1`, header `Authorization: Bearer <key>`,
+    optional `OpenAI-Safety-Identifier`; JSON text messages, audio base64 inside them —
+    https://developers.openai.com/api/docs/guides/voice-websockets.md. A browser WebSocket may use an ephemeral
+    token in the subprotocols (`realtime`, `openai-insecure-api-key.<token>`) — same page.
+  - Realtime client events used: `session.update` (`session.type: "realtime"`, `instructions`, `output_modalities`,
+    `audio.input.turn_detection`, `audio.input.transcription.model`, `audio.output.voice`, `tools`, `tool_choice`),
+    `input_audio_buffer.append` (`audio`, base64, at most 15 MiB, no acknowledgment), `response.cancel`,
+    `conversation.item.create` with a `function_call_output` item, `response.create` —
+    https://developers.openai.com/api/reference/resources/realtime/client-events.md and
+    https://developers.openai.com/api/docs/guides/realtime-conversations.md.
+  - Realtime server events used: `session.created`, `error` (`error.type`, `code`, `message`, `event_id`),
+    `input_audio_buffer.speech_started` (`audio_start_ms`, `item_id`) and `speech_stopped` (`audio_end_ms`),
+    `conversation.item.input_audio_transcription.delta` / `.completed` (`item_id`, `delta` / `transcript`,
+    `languages[].code`), `response.output_audio.delta` (`delta`, base64), `response.output_audio_transcript.delta` /
+    `.done` (`transcript`), `response.function_call_arguments.done` (`call_id`, `name`, `arguments`), `response.done` —
+    https://developers.openai.com/api/reference/resources/realtime/server-events.md.
+  - PCM format for Realtime: only 24 kHz mono 16-bit (`{"type":"audio/pcm","rate":24000}`); G.711 `audio/pcmu` and
+    `audio/pcma` also exist — https://developers.openai.com/api/reference/resources/realtime/subresources/client_secrets/methods/create.md.
+  - GPT-Live WebSocket: `wss://api.openai.com/v1/live/sessions`, no query parameters, same bearer header; the first
+    message is `session.start` with `session.model`, `instructions`, `audio.format` (24 kHz or 16 kHz PCM, G.711 at
+    8 kHz; one format for both directions), `audio.output.voice`, `delegation`; wait for `session.started`; audio in
+    `session.input_audio.append`, out in `session.output_audio.delta` (no timing, no done event); transcript fragments
+    `session.input_transcript.delta` / `session.output_transcript.delta` (`delta`, `start_ms`, `end_ms`, no turn
+    marker); `session.usage.updated`; `session.close` answered by `session.closed` (`usage.seconds`, `reason`);
+    `error` with `client_event_id` — https://developers.openai.com/api/docs/guides/voice-websockets.md (GPT-Live tab),
+    https://developers.openai.com/api/docs/guides/live-conversations.md; path confirmed in openai-python v3.26.0
+    `src/openai/resources/live/live.py` (`/live/sessions`) — https://github.com/openai/openai-python.
+  - Ephemeral client secrets (Realtime): `POST https://api.openai.com/v1/realtime/client_secrets`, body
+    `expires_after {anchor: "created_at", seconds: 10..7200, default 600}` and `session` (`type: "realtime"`, `model`,
+    `audio.output.voice`, `instructions`); reply `value` (`ek_...`), `expires_at` (seconds since epoch), `session`;
+    the session set on the secret can be overridden by the client connection; set `OpenAI-Safety-Identifier` on the
+    minting request —
+    https://developers.openai.com/api/reference/resources/realtime/subresources/client_secrets/methods/create.md,
+    https://developers.openai.com/api/docs/guides/voice-webrtc.md, and `src/openai/resources/realtime/client_secrets.py`
+    in openai-python v3.26.0. GPT-Live documents no client secrets: its browsers use WebRTC through a server
+    (`POST /v1/live/sessions` with the SDP offer, key kept on the server) — voice-webrtc guide, GPT-Live tab.
+  - Stale: the OpenAPI document `manual_spec` at https://github.com/openai/openai-openapi (checked 2026-10-07) lists only
+    the old `/realtime/sessions` and `/realtime/transcription_sessions`; it has no `client_secrets` and no `/live`.
+  - **Unverified** (docs silent): the close codes, the HTTP status of a bad key at the WebSocket handshake (assumed
+    401), and whether a `response.output_audio.delta` can exceed 1 MiB (the client caps messages at 1 MiB).
 - **Agents API** public beta 2026-09-10 (managed Codex harness, compaction, recovery); **computer use** in Agents
   API 2026-09-29 in an OpenAI-hosted browser with site-access approvals and sign-in handled by your app; remote MCP
   in Responses API since 2026-05-20 — changelog above. Agents SDK (Python + TS) has sandbox execution, handoffs,

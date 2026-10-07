@@ -382,6 +382,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "aulo-realtime"
+version = "0.0.0"
+dependencies = [
+ "aulo-types",
+ "base64 0.23.1",
+ "futures-util",
+ "reqwest",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "tokio-tungstenite",
+ "tokio-util",
+ "url",
+ "wiremock",
+]
+
+[[package]]
 name = "aulo-server"
 version = "0.0.0"
 dependencies = [
