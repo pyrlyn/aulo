@@ -31,6 +31,8 @@ def parse(text):
         meta = next((CARD_META.match(l) for l in lines if CARD_META.match(l)), None)
         if not meta:
             sys.exit(f"{PLAN}: card {head[1]} has no Stage/Area/Depends line")
+        if head[1] not in table:
+            sys.exit(f"{PLAN}: card {head[1]} is missing from the summary table")
         stage, area, deps, issue = meta.groups()
         body = "\n".join(l for l in lines[1:] if not CARD_META.match(l) and not l.startswith("## ")).strip()
         tasks.append(dict(id=head[1], title=head[2], stage=stage, area=area,

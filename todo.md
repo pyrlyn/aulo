@@ -151,4 +151,3 @@
 - T15.5. API reference
 - T16.5. Windows named pipe admits any writing client as `LocalOwner`
 - T16.6. Unwired store/grants surface
-- T16.7. Small fixes batch

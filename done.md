@@ -517,3 +517,9 @@ Check: `cargo test -p aulo-speech-local offline` — 9 passed (new: `a_rejected_
 `crates/aulo-speech-system/src/macos/stt.rs`: when a final arrived before `finish`, the outcome was delivered as a partial and held — but items still queued in the older `partials` channel were not cleared, so the next poll drained one and delivered an older partial ("open the") over the newer held text ("Open the door.") until `finish` released the held final. Found by the 2026-10-07 audit. Fix: holding an outcome drops every partial queued behind it.
 Model: ZCode / GLM-5.3 · Status: done 2026-10-07 · Priority: P2 · Complexity: 2 · Files: `crates/aulo-speech-system/src/macos/stt.rs`
 Check: `cargo test -p aulo-speech-system stt` — 10 passed (new: `a_held_final_drops_the_partials_queued_behind_it`); `cargo fmt --check` clean.
+
+### T16.7. Small fixes batch
+
+Three audit items. `aulo-speech-local/src/model.rs` told users to run `aulo models pull <id>` — no such subcommand exists (`aulo` has `bench` and `config`); the message now names the directory and the pinned model instead. `scripts/sync-issues.py` crashed with a bare `KeyError` when a plan card was missing from the summary table; it exits with a named `sys.exit` like the missing-meta case now. The third item — `daemon.listen` failing at two different points — dissolved with T16.1: the token loads (or fails, with context) before anything binds, and the off-loopback-without-TLS refusal is the typed `UnauthenticatedRemote`, so both paths fail fast with named errors.
+Model: ZCode / GLM-5.3 · Status: done 2026-10-07 · Priority: P3 · Complexity: 1 · Files: `crates/aulo-speech-local/src/model.rs`, `scripts/sync-issues.py`
+Check: `cargo test -p aulo-speech-local model` — 2 passed; `python3 -c "import ast; ast.parse(open('scripts/sync-issues.py').read())"`; `cargo fmt --check` clean.
