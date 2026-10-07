@@ -83,7 +83,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T7.12 | todo | P2 | 2 | 0% | |
 | T7.13 | todo | P1 | 2 | 0% | |
 | T7.14 | todo | P2 | 2 | 0% | |
-| T7.15 | in progress | P0 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T7.16 | todo | P2 | 2 | 0% | |
 | T8.1 | todo | P0 | 4 | 0% | |
 | T8.2 | todo | P0 | 2 | 0% | |
@@ -953,18 +952,6 @@ WebSocket streaming TTS with voice id and model from config; key from the keycha
 Done when:
 
 - recorded-session test
-
-### T7.15. Speakable-text normalizer
-
-Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 1 task(s)
-
-Turns model text into speech input: strips markdown, replaces code blocks and long output with "it is on the screen", shortens URLs, expands units and numbers per language, splits sentences for streaming TTS, picks the voice by detected language.
-
-Execution plan: 1. Pure, allocation-bounded normalizer module (crate per spec, likely aulo-speech or aulo-voice): markdown stripped with pulldown-cmark, code blocks and long tool output replaced by a localized "it is on the screen" phrase, URLs shortened to host, units/numbers expanded for en and ru (simple rules, no heavy deps), sentence splitter for streaming TTS that emits on sentence boundaries with a max chunk length. 2. Input capped (untrusted model text). 3. Golden tests per language plus streaming split tests.
-
-Done when:
-
-- insta snapshot tests for en and ru
 
 ### T7.16. Speech benchmarks
 

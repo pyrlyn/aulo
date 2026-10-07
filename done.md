@@ -222,3 +222,16 @@ Done when:
 - docs/spikes/aec.md with a recommendation per OS
 
 Outcome: docs/spikes/aec.md (M3 Max, built-in speakers and mic, 7 s TTS echo): raw mic -40 dBFS with a never-ending false barge-in; webrtc-audio-processing 2.1.0 AEC3 27.5 dB reduction (30 dB with NS), 0 false barge-ins, cuts the first overlapping word and detects real speech ~1 s late; macOS VP-IO ~38 dB after a 0.5 s leak at playback start, 0 false barge-ins, but ducks other audio. Recommendation: macOS VP-IO default with AEC3 fallback (TTS must play through the engine; barge-in ignores the start leak); Windows 11 OS AEC on a communications WASAPI stream (needs its own spike; AEC3 bundled MSVC build reportedly fails, unverified); Linux AEC3 bundled (meson, ninja; beware Homebrew abseil linking dynamically). Open: a live human barge-in test on both; AEC3 tuning; a 7.5 s burst seen with cpal on built-in speakers.
+
+### T7.15. Speakable-text normalizer
+
+Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 1 task(s)
+
+Turns model text into speech input: strips markdown, replaces code blocks and long output with "it is on the screen", shortens URLs, expands units and numbers per language, splits sentences for streaming TTS, picks the voice by detected language.
+
+
+Done when:
+
+- insta snapshot tests for en and ru
+
+Outcome: crates/aulo-voice (domain): speakable(markdown, SpeakOptions) strips markdown (pulldown-cmark), turns code blocks and tables into "It's on the screen." / "Это на экране.", URLs into hosts, removes bidi/control/zero-width characters, expands %, decimals and ~24 units with Russian plurals, caps input at 64 KiB and speech at 2000 chars. SentenceSplitter and SpeakableStream emit whole sentences from deltas (abbreviation-aware, max chunk) so TTS starts after the first paragraph. detect_language guesses en/ru. insta golden snapshots for en and ru. Limits: numbers not spelled out; dates, times, versions, compound units left as written; the stream waits for a blank line or ~1 KiB.

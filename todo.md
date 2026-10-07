@@ -75,7 +75,6 @@
 - T7.12. TTS: Linux speech-dispatcher / espeak-ng
 - T7.13. TTS: OpenAI speech endpoint
 - T7.14. TTS: ElevenLabs streaming
-- T7.15. Speakable-text normalizer
 - T7.16. Speech benchmarks
 - T8.1. aulo-voice: conversation pipeline
 - T8.2. VAD backends
