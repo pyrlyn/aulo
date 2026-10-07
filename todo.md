@@ -22,7 +22,6 @@
 - T1.20. runa: library target for in-process local inference
 - T2.3. CI workflows
 - T2.10. aulo-store: full-text search over messages
-- T3.4. aulo-server: authentication
 - T3.7. aulo CLI: text chat client
 - T3.8. aulo-server: TLS for TCP listeners
 - T3.9. Run aulod as a user service

@@ -30,7 +30,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.20 | todo | P2 | 3 | 0% | |
 | T2.3 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T2.10 | todo | P2 | 2 | 0% | |
-| T3.4 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T3.7 | todo | P0 | 3 | 0% | |
 | T3.8 | todo | P0 | 3 | 0% | |
 | T3.9 | todo | P2 | 3 | 0% | |
@@ -403,18 +402,6 @@ Done when:
 - search test finds a message by a word
 
 ## S3. gRPC API and daemon
-
-### T3.4. aulo-server: authentication
-
-Stage: S3 · Area: api · Depends on: T3.3 · Blocks: 3 task(s)
-
-Local socket: trust by file owner and 0600 permissions. TCP: bearer token required, compared in constant time, interceptor rejects missing tokens. The first token is generated on first run and stored in the OS keychain.
-
-Execution plan: 1. aulo-server auth module: a tonic interceptor/tower layer applied per listener. UDS: check the peer credentials (SO_PEERCRED / getpeereid via tokio UnixStream::peer_cred) match the daemon uid, on top of 0600; reject others. TCP: require `authorization: Bearer <token>`, constant-time compare (subtle), reject missing/malformed with UNAUTHENTICATED and no detail leak. 2. Token store: generate a 256-bit token on first run, keep it in the OS keychain via keyring (rust.md), with a file fallback only if the spec allows it; never log it (aulo-telemetry redaction). 3. Wire `remote_auth_configured` to "a token exists". 4. Tests: TCP without token rejected, wrong token rejected, right token accepted, UDS from owner accepted; keychain behind a trait with an in-memory fake in tests.
-
-Done when:
-
-- tests: TCP without token is rejected; UDS from owner is accepted
 
 ### T3.7. aulo CLI: text chat client
 

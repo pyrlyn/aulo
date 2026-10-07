@@ -313,3 +313,16 @@ Done when:
 - grpc integration tests for every RPC
 
 Outcome: ChatApi over Arc<Mutex<Store>> on spawn_blocking: Create/List/Get/Rename/Delete chats and ListMessages with keyset page tokens, canonical id parsing, title and ModelRef validation, generic INTERNAL errors; SearchMessages UNIMPLEMENTED until T2.10. Model stored as provider/model; role and status strings user|assistant|tool and running|succeeded|failed|denied|cancelled until aulo-types gets enums.
+
+### T3.4. aulo-server: authentication
+
+Stage: S3 · Area: api · Depends on: T3.3 · Blocks: 3 task(s)
+
+Local socket: trust by file owner and 0600 permissions. TCP: bearer token required, compared in constant time, interceptor rejects missing tokens. The first token is generated on first run and stored in the OS keychain.
+
+
+Done when:
+
+- tests: TCP without token is rejected; UDS from owner is accepted
+
+Outcome: aulo_server::auth: Unix socket peers must match the daemon euid (rustix); TCP needs exactly one Bearer token compared in constant time (subtle) against its SHA-256, health and reflection included; no TCP listener without an installed token. ApiToken is aulo_ + 64 hex from getrandom, redacted Debug, masked by aulo-telemetry. TokenStore with keyring 4 and in-memory stores. Windows pipe clients trust the default DACL (no per-client check without unsafe FFI). remote_auth_configured stays the non-loopback gate until TLS (T3.8); token scopes not modelled yet.
