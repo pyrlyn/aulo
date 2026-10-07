@@ -398,6 +398,8 @@ impl ServiceManager for Missing {
     }
 }
 
+// Only the Unix-only plist and unit tests use it.
+#[cfg(unix)]
 const AWKWARD: &str = r#"/opt/my apps/"q" & <x> 'y' 50% $HOME\bin/aulod"#;
 
 // launchd and systemd only run on Unix; on Windows `Path::join` writes `\`.
