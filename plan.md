@@ -66,7 +66,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T7.7 | in progress | P2 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T7.8 | in progress | P2 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T7.9 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
-| T7.11 | todo | P2 | 3 | 0% | |
+| T7.11 | in progress | P2 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T7.12 | in progress | P2 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T7.16 | todo | P2 | 2 | 0% | |
 | T8.1 | todo | P0 | 4 | 0% | |
@@ -772,6 +772,8 @@ Done when:
 ### T7.11. TTS: Windows system voices
 
 Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 0 task(s)
+
+Execution plan: 1. Windows engine in aulo-speech-system behind cfg(windows): WinRT SpeechSynthesizer.SynthesizeTextToStreamAsync through the windows crate, WAV stream parsed and chunked into the bounded poll queue, voices from AllVoices. 2. Platform-neutral parsing and queue logic tested on every host. 3. `cargo check --target x86_64-pc-windows-msvc -p aulo-speech-system` locally; the real test runs on the Windows CI runner after a push. 4. Verify clippy, fmt, workspace tests.
 
 WinRT SpeechSynthesizer via the windows crate, streamed into aulo-audio.
 
