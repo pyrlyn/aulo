@@ -261,3 +261,16 @@ Done when:
 - test switches TTS mid-chat; a failing engine falls back with a notice
 
 Outcome: aulo-voice (domain) gains EngineRegistry<E> (SttRegistry, TtsRegistry; duplicate ids refused so a plugin cannot replace a built-in; unregistered id is Unavailable and falls back), candidates(config, Overrides{bot, chat}) ordering chat > bot > config > fallback list without duplicates, and ActiveEngine<E> whose switch applies at the next begin (never mid-utterance); build failures and should_fall_back errors skip the engine with a Warn Notice, caller bugs and overflow do not. aulo-speech gains EngineSpec, EngineChoice and a testkit feature with the shared fake engines; aulo-config gains EngineConfig::choice, which turns bad engine ids and out-of-range rates into a ConfigError naming key and layer. 14 tests incl. switching TTS mid-chat and fallback with a notice. Decisions: the configured engine stays second behind an override; fallback engines start with default model and voice; validation runs at startup via choice(), not in Config::load.
+
+### T3.3. aulo-server: tonic server scaffold
+
+Stage: S3 · Area: api · Depends on: T3.2, T2.5, T2.7 · Blocks: 4 task(s)
+
+tonic server with tonic-health and reflection, listeners for a Unix socket / Windows named pipe (local) and TCP (remote), graceful shutdown, request size limits.
+
+
+Done when:
+
+- integration test connects over UDS and calls health
+
+Outcome: crates/aulo-server: ApiServer::new(Limits) mounts tonic-health and reflection (v1, v1alpha) over aulo_proto::FILE_DESCRIPTOR_SET; add_service requires MessageLimits so no service is mounted without size caps (4 MiB both ways), plus per-connection concurrency 32, 64 streams, 30 s timeout. bind(Listen) fails fast: Unix socket under <home>/run (absolute path, parent 0700 or refused, symlinked parent refused, socket 0600, a live socket is never replaced, a stale one only after connection refused, non-sockets untouched), Windows named pipe (first instance, remote clients rejected; not compiled here), TCP refused on non-loopback unless remote auth is configured. serve() with CancellationToken flips health to NOT_SERVING and drains streams for 10 s. 12 tests over a real UDS incl. health, reflection, oversize, shutdown and socket safety. Follow-ups: limits into config; loopback TCP vs the TLS rule (T3.8); owner-only pipe DACL (T3.4).

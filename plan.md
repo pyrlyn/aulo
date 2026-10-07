@@ -31,7 +31,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T2.3 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T2.6 | in progress | P1 | 1 | 0% | Claude Code / claude-sonnet-5-5 |
 | T2.10 | todo | P2 | 2 | 0% | |
-| T3.3 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T3.4 | todo | P0 | 3 | 0% | |
 | T3.5 | todo | P0 | 2 | 0% | |
 | T3.6 | todo | P0 | 2 | 0% | |
@@ -419,18 +418,6 @@ Done when:
 - search test finds a message by a word
 
 ## S3. gRPC API and daemon
-
-### T3.3. aulo-server: tonic server scaffold
-
-Stage: S3 · Area: api · Depends on: T3.2, T2.5, T2.7 · Blocks: 4 task(s)
-
-tonic server with tonic-health and reflection, listeners for a Unix socket / Windows named pipe (local) and TCP (remote), graceful shutdown, request size limits.
-
-Execution plan: 1. crates/aulo-server: tonic Server builder taking service impls from callers (no business logic here), tonic-health and tonic-reflection (latest compatible with tonic 0.14.6). 2. Listeners: Unix socket under AULO_HOME with 0600 permissions (stale socket removed only if no one answers), Windows named pipe behind cfg(windows), optional TCP from DaemonConfig.listen. 3. Limits: max decoding/encoding message size, concurrency and timeouts from config with safe defaults; graceful shutdown on a token/signal draining streams. 4. Tests: health check over a Unix socket in a temp dir, reflection lists aulo.v1 services, oversize request rejected, shutdown completes.
-
-Done when:
-
-- integration test connects over UDS and calls health
 
 ### T3.4. aulo-server: authentication
 

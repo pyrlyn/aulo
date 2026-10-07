@@ -23,7 +23,6 @@
 - T2.3. CI workflows
 - T2.6. Embedded default config
 - T2.10. aulo-store: full-text search over messages
-- T3.3. aulo-server: tonic server scaffold
 - T3.4. aulo-server: authentication
 - T3.5. aulo-server: ChatService
 - T3.6. aulod binary
