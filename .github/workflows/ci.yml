@@ -1,0 +1,93 @@
+# Rust CI through pyrlyn/ci's ci-rust.yml (fmt once, then clippy -D warnings, check and tests per
+# target: Linux x86_64 and aarch64, macOS aarch64 and Windows x86_64; Intel macOS is not
+# supported), plus a Conventional Commits check of pull request commit subjects. The scans
+# (CodeQL, Semgrep) live in pipeline.yml.
+# Shared workflows: https://github.com/pyrlyn/ci/blob/main/docs/reusable-workflows.md
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # The Rust version comes from mise.toml, the single source of the pin. The shared matrix
+  # (the `matrix` input left empty) is exactly the supported targets; `xcode-27` is the
+  # GitHub image that ships Xcode 27.
+  rust:
+    uses: pyrlyn/ci/.github/workflows/ci-rust.yml@f880dee803f157cd4268a503418b4ecaf4da7078 # main
+    # ci-rust cancels the whole run when a job fails (cancel-run-on-failure), which needs
+    # `actions: write` on the calling job.
+    permissions:
+      contents: read
+      actions: write
+    with:
+      clippy-args: --locked
+      test-command: cargo test $PACKAGE_ARGS --all-targets $FEATURE_ARGS --locked
+      # The reusable workflow has no package input, only this hook, so the system packages
+      # are installed here. crates/aulo-proto needs `protoc` on every runner (its build script
+      # takes it from PATH, never vendored); the audio crates need ALSA headers on Linux.
+      setup-command: |
+        case "$RUNNER_OS" in
+          Linux)
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends libasound2-dev protobuf-compiler
+            ;;
+          macOS)
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install protobuf
+            ;;
+          Windows)
+            choco install protoc --no-progress -y
+            ;;
+        esac
+        protoc --version
+
+  # A pull request's commit subjects must be Conventional Commits (workspace rule). Pushes to
+  # main skip this: every commit there arrived through a pull request that passed it.
+  commits:
+    if: github.event_name == 'pull_request' && github.event.pull_request.draft != true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Full history: the check ranges from the pull request's base branch to HEAD.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Commit subjects
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          # An unresolvable base must be an error: rev-list would print nothing and the
+          # check would pass itself.
+          base="origin/$BASE_REF"
+          git rev-parse -q --verify "$base^{commit}" > /dev/null \
+            || { echo "base branch $base not found" >&2; exit 1; }
+          # Merge commits are skipped (git writes their subjects), and so are reverts, which
+          # git writes in its own format. Every offender is listed before the step fails.
+          pattern='^(feat|fix|docs|ci|test|chore|style|refactor|perf|build)(\([a-z0-9._/-]+\))?!?: .+'
+          bad=0
+          for sha in $(git rev-list --no-merges --reverse "$base..HEAD"); do
+            subject=$(git log -1 --format=%s "$sha")
+            case "$subject" in
+              "Revert "*) continue ;;
+            esac
+            if ! printf '%s\n' "$subject" | grep -Eq "$pattern"; then
+              echo "not a Conventional Commit: $sha $subject" >&2
+              bad=1
+            fi
+          done
+          exit $bad

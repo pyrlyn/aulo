@@ -1,0 +1,16 @@
+# Configuration for pyrlyn/ci's ci.yml, called from pipeline.yml (docs/config.md in
+# pyrlyn/ci). Rust CI stays in ci.yml (infra's ci-rust.yml); this file turns on the scans.
+version: 1
+
+codeql:
+  # Every language in the repository that supports `build-mode: none`.
+  languages: [actions, python, rust]
+
+# Snyk is switched off (flag), as in the other pyrlyn repositories: the snyk job is skipped and
+# the gate counts it as passed. `enabled: true` turns it back on.
+snyk:
+  enabled: false
+
+# No .NET project here: the dotnet job would only pass as a no-op.
+dotnet:
+  enabled: false
