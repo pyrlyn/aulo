@@ -351,8 +351,13 @@ async fn converse(
     tokio::select! {
         verdict = &mut read => verdict,
         written = &mut write => {
-            written?;
-            read.await
+            // A server that hangs up breaks the write side first; the reader still
+            // delivers the audio sent before that and knows better why it ended.
+            let read = read.await;
+            match written {
+                Ok(()) => read,
+                Err(error) => read.and(Err(Stop::from(error))),
+            }
         }
     }
 }
