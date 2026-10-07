@@ -31,7 +31,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T2.3 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T2.10 | todo | P2 | 2 | 0% | |
 | T3.7 | todo | P0 | 3 | 0% | |
-| T3.8 | todo | P0 | 3 | 0% | |
+| T3.8 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T3.9 | todo | P2 | 3 | 0% | |
 | T4.1 | todo | P0 | 3 | 0% | |
 | T4.2 | todo | P0 | 2 | 0% | |
@@ -65,7 +65,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T6.5 | todo | P1 | 3 | 0% | |
 | T6.6 | todo | P1 | 2 | 0% | |
 | T6.7 | todo | P2 | 3 | 0% | |
-| T7.4 | todo | P0 | 3 | 0% | |
+| T7.4 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T7.5 | todo | P1 | 2 | 0% | |
 | T7.7 | todo | P2 | 3 | 0% | |
 | T7.8 | todo | P2 | 3 | 0% | |
@@ -73,7 +73,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T7.10 | in progress | P1 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T7.11 | todo | P2 | 3 | 0% | |
 | T7.12 | todo | P2 | 2 | 0% | |
-| T7.13 | todo | P1 | 2 | 0% | |
+| T7.13 | in progress | P1 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T7.14 | todo | P2 | 2 | 0% | |
 | T7.16 | todo | P2 | 2 | 0% | |
 | T8.1 | todo | P0 | 4 | 0% | |
@@ -168,7 +168,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T15.2 | todo | P1 | 3 | 0% | |
 | T15.3 | todo | P2 | 3 | 0% | |
 | T15.4 | todo | P1 | 2 | 0% | |
-| T15.5 | todo | P1 | 2 | 0% | |
+| T15.5 | in progress | P1 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 
 ## S0. Decisions and spikes
 
@@ -404,7 +404,7 @@ Done when:
 
 ### T3.7. aulo CLI: text chat client
 
-Stage: S3 · Area: api · Depends on: T3.5, T3.6 · Blocks: 2 task(s)
+Stage: S3 · Area: api · Depends on: T3.5, T3.6, T4.8 · Blocks: 2 task(s)
 
 aulo chat (rustyline REPL over Converse), aulo chats ls/rm, aulo status. Renders streamed text and tool calls; Ctrl-C sends Interrupt.
 
@@ -415,6 +415,8 @@ Done when:
 ### T3.8. aulo-server: TLS for TCP listeners
 
 Stage: S3 · Area: api · Depends on: T3.4 · Blocks: 1 task(s)
+
+Execution plan: 1. TLS on aulo-server TCP listeners through tonic's rustls support: a configured certificate and key, or a self-signed one generated on first start and kept under the aulo home (0600). 2. Expose the SHA-256 certificate fingerprint and a client-side pinning verifier that accepts only that fingerprint. 3. Plain TCP stays refused off loopback until TLS is on; wire the `remote_auth_configured` gate to TLS plus token. 4. Tests: right pin connects, wrong pin is refused, expired or mismatched key is an error. 5. toolchain.md rows; verify clippy, fmt, workspace tests.
 
 rustls; user-provided certificate or a generated self-signed one with fingerprint pinning in clients (`aulo connect --pin`).
 
@@ -506,7 +508,7 @@ Done when:
 
 ### T4.8. Converse RPC and chat persistence
 
-Stage: S4 · Area: agent · Depends on: T4.6, T3.5 · Blocks: 9 task(s)
+Stage: S4 · Area: agent · Depends on: T4.6, T3.5 · Blocks: 10 task(s)
 
 SessionService.Converse drives aulo-agent; every turn, tool call and usage row is persisted; a chat resumes after a daemon restart.
 
@@ -764,6 +766,8 @@ Done when:
 
 Stage: S7 · Area: speech · Depends on: T7.3, T0.5 · Blocks: 1 task(s)
 
+Execution plan: 1. New adapter crate aulo-speech-sherpa (the only owner of sherpa-onnx, pinned =1.13.x per the spike). 2. SttEngine for Parakeet TDT v3 on VAD segments and Moonshine for streaming English partials; models located through aulo-models. 3. Handle spike risks R2 (archive download at build, SHERPA_ONNX_ARCHIVE_DIR), R5 (a bad model must not abort the daemon) and R6 (attribution). 4. WER test on fixture WAVs, gated behind an env var or ignored when models are absent. 5. toolchain.md rows; verify clippy, fmt, workspace tests.
+
 Default local STT. Parakeet TDT v3 (25 languages incl. ru, uk) on VAD segments; Moonshine streaming for low-latency English partials.
 
 Done when:
@@ -845,6 +849,8 @@ Done when:
 ### T7.13. TTS: OpenAI speech endpoint
 
 Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 0 task(s)
+
+Execution plan: 1. In aulo-speech-cloud, a TtsEngine over OpenAI-compatible POST /v1/audio/speech with streaming PCM, reusing the T7.6 client, key, redirect and cap rules. 2. Voice list from config. 3. wiremock tests for streaming, errors and cancel. 4. Verify clippy, fmt, workspace tests.
 
 OpenAI-compatible /v1/audio/speech with streaming PCM; voice list from config.
 
@@ -1812,6 +1818,8 @@ Done when:
 ### T15.5. API reference
 
 Stage: S15 · Area: release · Depends on: T3.1 · Blocks: 0 task(s)
+
+Execution plan: 1. Generate a Markdown reference for proto/aulo/v1 with buf and protoc-gen-doc into docs/api/. 2. A justfile recipe to regenerate it. 3. The proto CI workflow regenerates it and fails on drift. 4. Verify locally with buf.
 
 Generated reference for the gRPC API from the protos (buf / protoc-gen-doc).
 
