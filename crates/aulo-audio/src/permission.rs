@@ -23,7 +23,7 @@ pub enum MicPermission {
     Granted,
     /// The user (or an earlier prompt) refused.
     Denied,
-    /// Nobody has been asked yet; the first stream start asks.
+    /// Nobody has been asked yet.
     NotDetermined,
     /// A system policy, such as a managed device, forbids it and the user
     /// cannot change that.
@@ -33,11 +33,11 @@ pub enum MicPermission {
 }
 
 impl MicPermission {
-    /// Whether starting a stream is pointless: the system will only deliver
-    /// silence. `NotDetermined` passes, because starting the stream is what
-    /// makes the system ask.
+    /// Whether the daemon must not start a stream. `NotDetermined` blocks too:
+    /// a first stream start makes the system prompt, and macOS kills a launchd
+    /// process that prompts, so asking is left to the desktop app.
     pub fn blocks_capture(self) -> bool {
-        matches!(self, Self::Denied | Self::Restricted)
+        matches!(self, Self::Denied | Self::Restricted | Self::NotDetermined)
     }
 
     /// The notice for this state, or `None` when there is nothing to tell.
@@ -59,9 +59,9 @@ impl MicPermission {
                 ),
             ),
             Self::NotDetermined => (
-                NoticeLevel::Warn,
+                NoticeLevel::Error,
                 format!(
-                    "Microphone access has not been granted yet. Allow it when the system asks, or later in {path}.",
+                    "Microphone access has not been granted yet, so voice cannot hear you. Open the aulo app and allow it when the system asks, or allow it in {path}.",
                 ),
             ),
         };
@@ -247,25 +247,26 @@ mod tests {
     }
 
     #[test]
-    fn an_unasked_microphone_is_a_warning_and_a_granted_or_unknown_one_is_silent() {
-        let Some(AuloEvent::Notice { level, .. }) =
+    fn an_unasked_microphone_points_to_the_app_and_a_granted_or_unknown_one_is_silent() {
+        let Some(AuloEvent::Notice { level, message, .. }) =
             MicPermission::NotDetermined.notice(Platform::Windows)
         else {
             panic!("no notice for an unasked microphone");
         };
-        assert_eq!(level, NoticeLevel::Warn);
+        assert_eq!(level, NoticeLevel::Error);
+        assert!(message.contains("Open the aulo app"), "{message}");
         assert_eq!(MicPermission::Granted.notice(Platform::MacOs), None);
         assert_eq!(MicPermission::Unknown.notice(Platform::MacOs), None);
     }
 
     #[test]
-    fn only_a_refusal_blocks_capture() {
+    fn a_refusal_or_an_unasked_microphone_blocks_capture() {
         use MicPermission::*;
         let blocked: Vec<_> = [Granted, Denied, NotDetermined, Restricted, Unknown]
             .into_iter()
             .filter(|p| p.blocks_capture())
             .collect();
-        assert_eq!(blocked, [Denied, Restricted]);
+        assert_eq!(blocked, [Denied, NotDetermined, Restricted]);
     }
 
     #[test]
