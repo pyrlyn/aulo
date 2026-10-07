@@ -61,7 +61,6 @@
 - T7.7. STT: Deepgram streaming
 - T7.8. STT: Apple SpeechAnalyzer (macOS 26+)
 - T7.9. TTS: sherpa-onnx (Kokoro, Matcha, VITS)
-- T7.10. TTS: macOS system voices
 - T7.11. TTS: Windows system voices
 - T7.12. TTS: Linux speech-dispatcher / espeak-ng
 - T7.14. TTS: ElevenLabs streaming

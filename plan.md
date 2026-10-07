@@ -69,7 +69,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T7.7 | todo | P2 | 3 | 0% | |
 | T7.8 | todo | P2 | 3 | 0% | |
 | T7.9 | todo | P0 | 3 | 0% | |
-| T7.10 | in progress | P1 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T7.11 | todo | P2 | 3 | 0% | |
 | T7.12 | todo | P2 | 2 | 0% | |
 | T7.14 | in progress | P2 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
@@ -803,18 +802,6 @@ Default local TTS. Kokoro (Apache-2.0 weights) with voice list; sentence-chunked
 Done when:
 
 - time-to-first-audio test within the budget
-
-### T7.10. TTS: macOS system voices
-
-Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 0 task(s)
-
-AVSpeechSynthesizer via objc2-avf-audio writing buffers into aulo-audio (not straight to the speaker, so barge-in and AEC still work). Lists installed voices.
-
-Execution plan: 1. crates/aulo-speech-system (adapter, spec §4.2), macOS module behind cfg(target_os = "macos"): TtsEngine over AVSpeechSynthesizer.writeUtterance:toBufferCallback: via objc2-avf-audio, so audio comes back as PCM buffers into the engine's poll (never straight to the speaker; barge-in and AEC need the engine path). 2. Resample/convert to the TtsEngine's declared AudioFormat; bounded queue between the callback and poll, overflow counted. 3. voices() from AVSpeechSynthesisVoice.speechVoices (id, name, language, quality), cancel() stops the utterance. 4. Factory for the registry; non-macOS builds compile to an empty module. 5. Tests: voice listing non-empty on macOS, synthesizing a short phrase yields samples within a timeout, cancel ends with Done; unit tests for conversion and the bounded queue.
-
-Done when:
-
-- manual check; voice-list test behind a macOS cfg
 
 ### T7.11. TTS: Windows system voices
 

@@ -365,3 +365,16 @@ Done when:
 - wiremock test
 
 Outcome: CloudTts in aulo-speech-cloud over POST /v1/audio/speech with response_format pcm (24 kHz s16le mono, layout unverified from the OpenAPI spec): one request per pushed sentence in order, 100 ms chunks through a bounded queue of 8 so a slow consumer slows the server, text queue of 64 with Overflow, abort on cancel or begin, total audio cap, idle timeout; voice from request, spec or config default within a configured list. Shared endpoint, auth, client and error mapping moved into a private net module used by STT too. Speed comes from TtsRequest.rate; EngineSpec.rate is ignored.
+
+### T7.10. TTS: macOS system voices
+
+Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 0 task(s)
+
+AVSpeechSynthesizer via objc2-avf-audio writing buffers into aulo-audio (not straight to the speaker, so barge-in and AEC still work). Lists installed voices.
+
+
+Done when:
+
+- manual check; voice-list test behind a macOS cfg
+
+Outcome: New adapter crate aulo-speech-system (macOS only): AVSpeechSynthesizer write(_:toBufferCallback:) on a dedicated worker thread, buffers pushed by try_lock into a fixed 1M-sample ringbuf with overflow counted, a generation fence for cancel, linear resampling only on rate mismatch, voice choice by tag then primary subtag then quality. The buffer callback fires only on the main dispatch queue, so hosts (aulod, aulo-ffi) must keep the main run loop running and run tokio elsewhere; without it the engine reports Unavailable after 5 s. unsafe is allowed only in src/macos with SAFETY comments. Manual WAV check, no speaker playback.
