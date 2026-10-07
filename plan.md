@@ -68,7 +68,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T7.9 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T7.11 | todo | P2 | 3 | 0% | |
 | T7.12 | in progress | P2 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
-| T7.14 | in progress | P2 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T7.16 | todo | P2 | 2 | 0% | |
 | T8.1 | todo | P0 | 4 | 0% | |
 | T8.2 | todo | P0 | 2 | 0% | |
@@ -791,18 +790,6 @@ Speech-dispatcher (SSIP) or espeak-ng subprocess as the zero-download fallback v
 Done when:
 
 - test on the Linux runner with espeak-ng installed
-
-### T7.14. TTS: ElevenLabs streaming
-
-Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 0 task(s)
-
-Execution plan: 1. In aulo-speech-cloud, a TtsEngine over the ElevenLabs stream-input WebSocket (tokio-tungstenite, approved in D4) with voice id and model from config and the key as an ApiKey handle. 2. Reuse the net module rules from T7.6/T7.13 (endpoint validation, error mapping, caps, bounded audio queue, cancel). 3. Recorded-session test: a local WebSocket server replays a captured message sequence. 4. Verify clippy, fmt, workspace tests.
-
-WebSocket streaming TTS with voice id and model from config; key from the keychain.
-
-Done when:
-
-- recorded-session test
 
 ### T7.16. Speech benchmarks
 

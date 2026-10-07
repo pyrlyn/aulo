@@ -417,3 +417,16 @@ Done when:
 - install and uninstall are idempotent (tested with a fake service manager)
 
 Outcome: aulod service install|uninstall|status over a ServiceManager trait (std fs and Command, no shell) with launchd (dev.aulo.aulod LaunchAgent, bootstrap/bootout), systemd user unit (daemon-reload only on change, enable --now, restart on update) and schtasks ONLOGON backends; Fresh/Updated/Unchanged results, uninstall of nothing runs no command. Per-format quoting (XML, systemd, Windows CRT), control characters and non-UTF-8 paths refused. AULO_HOME goes in the unit environment, or as a hidden --home flag on Windows. 17 unit tests with a stateful fake manager plus trycmd fixtures.
+
+### T7.14. TTS: ElevenLabs streaming
+
+Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 0 task(s)
+
+
+WebSocket streaming TTS with voice id and model from config; key from the keychain.
+
+Done when:
+
+- recorded-session test
+
+Outcome: ElevenLabsTts in aulo-speech-cloud over the stream-input WebSocket (tokio-tungstenite with rustls, base64, futures-util): xi-api-key header never in the URL, validated voice id in the path, pcm_<rate> output, init/text/close message sequence with a flush per sentence so the first one plays early, audio through the shared bounded reply queues (new private reply.rs shared with OpenAI TTS), abort on cancel or begin, message, audio and text caps; auth, quota, rate and connect failures map to Unavailable and server text is never echoed. Verified against a synthetic recorded session only; error and close-code layout marked unverified. About 550 net lines including the moved reply code.
