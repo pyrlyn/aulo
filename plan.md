@@ -31,9 +31,9 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T2.3 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T2.6 | in progress | P1 | 1 | 0% | Claude Code / claude-sonnet-5-5 |
 | T2.10 | todo | P2 | 2 | 0% | |
-| T3.4 | todo | P0 | 3 | 0% | |
-| T3.5 | todo | P0 | 2 | 0% | |
-| T3.6 | todo | P0 | 2 | 0% | |
+| T3.4 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
+| T3.5 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
+| T3.6 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T3.7 | todo | P0 | 3 | 0% | |
 | T3.8 | todo | P0 | 3 | 0% | |
 | T3.9 | todo | P2 | 3 | 0% | |
@@ -71,7 +71,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T6.7 | todo | P2 | 3 | 0% | |
 | T7.4 | todo | P0 | 3 | 0% | |
 | T7.5 | todo | P1 | 2 | 0% | |
-| T7.6 | todo | P1 | 3 | 0% | |
+| T7.6 | in progress | P1 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T7.7 | todo | P2 | 3 | 0% | |
 | T7.8 | todo | P2 | 3 | 0% | |
 | T7.9 | todo | P0 | 3 | 0% | |
@@ -425,6 +425,8 @@ Stage: S3 · Area: api · Depends on: T3.3 · Blocks: 3 task(s)
 
 Local socket: trust by file owner and 0600 permissions. TCP: bearer token required, compared in constant time, interceptor rejects missing tokens. The first token is generated on first run and stored in the OS keychain.
 
+Execution plan: 1. aulo-server auth module: a tonic interceptor/tower layer applied per listener. UDS: check the peer credentials (SO_PEERCRED / getpeereid via tokio UnixStream::peer_cred) match the daemon uid, on top of 0600; reject others. TCP: require `authorization: Bearer <token>`, constant-time compare (subtle), reject missing/malformed with UNAUTHENTICATED and no detail leak. 2. Token store: generate a 256-bit token on first run, keep it in the OS keychain via keyring (rust.md), with a file fallback only if the spec allows it; never log it (aulo-telemetry redaction). 3. Wire `remote_auth_configured` to "a token exists". 4. Tests: TCP without token rejected, wrong token rejected, right token accepted, UDS from owner accepted; keychain behind a trait with an in-memory fake in tests.
+
 Done when:
 
 - tests: TCP without token is rejected; UDS from owner is accepted
@@ -435,6 +437,8 @@ Stage: S3 · Area: api · Depends on: T3.3, T2.8 · Blocks: 5 task(s)
 
 Implement chat CRUD and message listing over aulo-store with pagination.
 
+Execution plan: 1. aulo-server ChatService impl over aulo-store (Store behind a Mutex or spawn_blocking; the store is sync). 2. Map proto <-> store types (ids as ULID strings validated on input, ModelRef <-> model string per T3.1 note, Timestamp from Unix ms), page_token as an opaque keyset cursor, page size default 50 clamp 200, title cap 200 bytes; errors map to NOT_FOUND / INVALID_ARGUMENT without leaking internals. 3. SearchMessages returns UNIMPLEMENTED until T2.10. 4. gRPC integration tests over UDS for every RPC including pagination and invalid input.
+
 Done when:
 
 - grpc integration tests for every RPC
@@ -444,6 +448,8 @@ Done when:
 Stage: S3 · Area: api · Depends on: T3.3 · Blocks: 2 task(s)
 
 clap surface: aulod run, --config, --listen; single-instance lock per home; pidfile; SIGINT/SIGTERM shutdown.
+
+Execution plan: 1. crates/aulo `aulod` bin: clap with `run` (default), `--config <path>`, `--listen <addr>`; loads aulo-config, inits aulo-telemetry, binds aulo-server listeners (UDS always, TCP if configured) and serves until SIGINT/SIGTERM (ctrl-c on Windows) via CancellationToken. 2. Single instance per AULO_HOME: an exclusive advisory lock (fs4 or the crate rust.md lists) on <home>/run/aulod.lock held for the process lifetime, pidfile written next to it; a second instance exits non-zero with a clear message naming the pid. 3. trycmd fixtures for --help, --version and the second-instance message (use a temp AULO_HOME). Keep `aulo` (CLI) untouched except shared code.
 
 Done when:
 
@@ -832,6 +838,8 @@ Done when:
 Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 0 task(s)
 
 /v1/audio/transcriptions client: works with OpenAI (GPT Transcribe), runa (local server) and other compatible servers. Streaming variant where the server supports it.
+
+Execution plan: 1. crates/aulo-speech-cloud (adapter, spec §4.2): OpenAI-compatible /v1/audio/transcriptions SttEngine. The trait is sync push/poll: frames go into a bounded buffer (cap by seconds), finish() hands the WAV-encoded utterance to a background tokio task that POSTs multipart and returns partials/final through a bounded channel; poll is try_recv. 2. Shapes: plain JSON response, and the streaming SSE variant (stream=true, transcript.text.delta/done events) when configured. 3. base_url, model, api key handle from caller; key never logged; response text capped; HTTP errors -> SpeechError::Unavailable/Failed so the registry falls back. 4. wiremock tests for both shapes, error mapping and the cap.
 
 Done when:
 
