@@ -9,9 +9,9 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | # | Status | Priority | Complexity | Readiness | Agent |
 | --- | --- | --- | --- | --- | --- |
 | T1.1 | in progress | P0 | 4 | 60% | Claude Code / claude-sonnet-5-5 |
-| T1.2 | in progress | P0 | 3 | 5% | Claude Code / claude-sonnet-5-5 |
-| T1.3 | todo | P0 | 3 | 0% | |
-| T1.4 | todo | P0 | 3 | 0% | |
+| T1.2 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
+| T1.3 | in progress | P0 | 3 | 5% | Claude Code / claude-sonnet-5-5 |
+| T1.4 | in progress | P0 | 3 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.5 | todo | P0 | 2 | 0% | |
 | T1.6 | todo | P0 | 3 | 0% | |
 | T1.7 | todo | P1 | 3 | 0% | |
@@ -24,7 +24,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.14 | todo | P1 | 2 | 0% | |
 | T1.15 | in progress | P0 | 4 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.16 | todo | P1 | 3 | 0% | |
-| T1.17 | in progress | P1 | 3 | 50% | Claude Code / claude-sonnet-5-5 |
+| T1.17 | in progress | P1 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.18 | todo | P2 | 2 | 0% | |
 | T1.19 | todo | P1 | 3 | 0% | |
 | T1.20 | todo | P2 | 3 | 0% | |
@@ -193,6 +193,8 @@ Done when:
 
 Stage: S1 · Area: shared · Depends on: T1.2 · Blocks: 2 task(s)
 
+Execution plan: in a packages/crates worktree branched from t1-2, create llm-openai (publish = false, dual licence, rust-version 1.98) from cox-provider-openai: Chat and Responses wires over llm-wire and llm-http, with recorded-fixture streaming text and tool-call tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption (T1.6) waits for publication.
+
 Move the OpenAI Chat and Responses wires from cox-provider-openai into packages/crates/llm-openai. They also serve every OpenAI-compatible endpoint (Ollama, LM Studio, vLLM, OpenRouter, DeepSeek, Gemini compat, xAI, runa).
 
 Done when:
@@ -202,6 +204,8 @@ Done when:
 ### T1.4. Extract llm-anthropic: Messages wire
 
 Stage: S1 · Area: shared · Depends on: T1.2 · Blocks: 1 task(s)
+
+Execution plan: in a packages/crates worktree branched from t1-2, create llm-anthropic (publish = false, dual licence, rust-version 1.98) from cox-provider-anthropic: Messages wire with typify-generated types, cache breakpoints, thinking and effort, over llm-wire and llm-http, with recorded-fixture tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption (T1.6) waits for publication.
 
 Move the Anthropic Messages wire (typify-generated types, cache breakpoints, thinking, effort) into packages/crates/llm-anthropic.
 
