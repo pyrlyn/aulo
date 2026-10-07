@@ -109,6 +109,7 @@ const OWNERS: &[(&[&str], &[&str])] = &[
         &["aulo-speech-sherpa"],
     ),
     (&["whisper-rs", "whisper-rs-sys"], &["aulo-speech-whisper"]),
+    (&["cpal"], &["aulo-audio"]),
     (&["wasmtime", "extism"], &["aulo-plugin"]),
     (&["chromiumoxide"], &["aulo-browser"]),
     (&["uniffi", "uniffi_bindgen", "uniffi_build"], &["aulo-ffi"]),

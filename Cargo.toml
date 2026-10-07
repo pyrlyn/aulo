@@ -68,6 +68,8 @@ objc2-speech = { version = "0.3.2", default-features = false }
 block2 = "0.6.2"
 # WinRT SpeechSynthesizer for the Windows system voices in aulo-speech-system; members pick the namespaces they use
 windows = { version = "0.62.2", default-features = false }
+# microphone capture in aulo-audio (CoreAudio, WASAPI, ALSA); Linux builds need libasound2-dev
+cpal = "0.18.2"
 # fixed-size lock-free SPSC rings between platform audio callbacks and engine polls (spec §5.3)
 ringbuf = "0.5.2"
 # benchmarks of the deterministic parts of the speech harness (WER, resampling, measurement)

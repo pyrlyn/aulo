@@ -25,6 +25,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | base64 | local | https://github.com/marshallpierce/rust-base64 | Decodes the base64 audio inside the ElevenLabs WebSocket messages in `aulo-speech-cloud`; encodes and decodes the audio of the OpenAI realtime sockets in `aulo-realtime` |
 | block2 | local (macOS) | https://github.com/madsmtm/objc2 | Objective-C block for the `AVSpeechSynthesizer` buffer callback (`aulo-speech-system`) |
 | clap | local | https://github.com/clap-rs/clap | Command-line parsing for `aulo` (`aulo config show`, `aulo config default`) and `aulod` |
+| cpal | local | https://github.com/RustAudio/cpal | Opens the microphone (CoreAudio, WASAPI, ALSA), by name or the default device, for capture in `aulo-audio`; Linux needs `libasound2-dev` (already in CI) |
 | diesel | local | https://github.com/diesel-rs/diesel | Typed SQLite access in `aulo-store` (no raw SQL) |
 | diesel_migrations | local | https://github.com/diesel-rs/diesel | Embedded, filename-keyed schema migrations |
 | divan | local (dev) | https://github.com/nvzqz/divan | Benchmarks of the deterministic speech-harness parts (word error rate, resampling, measurement against fake engines) in `aulo-speech-bench` |
@@ -49,7 +50,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | rcgen | local | https://github.com/rustls/rcgen | Self-signed certificate for the `aulo-server` TCP listener, generated on first start (aws-lc-rs) |
 | regex | local | https://github.com/rust-lang/regex | Credential and secret-pair patterns in the log redaction |
 | reqwest | local | https://github.com/seanmonstar/reqwest | Streaming HTTPS downloads (rustls) of speech models in `aulo-models`; multipart transcription uploads and streamed speech replies in `aulo-speech-cloud`; the `POST /realtime/client_secrets` call in `aulo-realtime` |
-| ringbuf | local | https://github.com/agerasev/ringbuf | Fixed-size lock-free ring from the TTS producer (the macOS main-queue callback, the espeak-ng and Windows worker threads) to `poll` (`aulo-speech-system`); spec §5.3 |
+| ringbuf | local | https://github.com/agerasev/ringbuf | Fixed-size lock-free ring from the TTS producer (the macOS main-queue callback, the espeak-ng and Windows worker threads) to `poll` (`aulo-speech-system`) and from the microphone callback to the frame consumer (`aulo-audio`); spec §5.3 |
 | rustix | local | https://github.com/bytecodealliance/rustix | Daemon euid for the local-socket peer check in `aulo-server`, without hand-written `unsafe` |
 | rustls | local | https://github.com/rustls/rustls | Certificate and key checks for the `aulo-server` TCP listener; the pinned-fingerprint client verifier for `aulo connect --pin` (aws-lc-rs, the provider reqwest already builds) |
 | schemars | local | https://github.com/GREsau/schemars | JSON Schema generated from the config types |
