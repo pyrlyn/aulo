@@ -28,7 +28,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.18 | todo | P2 | 2 | 0% | |
 | T1.19 | todo | P1 | 3 | 0% | |
 | T1.20 | todo | P2 | 3 | 0% | |
-| T2.3 | todo | P0 | 2 | 0% | |
+| T2.3 | in progress | P0 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T2.6 | todo | P1 | 1 | 0% | |
 | T2.10 | todo | P2 | 2 | 0% | |
 | T3.3 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
@@ -391,6 +391,8 @@ Done when:
 Stage: S2 · Area: infra · Depends on: T2.1 · Blocks: 0 task(s)
 
 ci.yml calls pyrlyn/ci ci-rust.yml (Linux x86_64 and aarch64, macOS aarch64, Windows x86_64; no x86_64 macOS), commit-subject lint, pipeline.yml (CodeQL, Semgrep). Linux job installs libasound2-dev.
+
+Execution plan: 1. .github/workflows/ci.yml calling pyrlyn/ci ci-rust.yml at the same pinned SHA style cox uses (targets Linux x86_64/aarch64, macOS aarch64, Windows x86_64; no x86_64 macOS), with protoc and libasound2-dev installed where the reusable workflow allows. 2. Commit-subject lint and pipeline.yml (CodeQL, Semgrep) following cox's workflows. 3. Validate locally with actionlint (and zizmor if rust.md/cox uses it). 4. CI green can only be checked after a push, which needs the creator's permission; until then readiness stays below 100% and the card notes it.
 
 Done when:
 
