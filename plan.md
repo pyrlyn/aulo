@@ -18,9 +18,9 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.8 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.9 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.10 | in progress | P0 | 2 | 60% | Claude Code / claude-sonnet-5-5 |
-| T1.11 | todo | P1 | 2 | 0% | |
+| T1.11 | in progress | P1 | 2 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.12 | in progress | P0 | 4 | 60% | Claude Code / claude-sonnet-5-5 |
-| T1.13 | in progress | P0 | 3 | 50% | Claude Code / claude-sonnet-5-5 |
+| T1.13 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.14 | todo | P1 | 2 | 0% | |
 | T1.15 | in progress | P0 | 4 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.16 | todo | P1 | 3 | 0% | |
@@ -284,6 +284,8 @@ Done when:
 ### T1.11. Extract text-sanitize: terminal and bidi guard
 
 Stage: S1 · Area: shared · Depends on: none · Blocks: 1 task(s)
+
+Execution plan: in a packages/crates worktree branched from s1-setup, create text-sanitize (publish = false, dual licence, rust-version 1.86 so ketch can adopt it) merging cox-sanitize, rtok src/sanitize.rs and ketch changelog::sanitize, with the union of their tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. Adoption by cox, rtok and ketch and the rust.md duplicate note wait for publication and creator permission.
 
 Merge cox-sanitize, rtok src/sanitize.rs and ketch changelog::sanitize (a known duplicate in rust.md) into packages/crates/text-sanitize. All three projects adopt it.
 
