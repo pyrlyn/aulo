@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - "proto/**"
+      - "buf.gen.yaml"
+      - "docs/api/**"
       - ".github/workflows/proto.yml"
 
 permissions:
@@ -29,3 +31,12 @@ jobs:
           # No BSR push or archive: the protos are not published there.
           push: false
           archive: false
+
+      # The reference is generated, so a hand edit or a proto change without a regenerate
+      # shows up as drift. --intent-to-add makes a brand new file count as a diff too.
+      # buf-action leaves buf on PATH for this step.
+      - name: API reference is up to date
+        run: |
+          buf generate proto
+          git add --intent-to-add docs/api
+          git diff --exit-code docs/api

@@ -11,6 +11,7 @@ aulo runs as a daemon, `aulod`, with a gRPC API. Use it from the native desktop 
 - [Specification](spec.md)
 - [Research and sources](research.md)
 - [Plan](plan.md)
+- [gRPC API reference](docs/api/aulo.v1.md)
 
 ## License
 

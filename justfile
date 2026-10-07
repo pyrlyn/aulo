@@ -12,3 +12,7 @@ fmt:
 
 test:
     cargo test --workspace
+
+# Regenerates docs/api from the protos. Needs network: the plugin runs on the BSR.
+api-docs:
+    buf generate proto

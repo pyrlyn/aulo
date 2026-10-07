@@ -13,6 +13,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | buf (1.73.0) | brew | Lints and builds the protos, `buf format`, breaking-change check (`proto/buf.yaml`) | https://github.com/bufbuild/buf |
 | protoc (libprotoc 36.2) | brew (`PROTOC` or `PATH`) | `aulo-proto` build script compiles `proto/aulo/v1`; not vendored so the version follows the platform package | https://github.com/protocolbuffers/protobuf |
 | mise | brew | Pins the Rust toolchain and just | https://github.com/jdx/mise |
+| protoc-gen-doc (v1.5.1) | buf remote plugin `buf.build/community/pseudomuto-doc` (`buf.gen.yaml`), nothing to install | Generates the Markdown gRPC API reference in `docs/api/` (`just api-docs`) | https://github.com/pseudomuto/protoc-gen-doc |
 
 ## cargo
 
