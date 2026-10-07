@@ -157,7 +157,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T15.3 | todo | P2 | 3 | 0% | |
 | T15.4 | todo | P1 | 2 | 0% | |
 | T15.5 | in progress | P1 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
-| T16.3 | todo | P2 | 1 | 0% | |
 | T16.4 | todo | P2 | 2 | 0% | |
 | T16.5 | todo | P2 | 3 | 0% | |
 | T16.6 | todo | P3 | 2 | 0% | |
@@ -1753,10 +1752,6 @@ Done when:
 ### T16. Audit fixes (2026-10-07)
 
 Findings from a code audit on 2026-10-07. Verified-clean areas worth noting: strict input caps, constant-time token compare, pinned SHA-256 model downloads, XML/systemd/schtasks escaping, secret redaction at every sink, endpoint and model-path validation. T16.1 (daemon.listen without a token) is closed in `done.md`.
-
-### T16.3. `OfflineStt::begin` validates language before cancelling
-
-`crates/aulo-speech-local/src/offline.rs:128-142` returns `Unsupported` before `self.cancel()`, so a previous utterance left in `Waiting` survives a failed `begin` — violating the trait contract "`begin` … implies `cancel`" (`aulo-speech/src/stt.rs:76-79`) that the other engines honour (`deepgram.rs:248-250`, `macos/stt.rs:175-176`). Done means: the cancel runs first, with a test.
 
 ### T16.4. A stale partial can overwrite a newer held transcript
 

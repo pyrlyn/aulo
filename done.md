@@ -507,3 +507,8 @@ Check: `cargo check -p aulo` clean; `cargo test -p aulo --bin aulod` — 17 pass
 `crates/aulo-speech-system/src/resample.rs` computed `step = input_hz / output_hz` whenever the rates differed and only guarded `output_hz > 0`: a malformed buffer reporting 0 Hz (or negative — the macOS callback path feeds `format.sampleRate()` straight in, `src/macos/worker.rs:200-218`) produced a `step <= 0` that never advanced `pos`, and `push`'s emit loop spun forever on the main dispatch queue, hanging the whole process. Found by the 2026-10-07 audit. Fix: non-positive input rates pass samples through, like equal rates — the same degradation the wav path's 8000..=192000 guard reaches by refusing the input.
 Model: ZCode / GLM-5.3 · Status: done 2026-10-07 · Priority: P1 · Complexity: 2 · Files: `crates/aulo-speech-system/src/resample.rs`
 Check: `cargo test -p aulo-speech-system resample` — 5 passed (new: `a_non_positive_input_rate_passes_through`, covering 0 Hz and −16 kHz); `cargo fmt --check` clean.
+### T16.3. `OfflineStt::begin` validates the language before cancelling
+
+`crates/aulo-speech-local/src/offline.rs` returned `unsupported` before `self.cancel()`, so an utterance left in `Recording` or `Waiting` survived a failed `begin` — violating the trait contract "`begin` … implies `cancel`" (`aulo-speech/src/stt.rs`) that deepgram and the macOS engine honour. Found by the 2026-10-07 audit. Fix: the cancel runs first; a rejected language still ends the utterance in progress.
+Model: ZCode / GLM-5.3 · Status: done 2026-10-07 · Priority: P2 · Complexity: 1 · Files: `crates/aulo-speech-local/src/offline.rs`
+Check: `cargo test -p aulo-speech-local offline` — 9 passed (new: `a_rejected_language_still_cancels_the_utterance_in_progress`); `cargo fmt --check` clean.

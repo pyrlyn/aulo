@@ -126,12 +126,15 @@ impl SttEngine for OfflineStt {
     }
 
     fn begin(&mut self, turn_id: TurnId, language: Option<&str>) -> Result<(), SpeechError> {
+        // The contract says `begin` implies `cancel` (aulo-speech `stt`):
+        // cancel first, so a language this engine rejects still ends any
+        // utterance left recording or waiting (T16.3).
+        self.cancel();
         if let Some(tag) = language
             && !self.info.capabilities.languages.supports(tag)
         {
             return Err(SpeechError::unsupported(tag));
         }
-        self.cancel();
         // Only allocates when a cancelled decode kept the previous buffer.
         self.samples.reserve_exact(self.max_samples);
         self.state = State::Recording {
@@ -275,6 +278,24 @@ mod tests {
         })
         .unwrap();
         OfflineStt::new(info(), worker, MAX_SAMPLES)
+    }
+
+    /// T16.3: `begin` implies `cancel` even when it rejects the language —
+    /// an utterance left recording must not keep accepting audio after a
+    /// failed `begin`.
+    #[test]
+    fn a_rejected_language_still_cancels_the_utterance_in_progress() {
+        let mut stt = engine(Arc::default(), None);
+        stt.begin(TurnId::new(), None).unwrap();
+        push(&mut stt, 1).unwrap();
+        stt.begin(TurnId::new(), Some("zz"))
+            .expect_err("zz is not en/ru/uk");
+        assert!(
+            matches!(push(&mut stt, 1), Err(SpeechError::OutOfOrder(_))),
+            "the old utterance must have been cancelled"
+        );
+        stt.begin(TurnId::new(), Some("en")).unwrap();
+        push(&mut stt, 1).unwrap();
     }
 
     fn push(stt: &mut OfflineStt, frames: usize) -> Result<(), SpeechError> {
