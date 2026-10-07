@@ -74,6 +74,12 @@ pulldown-cmark = { version = "0.13.4", default-features = false }
 regex = "1.13.1"
 # HTTPS client for model downloads (aulo-models) and cloud speech (aulo-speech-cloud); rustls, no system OpenSSL
 reqwest = { version = "0.13.5", default-features = false, features = ["rustls"] }
+# base64 audio inside the JSON messages of the ElevenLabs streaming speech socket
+base64 = "0.23.1"
+# split a WebSocket into read and write halves, so a slow audio consumer never stalls the text we send
+futures-util = { version = "0.3.34", default-features = false, features = ["sink", "std"] }
+# WebSocket client (rustls, platform trust roots) for the ElevenLabs stream-input speech API; approved in spec D4
+tokio-tungstenite = { version = "0.30.0", default-features = false, features = ["connect", "rustls-tls-native-roots"] }
 # WAV encoding of the utterance sent to a transcription endpoint
 hound = "3.5.1"
 # local speech engines (Parakeet STT); owned by aulo-speech-sherpa. Exact pin: sherpa-onnx-sys pins

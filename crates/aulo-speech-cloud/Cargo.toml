@@ -1,6 +1,6 @@
 [package]
 name = "aulo-speech-cloud"
-description = "aulo cloud speech engines: OpenAI-compatible transcription and speech synthesis"
+description = "aulo cloud speech engines: OpenAI-compatible transcription and speech synthesis, ElevenLabs streaming synthesis"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -10,12 +10,15 @@ publish.workspace = true
 
 [dependencies]
 aulo-speech = { path = "../aulo-speech" }
+base64.workspace = true
+futures-util.workspace = true
 hound.workspace = true
 reqwest = { workspace = true, features = ["multipart"] }
 serde.workspace = true
 serde_json.workspace = true
 sse-core.workspace = true
-tokio = { workspace = true, features = ["rt", "sync", "time"] }
+tokio = { workspace = true, features = ["macros", "rt", "sync", "time"] }
+tokio-tungstenite.workspace = true
 tokio-util = { workspace = true, features = ["rt"] }
 
 [dev-dependencies]

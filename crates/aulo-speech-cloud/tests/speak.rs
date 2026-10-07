@@ -8,9 +8,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
-use aulo_speech::{
-    EngineId, EngineSpec, SpeechError, SpeechRate, TtsEngine, TtsPoll, TtsRequest, TurnId,
-};
+use aulo_speech::{EngineId, EngineSpec, SpeechError, SpeechRate, TtsEngine, TtsPoll};
 use aulo_speech_cloud::{ApiKey, CloudTtsConfig, CloudTtsFactory, SAMPLE_RATE_HZ, openai_voices};
 use serde_json::json;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -19,10 +17,11 @@ use tokio::runtime::Handle;
 use wiremock::matchers::{body_json, header, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
+mod common;
+use common::{POLL_LIMIT, POLL_PAUSE, collect, expected, pcm, request};
+
 const KEY: &str = "sk-test-secret-key";
 const MODEL: &str = "gpt-test-tts";
-const POLL_PAUSE: Duration = Duration::from_millis(10);
-const POLL_LIMIT: usize = 500;
 const CHUNK_BYTES: usize = 4800;
 const PCM: &str = "application/octet-stream";
 
@@ -54,44 +53,12 @@ fn engine(config: CloudTtsConfig) -> Box<dyn TtsEngine> {
         .unwrap()
 }
 
-fn request<'a>(voice: Option<&'a str>, rate: f32) -> TtsRequest<'a> {
-    TtsRequest {
-        turn_id: TurnId::default(),
-        voice,
-        language: None,
-        rate: SpeechRate::new(rate).unwrap(),
-    }
-}
-
-/// Little-endian samples `start`, `start + 1`, ... so a lost or reordered byte shows.
-fn pcm(start: i16, samples: usize) -> Vec<u8> {
-    (0..samples)
-        .flat_map(|i| (start + i as i16).to_le_bytes())
-        .collect()
-}
-
 fn speak(engine: &mut dyn TtsEngine, texts: &[&str]) -> Result<(), SpeechError> {
     engine.begin(&request(None, 1.0))?;
     for text in texts {
         engine.push_text(text)?;
     }
     engine.finish()
-}
-
-async fn collect(engine: &mut dyn TtsEngine, slice: usize) -> Result<Vec<f32>, SpeechError> {
-    let mut out = vec![0.0; slice];
-    let mut audio = Vec::new();
-    for _ in 0..POLL_LIMIT {
-        match engine.poll(&mut out)? {
-            TtsPoll::Audio { samples } => {
-                assert!(samples <= slice);
-                audio.extend_from_slice(&out[..samples]);
-            }
-            TtsPoll::Done => return Ok(audio),
-            TtsPoll::Pending => tokio::time::sleep(POLL_PAUSE).await,
-        }
-    }
-    panic!("the reply did not finish in time");
 }
 
 async fn serve(response: ResponseTemplate) -> MockServer {
@@ -102,12 +69,6 @@ async fn serve(response: ResponseTemplate) -> MockServer {
         .mount(&server)
         .await;
     server
-}
-
-fn expected(start: i16, samples: usize) -> Vec<f32> {
-    (0..samples)
-        .map(|i| f32::from(start + i as i16) / 32768.0)
-        .collect()
 }
 
 #[tokio::test(flavor = "multi_thread")]

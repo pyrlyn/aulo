@@ -20,22 +20,35 @@ pub(crate) struct Endpoint {
 
 /// `base_url` goes up to and including the version segment.
 pub(crate) fn endpoint(base_url: &str, path: &str, has_key: bool) -> Result<Endpoint, SpeechError> {
-    let url = Url::parse(&format!("{}{path}", base_url.trim_end_matches('/')))
-        .map_err(|_| SpeechError::invalid("base url", "not a valid URL"))?;
+    checked(base_url, path, has_key, ("https", "http"))
+        .map_err(|()| SpeechError::invalid("base url", "https, or http only to localhost"))
+}
+
+/// The WebSocket form of [`endpoint`]: `wss`, or `ws` only to this machine.
+pub(crate) fn ws_endpoint(
+    base_url: &str,
+    path: &str,
+    has_key: bool,
+) -> Result<Endpoint, SpeechError> {
+    checked(base_url, path, has_key, ("wss", "ws"))
+        .map_err(|()| SpeechError::invalid("base url", "wss, or ws only to localhost"))
+}
+
+fn checked(
+    base_url: &str,
+    path: &str,
+    has_key: bool,
+    (secure_scheme, plain_scheme): (&str, &str),
+) -> Result<Endpoint, ()> {
+    let url = Url::parse(&format!("{}{path}", base_url.trim_end_matches('/'))).map_err(|_| ())?;
     let local = is_loopback(&url);
-    // A bearer token over plain http to another host is readable on the path.
-    let secure = match url.scheme() {
-        "https" => true,
-        "http" => local || !has_key,
-        _ => false,
-    };
-    if !secure {
-        return Err(SpeechError::invalid(
-            "base url",
-            "https, or http only to localhost",
-        ));
+    // A key over an unencrypted connection to another host is readable on the path.
+    let scheme = url.scheme();
+    if scheme == secure_scheme || (scheme == plain_scheme && (local || !has_key)) {
+        Ok(Endpoint { url, local })
+    } else {
+        Err(())
     }
-    Ok(Endpoint { url, local })
 }
 
 fn is_loopback(url: &Url) -> bool {
@@ -49,7 +62,15 @@ fn is_loopback(url: &Url) -> bool {
 }
 
 pub(crate) fn bearer(key: Option<&ApiKey>) -> Result<Option<HeaderValue>, SpeechError> {
-    key.map(|key| HeaderValue::from_str(&format!("Bearer {}", key.expose())))
+    secret_header(key, "Bearer ")
+}
+
+/// The key as a header value, after `prefix` (empty for a bare key header).
+pub(crate) fn secret_header(
+    key: Option<&ApiKey>,
+    prefix: &str,
+) -> Result<Option<HeaderValue>, SpeechError> {
+    key.map(|key| HeaderValue::from_str(&format!("{prefix}{}", key.expose())))
         .transpose()
         .map_err(|_| SpeechError::invalid("api key", "not a valid header value"))
         .map(|value| {

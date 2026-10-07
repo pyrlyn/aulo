@@ -1,4 +1,4 @@
-//! Cloud speech engines. Today: speech-to-text over the OpenAI-compatible
+//! Cloud speech engines: speech-to-text over the OpenAI-compatible
 //! `POST /v1/audio/transcriptions` endpoint and text-to-speech over
 //! `POST /v1/audio/speech`, which OpenAI and local servers such as runa both
 //! serve.
@@ -31,20 +31,29 @@
 //! request, run in order; the body is cut into 100 ms chunks and read no
 //! faster than playback drains them.
 //!
+//! Speech can also come from ElevenLabs over a WebSocket ([`ElevenLabsTts`]); its
+//! protocol and sources are documented in that module.
+//!
 //! Nothing is retried. A rejected key is reported as
 //! [`aulo_speech::SpeechError::Unavailable`] so the registry warns and falls
 //! back at once instead of sending every utterance to a server that refuses it.
 
 mod config;
+mod elevenlabs;
 mod engine;
 mod http;
 mod net;
+mod reply;
 mod speech;
 mod tts;
 
 pub use config::{
     ApiKey, CloudSttConfig, CloudTtsConfig, DEFAULT_MAX_TEXT_CHARS, MAX_AUDIO_BYTES_LIMIT,
     MAX_TEXT_CHARS_LIMIT, MAX_UTTERANCE_LIMIT, ResponseShape, openai_voices,
+};
+pub use elevenlabs::{
+    DEFAULT_BASE_URL, ElevenLabsTts, ElevenLabsTtsConfig, ElevenLabsTtsFactory,
+    MAX_REPLY_CHARS_LIMIT, PCM_SAMPLE_RATES_HZ,
 };
 pub use engine::{CloudStt, CloudSttFactory, MAX_TRANSCRIPT_BYTES};
 pub use tts::{CloudTts, CloudTtsFactory, SAMPLE_RATE_HZ};

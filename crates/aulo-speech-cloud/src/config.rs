@@ -1,7 +1,7 @@
 use std::fmt;
 use std::time::Duration;
 
-use aulo_speech::Voice;
+use aulo_speech::{SpeechError, Voice};
 
 /// Longest utterance the engine buffers. A 10 minute 16 kHz mono WAV is about
 /// 19 MB, under OpenAI's 25 MB upload limit, and bounds memory per engine.
@@ -130,6 +130,26 @@ pub struct CloudTtsConfig {
 }
 
 impl CloudTtsConfig {
+    /// The limits every engine built from this config relies on.
+    pub(crate) fn validate(&self) -> Result<(), SpeechError> {
+        if self.max_text_chars == 0 || self.max_text_chars > MAX_TEXT_CHARS_LIMIT {
+            return Err(SpeechError::invalid("max text", "1 to 65536 characters"));
+        }
+        if self.max_audio_bytes == 0 || self.max_audio_bytes > MAX_AUDIO_BYTES_LIMIT {
+            return Err(SpeechError::invalid("max audio", "1 byte to 64 MiB"));
+        }
+        if self.request_timeout.is_zero() {
+            return Err(SpeechError::invalid("request timeout", "must not be zero"));
+        }
+        if !self.voices.iter().any(|v| v.id == self.default_voice) {
+            return Err(SpeechError::invalid(
+                "default voice",
+                "not in the voice list",
+            ));
+        }
+        Ok(())
+    }
+
     pub fn new(
         name: impl Into<String>,
         base_url: impl Into<String>,
