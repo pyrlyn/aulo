@@ -12,10 +12,9 @@ publish.workspace = true
 aulo-speech = { path = "../aulo-speech" }
 # Resampler: the streaming, allocation-free linear resampler the TTS path already uses.
 aulo-speech-system = { path = "../aulo-speech-system" }
-cpal = { workspace = true }
 ringbuf = { workspace = true }
+speech-capture = { workspace = true }
 thiserror = { workspace = true }
-tracing = { workspace = true }
 
 [features]
 # A scriptable fake input device for tests in this and other crates; never on in a release build.

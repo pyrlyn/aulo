@@ -6,9 +6,8 @@
 //! The platform sits behind [`InputBackend`]; [`CpalBackend`] is the real one
 //! and `testkit::FakeBackend` (feature `testkit`) the scriptable fake.
 //!
-//! `speech-capture` (T1.13) records to memory for push-to-talk and takes only
-//! the default device, so it cannot stream; this crate owns the streaming path
-//! until that crate grows one.
+//! The real backend wraps the shared `speech-capture` crate, which owns the
+//! `cpal` stream.
 
 mod capture;
 mod cpal_input;
