@@ -66,7 +66,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T7.5 | todo | P1 | 2 | 0% | |
 | T7.7 | in progress | P2 | 3 | 0% | Claude Code / claude-sonnet-5-5 |
 | T7.8 | todo | P2 | 3 | 0% | |
-| T7.9 | todo | P0 | 3 | 0% | |
+| T7.9 | in progress | P0 | 3 | 0% | Claude Code / claude-opus-5-5 |
 | T7.11 | todo | P2 | 3 | 0% | |
 | T7.12 | in progress | P2 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
 | T7.14 | in progress | P2 | 2 | 0% | Claude Code / claude-sonnet-5-5 |
@@ -772,6 +772,8 @@ Done when:
 ### T7.9. TTS: sherpa-onnx (Kokoro, Matcha, VITS)
 
 Stage: S7 · Area: speech · Depends on: T7.3, T0.5 · Blocks: 1 task(s)
+
+Execution plan: 1. In aulo-speech-sherpa, a TtsEngine for Kokoro multi-lang v1.0 with its voice list, reusing the T7.4 model validation, shared load and worker pattern. 2. Sentence-chunked synthesis: one job per pushed sentence, audio chunks through a bounded queue, cancel skips queued jobs. 3. Catalog entry for the Kokoro bundle only with hashes verified from primary sources or computed from the spike download. 4. Time-to-first-audio test gated on the model directory, against the spike budget (under 0.3 s for a short first sentence). 5. Verify clippy, fmt, workspace tests.
 
 Default local TTS. Kokoro (Apache-2.0 weights) with voice list; sentence-chunked streaming synthesis so the first sentence plays while the rest is generated.
 
