@@ -21,7 +21,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.11 | in progress | P1 | 2 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.12 | in progress | P0 | 4 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.13 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
-| T1.14 | todo | P1 | 2 | 0% | |
+| T1.14 | in progress | P1 | 2 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.15 | in progress | P0 | 4 | 5% | Claude Code / claude-sonnet-5-5 |
 | T1.16 | todo | P1 | 3 | 0% | |
 | T1.17 | in progress | P1 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
@@ -320,6 +320,8 @@ Done when:
 ### T1.14. Extract config-schema: schema-checked config helpers
 
 Stage: S1 · Area: shared · Depends on: none · Blocks: 0 task(s)
+
+Execution plan: in a packages/crates worktree branched from s1-setup, create config-schema (publish = false, dual licence, MSRV low enough for ketch and rtok) from the duplicates in cox-config, rtok config/layers.rs and ketch toml_file.rs: stale-schema test helper, figment layering with per-key provenance, toml_edit editing; union of their tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. Adoption by ketch or rtok waits for publication.
 
 rust.md lists "config with schema and one owner" as a known duplicate (cox-config, rtok config/layers.rs, ketch toml_file.rs). Extract the stale-schema test helper, figment layering with per-key provenance and toml_edit editing into packages/crates/config-schema.
 
