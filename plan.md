@@ -25,7 +25,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.15 | in progress | P0 | 4 | 70% | Claude Code / claude-sonnet-5-5 |
 | T1.16 | todo | P1 | 3 | 0% | |
 | T1.17 | in progress | P1 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
-| T1.18 | in progress | P2 | 2 | 5% | Claude Code / claude-sonnet-5-5 |
+| T1.18 | in progress | P2 | 2 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.19 | todo | P1 | 3 | 0% | |
 | T1.20 | todo | P2 | 3 | 0% | |
 | T2.3 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
