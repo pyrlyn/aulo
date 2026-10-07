@@ -1,0 +1,37 @@
+bin.name = "aulo"
+args = ["config", "show"]
+fs.cwd = "layers.in"
+fs.sandbox = true
+env.add.AULO_HOME = "."
+stdout = """
+[daemon]
+
+[mcp.servers]
+
+[plugins]
+dirs = []
+disabled = []
+
+[policy]
+allow = ["Read(*)"]
+approval_timeout_secs = 60
+ask = []
+deny = []
+
+[providers.endpoints.proxy]
+base_url = "https://[REDACTED]@proxy.example/v1?api_key=[REDACTED]"
+kind = "openai-compatible"
+
+[providers.tiers]
+
+[voice]
+barge_in = "interrupt"
+listen = "wake-word"
+
+[voice.stt]
+fallback = []
+
+[voice.tts]
+fallback = []
+"""
+stderr = ""

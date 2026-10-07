@@ -1,0 +1,16 @@
+bin.name = "aulo"
+args = ["config", "show"]
+status.code = 1
+fs.cwd = "broken.in"
+fs.sandbox = true
+env.add.AULO_HOME = "."
+stdout = ""
+stderr = """
+Error: invalid config in [..]/config.toml: TOML parse error at line 1, column 3
+  |
+1 | x=
+  |   ^
+invalid string
+expected `"`, `'`
+
+"""

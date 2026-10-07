@@ -90,6 +90,8 @@ tracing-appender = "0.2.5"
 tracing-opentelemetry = "0.34.0"
 # EnvFilter, JSON and human formatters for the log subscriber
 tracing-subscriber = "0.3.23"
+# full CLI command-output fixtures
+trycmd = "1.2.1"
 # host of a URL, so the normalizer speaks the site and not the whole address
 url = "2.5.8"
 # sortable ids for bots, chats, turns and calls

@@ -1,0 +1,112 @@
+## aulo configuration: every key with its built-in default.
+##
+## Nothing here is active. Lines starting with `##` explain, lines starting
+## with a single `#` are settings: remove the `# ` to change one. Settings
+## marked "unset by default" show an example value, not the default.
+##
+## Layers, lowest first: this file's defaults, `$AULO_HOME/config.toml`
+## (`~/.aulo/config.toml`), the project's `.aulo.toml`, `AULO_*` environment
+## variables (`AULO_VOICE__LISTEN`, `__` separates levels), command-line flags.
+## `aulo config show --origin` prints where each value comes from.
+##
+## API keys never go in this file. They live in the OS keychain or in the
+## environment. There is no setting for one, and unknown keys are rejected.
+
+## ---- aulod transport ----------------------------------------------------
+
+# [daemon]
+## TCP address for remote clients. Unset: the owner-only local socket only.
+# listen = "127.0.0.1:7878"  # unset by default
+## Certificate for `listen`. TLS is required whenever `listen` is set.
+# tls_cert = "/path/to/cert.pem"  # unset by default
+## Private key for `tls_cert`.
+# tls_key = "/path/to/key.pem"  # unset by default
+
+## ---- model providers ----------------------------------------------------
+
+# [providers.tiers]
+## Each tier picks one endpoint (a name from `[providers.endpoints.*]`) and a
+## model. An unset tier is not configured.
+
+## Fast short answers, or the realtime front.
+# [providers.tiers.voice]  # unset by default
+# provider = "local"
+# model = "llama3.2"
+
+## Tool use.
+# [providers.tiers.main]  # unset by default
+# provider = "local"
+# model = "llama3.2"
+
+## The reviewer of consequential actions.
+# [providers.tiers.sentinel]  # unset by default
+# provider = "local"
+# model = "llama3.2"
+
+## Titles and summaries.
+# [providers.tiers.cheap]  # unset by default
+# provider = "local"
+# model = "llama3.2"
+
+## Named endpoints that tiers refer to; none by default. `kind` is one of
+## runa, ollama, lm-studio, llama-cpp, openai, anthropic, gemini, xai,
+## openrouter, deepseek, openai-compatible.
+# [providers.endpoints.local]  # unset by default
+# kind = "ollama"
+## Overrides the provider's default endpoint; required for `openai-compatible`.
+# base_url = "http://127.0.0.1:11434"  # unset by default
+
+## ---- voice --------------------------------------------------------------
+
+# [voice]
+## How a turn starts: "push-to-talk" or "wake-word".
+# listen = "push-to-talk"
+## Speaking over aulo: "interrupt" stops playback and cancels the turn,
+## "continue" stops playback and lets the turn run.
+# barge_in = "interrupt"
+
+# [voice.stt]
+# engine = "whisper"  # unset by default
+# model = "base"  # unset by default
+# voice = "default"  # unset by default
+# rate = 1.0  # unset by default
+## Engines tried in order when the chosen one fails.
+# fallback = []
+
+# [voice.tts]
+# engine = "system"  # unset by default
+# model = "default"  # unset by default
+# voice = "default"  # unset by default
+# rate = 1.0  # unset by default
+## Engines tried in order when the chosen one fails.
+# fallback = []
+
+## ---- MCP servers --------------------------------------------------------
+
+## Servers aulo connects to, by name; none by default.
+# [mcp.servers.files]  # unset by default
+# transport = "stdio"
+# command = "mcp-files"
+# args = ["--root", "."]
+
+# [mcp.servers.docs]  # unset by default
+# transport = "http"
+# url = "http://127.0.0.1:8080/mcp"
+
+## ---- plugins ------------------------------------------------------------
+
+# [plugins]
+## Extra directories scanned for plugins.
+# dirs = []
+## Plugin ids that are never loaded.
+# disabled = []
+
+## ---- policy -------------------------------------------------------------
+
+# [policy]
+## Rules in the perm-rules grammar. Evaluation order is deny, allow, ask.
+# deny = []
+# allow = []
+# ask = []
+## An approval request nobody answers within this time is denied.
+# approval_timeout_secs = 60

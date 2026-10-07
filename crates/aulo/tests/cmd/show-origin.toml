@@ -1,0 +1,21 @@
+bin.name = "aulo"
+args = ["config", "show", "--origin"]
+fs.cwd = "layers.in"
+fs.sandbox = true
+env.add.AULO_HOME = "."
+env.add.AULO_VOICE__BARGE_IN = "continue"
+stdout = """
+plugins.dirs = []  # built-in defaults
+plugins.disabled = []  # built-in defaults
+policy.allow = ["Read(*)"]  # [..]/.aulo.toml
+policy.approval_timeout_secs = 60  # built-in defaults
+policy.ask = []  # built-in defaults
+policy.deny = []  # built-in defaults
+providers.endpoints.proxy.base_url = "https://[REDACTED]@proxy.example/v1?api_key=[REDACTED]"  # [..]/config.toml
+providers.endpoints.proxy.kind = "openai-compatible"  # [..]/config.toml
+voice.barge_in = "continue"  # AULO_VOICE__BARGE_IN
+voice.listen = "wake-word"  # [..]/config.toml
+voice.stt.fallback = []  # built-in defaults
+voice.tts.fallback = []  # built-in defaults
+"""
+stderr = ""

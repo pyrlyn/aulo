@@ -7,6 +7,7 @@ mod choice;
 mod error;
 mod load;
 mod model;
+mod render;
 mod schema;
 
 pub use error::ConfigError;
@@ -16,4 +17,9 @@ pub use model::{
     PolicyConfig, ProviderConfig, ProviderKind, ProvidersConfig, TierConfig, TiersConfig,
     VoiceConfig,
 };
+pub use render::mask;
 pub use schema::schema_json;
+
+/// The commented-out settings file `aulo config default` prints. Tests keep it
+/// in step with [`Config`], so it cannot drift from the real defaults.
+pub const DEFAULT_TOML: &str = include_str!("../config/default.toml");

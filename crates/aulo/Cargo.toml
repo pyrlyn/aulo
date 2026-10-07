@@ -16,7 +16,14 @@ path = "src/main.rs"
 name = "aulod"
 path = "src/bin/aulod.rs"
 
+[dependencies]
+anyhow.workspace = true
+aulo-config = { path = "../aulo-config" }
+clap.workspace = true
+
 [dev-dependencies]
+# Full command-output fixtures in tests/cmd/.
+trycmd.workspace = true
 # Parses `cargo metadata` in the dependency-graph test.
 serde_json.workspace = true
 

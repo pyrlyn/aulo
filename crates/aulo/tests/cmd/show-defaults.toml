@@ -1,0 +1,18 @@
+bin.name = "aulo"
+args = ["config", "show", "--origin"]
+fs.cwd = "empty.in"
+fs.sandbox = true
+env.add.AULO_HOME = "."
+stdout = """
+plugins.dirs = []  # built-in defaults
+plugins.disabled = []  # built-in defaults
+policy.allow = []  # built-in defaults
+policy.approval_timeout_secs = 60  # built-in defaults
+policy.ask = []  # built-in defaults
+policy.deny = []  # built-in defaults
+voice.barge_in = "interrupt"  # built-in defaults
+voice.listen = "push-to-talk"  # built-in defaults
+voice.stt.fallback = []  # built-in defaults
+voice.tts.fallback = []  # built-in defaults
+"""
+stderr = ""

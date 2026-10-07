@@ -18,6 +18,8 @@ Only what the project uses today. Crates are added by the task that wires each o
 
 | Package | Where | Source | Why here |
 | --- | --- | --- | --- |
+| anyhow | local | https://github.com/dtolnay/anyhow | Error context in the `aulo` binary only (surface crates) |
+| clap | local | https://github.com/clap-rs/clap | Command-line parsing for `aulo` (`aulo config show`, `aulo config default`) |
 | diesel | local | https://github.com/diesel-rs/diesel | Typed SQLite access in `aulo-store` (no raw SQL) |
 | diesel_migrations | local | https://github.com/diesel-rs/diesel | Embedded, filename-keyed schema migrations |
 | figment | local | https://github.com/SergioBenitez/Figment | Layered config with per-key provenance |
@@ -42,7 +44,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | tokio | local | https://github.com/tokio-rs/tokio | Async runtime; Unix socket, named pipe and TCP listeners in `aulo-server` |
 | tokio-stream | local | https://github.com/tokio-rs/tokio | Listener streams for tonic `serve_with_incoming` in `aulo-server` |
 | tokio-util | local | https://github.com/tokio-rs/tokio | `CancellationToken` that shuts every `aulo-server` listener down together |
-| toml | local | https://github.com/toml-rs/toml | Parses `aulo-plugin.toml` in `aulo-plugin` (the manifest module owns that file) |
+| toml | local | https://github.com/toml-rs/toml | Parses `aulo-plugin.toml` in `aulo-plugin` (the manifest module owns that file); renders and parses the config in `aulo-config` (default file tests, `aulo config show`) |
 | tonic | local | https://github.com/hyperium/tonic | gRPC server and client runtime in `aulo-proto` (generated code) and `aulo-server` (transport) |
 | tonic-health | local | https://github.com/hyperium/tonic | `grpc.health.v1` service, only in `aulo-server` |
 | tonic-prost | local | https://github.com/hyperium/tonic | Prost codec for tonic |
@@ -53,6 +55,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | tracing-appender | local | https://github.com/tokio-rs/tracing | Daily-rotating, non-blocking log files with a bounded file count |
 | tracing-opentelemetry | local | https://github.com/tokio-rs/tracing-opentelemetry | Bridges tracing spans to OTel, `otlp` feature only |
 | tracing-subscriber | local | https://github.com/tokio-rs/tracing | EnvFilter, JSON and human log formatters |
+| trycmd | local (dev) | https://github.com/assert-rs/snapbox | Full command-output fixtures for the `aulo` CLI (`crates/aulo/tests/cmd/`) |
 | ulid | local | https://github.com/dylanhart/ulid-rs | Sortable ids for bots, chats, turns, calls and stored rows |
 | url | local | https://github.com/servo/rust-url | Host of a URL for the speakable-text normalizer (`aulo-voice`) |
 | wiremock | local (dev) | https://github.com/LukeMathWalker/wiremock-rs | Local HTTP fixture server for the `aulo-models` downloader tests |
