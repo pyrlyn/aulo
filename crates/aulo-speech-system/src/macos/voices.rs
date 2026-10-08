@@ -124,6 +124,7 @@ mod tests {
 
     #[test]
     fn installed_voices_have_ids_and_plausible_rates() {
+        let _avspeech = super::super::avspeech_test_lock();
         let (voices, meta) = installed();
         assert!(!voices.is_empty(), "macOS ships system voices");
         assert_eq!(voices.len(), meta.len());
