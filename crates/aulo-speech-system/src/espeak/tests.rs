@@ -66,8 +66,16 @@ impl Fake {
              printf '%s\\n' \"$@\" > \"$dir/args.txt\"\n\
              cat > \"$dir/stdin.txt\"\n{tail}\n"
         );
+        // The script is written under another name and copied into place by
+        // `cp`, so this process never holds a writable descriptor on the file
+        // it later runs. A test thread forking at the wrong moment would
+        // otherwise inherit that descriptor and the exec would fail with
+        // ETXTBSY ("Text file busy").
+        let source = dir.path().join("espeak-ng.sh");
+        fs::write(&source, script).unwrap();
         let path = dir.path().join("espeak-ng");
-        fs::write(&path, script).unwrap();
+        let status = Command::new("cp").arg(&source).arg(&path).status().unwrap();
+        assert!(status.success(), "cp failed: {status}");
         fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
         Self { dir }
     }
