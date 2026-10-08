@@ -1,0 +1,4 @@
+# Text files keep LF on every platform: tests compare committed files byte for byte
+# (schemas/*.json against the generated schema), and the Windows runner checks out with
+# core.autocrlf=true.
+* text=auto eol=lf
