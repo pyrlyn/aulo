@@ -394,6 +394,9 @@ async fn broken_replies_fail_after_the_audio_before_them_is_delivered() {
         ws.send(Message::Text("not json at all".into()))
             .await
             .unwrap();
+        // Stay open until the client gives up: closing with the client's text still unread
+        // sends a reset, and Windows then drops the audio the client had not read yet.
+        while ws.next().await.is_some_and(|m| m.is_ok()) {}
         Vec::new()
     })
     .await;
