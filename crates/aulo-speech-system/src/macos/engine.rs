@@ -276,6 +276,7 @@ mod tests {
 
     #[test]
     fn registry_builds_the_engine_from_its_factory() {
+        let _avspeech = super::super::avspeech_test_lock();
         let mut registry = TtsRegistry::new();
         let id = EngineId::new(ENGINE_ID).unwrap();
         registry.register(id.clone(), factory).unwrap();
@@ -292,6 +293,7 @@ mod tests {
 
     #[test]
     fn unknown_voices_are_unsupported_so_the_registry_falls_back() {
+        let _avspeech = super::super::avspeech_test_lock();
         let mut engine = SystemTts::new(Some("no.such.voice".into())).unwrap();
         let error = engine.begin(&request(None, Some("en"))).unwrap_err();
         assert!(error.should_fall_back());
@@ -306,6 +308,7 @@ mod tests {
 
     #[test]
     fn declared_format_is_mono_at_the_voice_rate() {
+        let _avspeech = super::super::avspeech_test_lock();
         let mut engine = SystemTts::new(None).unwrap();
         let format = engine.begin(&request(None, Some("en-US"))).unwrap();
         assert_eq!(format.channels(), 1);
@@ -316,6 +319,7 @@ mod tests {
     /// the main run loop: the engine must give up and let the registry fall back.
     #[test]
     fn a_host_without_a_main_run_loop_gets_unavailable() {
+        let _avspeech = super::super::avspeech_test_lock();
         let mut engine = SystemTts::new(None).unwrap();
         engine.begin(&request(None, Some("en"))).unwrap();
         engine.push_text("Nobody will hear this.").unwrap();
@@ -335,6 +339,7 @@ mod tests {
 
     #[test]
     fn call_order_and_text_caps_are_enforced() {
+        let _avspeech = super::super::avspeech_test_lock();
         let mut engine = SystemTts::new(None).unwrap();
         assert!(matches!(
             engine.push_text("hi"),

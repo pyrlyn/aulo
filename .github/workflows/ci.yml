@@ -10,6 +10,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
 concurrency:
@@ -27,6 +28,7 @@ jobs:
   # (the `matrix` input left empty) is exactly the supported targets; `xcode-27` is the
   # GitHub image that ships Xcode 27.
   rust:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     uses: pyrlyn/ci/.github/workflows/ci-rust.yml@f880dee803f157cd4268a503418b4ecaf4da7078 # main
     # ci-rust cancels the whole run when a job fails (cancel-run-on-failure), which needs
     # `actions: write` on the calling job.
