@@ -13,6 +13,16 @@ aulo runs as a daemon, `aulod`, with a gRPC API. Use it from the native desktop 
 - [Plan](plan.md)
 - [gRPC API reference](docs/api/aulo.v1.md)
 
+## How to test
+
+Rust is pinned with mise. From the repository root:
+
+```bash
+mise exec -- just test
+```
+
+`just test` runs `cargo test --workspace`.
+
 ## License
 
 You can use this project under **any** of the following licenses, at your choice:
