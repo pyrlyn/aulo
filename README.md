@@ -1,3 +1,6 @@
+> [!NOTE]
+> This project is under active development. We need "testing volunteers": try it and report what breaks.
+
 # aulo
 
 A local-first voice agent that controls your computer.
