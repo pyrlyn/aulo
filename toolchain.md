@@ -14,6 +14,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | protoc (libprotoc 36.2) | brew (`PROTOC` or `PATH`) | `aulo-proto` build script compiles `proto/aulo/v1`; not vendored so the version follows the platform package | https://github.com/protocolbuffers/protobuf |
 | sherpa-onnx native lib (1.13.8, static) | downloaded by the `sherpa-onnx-sys` build script from the k2-fsa GitHub release into `<target>/sherpa-onnx-prebuilt/`, once per target directory; offline: `SHERPA_ONNX_ARCHIVE_DIR` (directory holding the release archive) or `SHERPA_ONNX_LIB_DIR` (unpacked `lib/`) | Prebuilt sherpa-onnx and onnxruntime linked into `aulo-speech-sherpa`; contains GPL-3.0 espeak-ng (spec §17 D9) | https://github.com/k2-fsa/sherpa-onnx/releases/tag/v1.13.8 |
 | mise | brew | Pins the Rust toolchain and just | https://github.com/jdx/mise |
+| cmake | mise / brew / system | Builds the bundled libopus when `aulo-audio` is built with feature `opus` (T6.7); not needed for a default build | https://github.com/Kitware/CMake |
 | espeak-ng | apt (`espeak-ng`) on Linux; optional elsewhere | Zero-download fallback voice, run as a separate process (GPL-3.0) by the Linux `system` engine in `aulo-speech-system`; the Linux CI runner needs it for the real-binary test | https://github.com/espeak-ng/espeak-ng |
 | protoc-gen-doc (v1.5.1) | buf remote plugin `buf.build/community/pseudomuto-doc` (`buf.gen.yaml`), nothing to install | Generates the Markdown gRPC API reference in `docs/api/` (`just api-docs`) | https://github.com/pseudomuto/protoc-gen-doc |
 
@@ -43,13 +44,14 @@ Only what the project uses today. Crates are added by the task that wires each o
 | opentelemetry | local | https://github.com/open-telemetry/opentelemetry-rust | OTel API for the optional OTLP trace export in `aulo-telemetry` (`otlp` feature) |
 | opentelemetry-otlp | local | https://github.com/open-telemetry/opentelemetry-rust | OTLP/HTTP span exporter, `otlp` feature only |
 | opentelemetry_sdk | local | https://github.com/open-telemetry/opentelemetry-rust | Tracer provider and batch span processor, `otlp` feature only |
+| opus | local (optional, feature `opus`) | https://github.com/SpaceManiac/opus-rs | Safe libopus bindings for the Opus encoder and decoder of remote audio frames in `aulo-audio` (T6.7); builds the bundled libopus 1.6.1 (BSD-3) with cmake, so it is off by default |
 | prost | local | https://github.com/tokio-rs/prost | Protobuf messages for the gRPC API, only in `aulo-proto` |
 | prost-types | local | https://github.com/tokio-rs/prost | Well-known protobuf types (`Timestamp`) used by the generated code |
 | pulldown-cmark | local | https://github.com/pulldown-cmark/pulldown-cmark | Markdown events for the speakable-text normalizer (`aulo-voice`); no HTML renderer |
 | rcgen | local | https://github.com/rustls/rcgen | Self-signed certificate for the `aulo-server` TCP listener, generated on first start (aws-lc-rs) |
 | regex | local | https://github.com/rust-lang/regex | Credential and secret-pair patterns in the log redaction |
 | reqwest | local | https://github.com/seanmonstar/reqwest | Streaming HTTPS downloads (rustls) of speech models in `aulo-models`; multipart transcription uploads and streamed speech replies in `aulo-speech-cloud`; the `POST /realtime/client_secrets` call in `aulo-realtime` |
-| ringbuf | local | https://github.com/agerasev/ringbuf | Fixed-size lock-free ring from the TTS producer (the macOS main-queue callback, the espeak-ng and Windows worker threads) to `poll` (`aulo-speech-system`); spec §5.3 |
+| ringbuf | local | https://github.com/agerasev/ringbuf | Fixed-size lock-free ring from the TTS producer (the macOS main-queue callback, the espeak-ng and Windows worker threads) to `poll` (`aulo-speech-system`) and from the microphone callback to the frame consumer (`aulo-audio`); spec §5.3 |
 | rustix | local | https://github.com/bytecodealliance/rustix | Daemon euid for the local-socket peer check in `aulo-server`, without hand-written `unsafe` |
 | rustls | local | https://github.com/rustls/rustls | Certificate and key checks for the `aulo-server` TCP listener; the pinned-fingerprint client verifier for `aulo connect --pin` (aws-lc-rs, the provider reqwest already builds) |
 | schemars | local | https://github.com/GREsau/schemars | JSON Schema generated from the config types |
@@ -61,6 +63,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | sse-core | local | https://github.com/PizzasBear/sse-rs | Zero-I/O server-sent-events parser for streaming transcription replies in `aulo-speech-cloud` (`eventsource-stream` has had no release since 2022) |
 | subtle | local | https://github.com/dalek-cryptography/subtle | Constant-time comparison of the API token digest (`aulo-server`) |
 | tempfile | local (dev) | https://github.com/Stebalien/tempfile | Temporary databases and directories in tests |
+| speech-capture | local (path, not published yet) | https://github.com/pyrlyn/crates-packages | Opens the microphone, by name or the default device, and streams mono samples to the capture ring in `aulo-audio`; it owns `cpal` (CoreAudio, WASAPI, ALSA; Linux needs `libasound2-dev`, already in CI). Default features off: no file decode |
 | thiserror | local | https://github.com/dtolnay/thiserror | Typed errors in library crates |
 | tokio | local | https://github.com/tokio-rs/tokio | Async runtime; Unix socket, named pipe and TCP listeners in `aulo-server`; SIGINT/SIGTERM shutdown in `aulod`; one-worker runtime that runs the cloud engines under `aulo bench speech` (`aulo-speech-bench`) |
 | tokio-rustls | local (dev) | https://github.com/rustls/tokio-rustls | TLS stream under the pinned gRPC client in the `aulo-server` tests |

@@ -109,6 +109,8 @@ const OWNERS: &[(&[&str], &[&str])] = &[
         &["aulo-speech-sherpa"],
     ),
     (&["whisper-rs", "whisper-rs-sys"], &["aulo-speech-whisper"]),
+    // libopus is a C build, so one crate owns it; the server uses it through aulo-audio.
+    (&["opus", "opusic-sys"], &["aulo-audio"]),
     (&["wasmtime", "extism"], &["aulo-plugin"]),
     (&["chromiumoxide"], &["aulo-browser"]),
     (&["uniffi", "uniffi_bindgen", "uniffi_build"], &["aulo-ffi"]),

@@ -68,8 +68,14 @@ objc2-speech = { version = "0.3.2", default-features = false }
 block2 = "0.6.2"
 # WinRT SpeechSynthesizer for the Windows system voices in aulo-speech-system; members pick the namespaces they use
 windows = { version = "0.62.2", default-features = false }
+# microphone capture (cpal) and 16 kHz resampling in aulo-audio; Linux builds need libasound2-dev.
+# A path dependency until the crate is published; then it switches to the crates.io version.
+speech-capture = { path = "../crates-t1-13/speech-capture", default-features = false }
 # fixed-size lock-free SPSC rings between platform audio callbacks and engine polls (spec §5.3)
 ringbuf = "0.5.2"
+# safe libopus bindings for the optional Opus codec of remote audio frames in aulo-audio (feature `opus`); the bundled
+# libopus (BSD-3) is built with cmake
+opus = "0.4.0"
 # benchmarks of the deterministic parts of the speech harness (WER, resampling, measurement)
 divan = "0.1.21"
 # snapshot tests (golden speech text per language)
