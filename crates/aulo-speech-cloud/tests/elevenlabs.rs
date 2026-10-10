@@ -345,10 +345,9 @@ async fn handshake_failures_map_to_fallback_categories_without_echoing_the_body(
 
 #[tokio::test(flavor = "multi_thread")]
 async fn an_unreachable_server_is_unavailable() {
-    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let base = format!("ws://{}", listener.local_addr().unwrap());
-    drop(listener);
-    let mut engine = engine(config(&base));
+    // Port 0 can never be listened on, so the connect fails at once on every platform. A port
+    // freed by dropping a listener could be taken by a parallel test before the connect.
+    let mut engine = engine(config("ws://127.0.0.1:0"));
     speak(&mut *engine, &["Hi."]).unwrap();
     let error = collect(&mut *engine, 64).await.unwrap_err();
     assert!(matches!(error, SpeechError::Unavailable(_)), "{error:?}");
