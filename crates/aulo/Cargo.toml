@@ -31,6 +31,10 @@ serde_json.workspace = true
 tokio = { workspace = true, features = ["rt-multi-thread", "signal"] }
 tracing.workspace = true
 
+[features]
+# Spec §4.2: heavy engines are off-by-default features of the binaries. whisper.cpp is a cmake C++ build.
+whisper = ["aulo-speech-bench/whisper"]
+
 [dev-dependencies]
 tempfile.workspace = true
 trycmd.workspace = true

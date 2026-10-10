@@ -17,6 +17,7 @@ use aulo_speech_sherpa::{
     KOKORO_ENGINE_ID, KOKORO_MODEL_ID, KokoroConfig, KokoroFactory, PARAKEET_ENGINE_ID,
     PARAKEET_MODEL_ID, ParakeetConfig, ParakeetFactory,
 };
+use aulo_speech_whisper::{WHISPER_ENGINE_ID, WHISPER_MODEL_ID, WhisperConfig, WhisperFactory};
 use tokio::runtime::Handle;
 
 use crate::report::Kind;
@@ -155,6 +156,7 @@ fn no_key(variable: &str) -> String {
 pub fn builtin(home: &Path, runtime: &Handle, keys: &Keys) -> Vec<Candidate> {
     let mut all = vec![
         sherpa_parakeet(home.to_owned()),
+        whisper_cpp(home.to_owned()),
         system_stt(),
         cloud_stt(
             "openai",
@@ -199,6 +201,14 @@ fn sherpa_parakeet(home: PathBuf) -> Candidate {
         let (model, dir) = model_dir(&home, PARAKEET_MODEL_ID)?;
         let factory = ParakeetFactory::new(&model, &dir, ParakeetConfig::default()).map_err(why)?;
         factory.build(&spec(PARAKEET_ENGINE_ID)?).map_err(why)
+    })
+}
+
+fn whisper_cpp(home: PathBuf) -> Candidate {
+    Candidate::stt(WHISPER_ENGINE_ID, move || {
+        let (model, dir) = model_dir(&home, WHISPER_MODEL_ID)?;
+        let factory = WhisperFactory::new(&model, &dir, WhisperConfig::default()).map_err(why)?;
+        factory.build(&spec(WHISPER_ENGINE_ID)?).map_err(why)
     })
 }
 
