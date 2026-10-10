@@ -1,6 +1,6 @@
 [package]
 name = "aulo-audio"
-description = "aulo audio I/O: microphone capture as 16 kHz mono frames in a lock-free ring"
+description = "aulo audio I/O: microphone capture as 16 kHz mono frames in a lock-free ring, optional Opus codec"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -12,11 +12,15 @@ publish.workspace = true
 aulo-speech = { path = "../aulo-speech" }
 # Resampler: the streaming, allocation-free linear resampler the TTS path already uses.
 aulo-speech-system = { path = "../aulo-speech-system" }
+# Only with the `opus` feature: it adds a C build (libopus), so it stays off by default.
+opus = { workspace = true, optional = true }
 ringbuf = { workspace = true }
 speech-capture = { workspace = true }
 thiserror = { workspace = true }
 
 [features]
+# Opus encoding and decoding of 20 ms frames for low-bandwidth remote clients (T6.7); PCM16 stays the default.
+opus = ["dep:opus"]
 # A scriptable fake input device for tests in this and other crates; never on in a release build.
 testkit = []
 

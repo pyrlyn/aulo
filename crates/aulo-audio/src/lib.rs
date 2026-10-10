@@ -8,10 +8,16 @@
 //!
 //! The real backend wraps the shared `speech-capture` crate, which owns the
 //! `cpal` stream.
+//!
+//! Feature `opus` adds [`OpusEncoder`] and [`OpusDecoder`] for remote clients
+//! that need less bandwidth than PCM16 (T6.7). It builds libopus, so it is off
+//! by default.
 
 mod capture;
 mod cpal_input;
 mod error;
+#[cfg(feature = "opus")]
+mod opus;
 mod sink;
 #[cfg(any(test, feature = "testkit"))]
 pub mod testkit;
@@ -21,4 +27,9 @@ pub use capture::{
 };
 pub use cpal_input::{CpalBackend, CpalDevice};
 pub use error::AudioError;
+#[cfg(feature = "opus")]
+pub use opus::{
+    DEFAULT_BITRATE_BPS, MAX_FRAMES_PER_PACKET, MAX_PACKET_BYTES, MAX_PACKET_SAMPLES, OpusDecoder,
+    OpusEncoder, OpusError,
+};
 pub use sink::{FRAME_MS, FRAME_SAMPLES, SampleSink};

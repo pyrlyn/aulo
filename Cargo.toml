@@ -73,6 +73,9 @@ windows = { version = "0.62.2", default-features = false }
 speech-capture = { path = "../crates-t1-13/speech-capture", default-features = false }
 # fixed-size lock-free SPSC rings between platform audio callbacks and engine polls (spec §5.3)
 ringbuf = "0.5.2"
+# safe libopus bindings for the optional Opus codec of remote audio frames in aulo-audio (feature `opus`); the bundled
+# libopus (BSD-3) is built with cmake
+opus = "0.4.0"
 # benchmarks of the deterministic parts of the speech harness (WER, resampling, measurement)
 divan = "0.1.21"
 # snapshot tests (golden speech text per language)
