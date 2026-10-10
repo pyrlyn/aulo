@@ -38,7 +38,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | keyring | local | https://github.com/open-source-cooperative/keyring-rs | OS keychain that holds the `aulod` API token (`aulo-server`) |
 | libsqlite3-sys | local | https://github.com/rusqlite/rusqlite | Bundled SQLite for Diesel |
 | objc2 | local (macOS) | https://github.com/madsmtm/objc2 | Objective-C runtime (`Retained`, downcasts) for the macOS system voices (`aulo-speech-system`) |
-| objc2-avf-audio | local (macOS) | https://github.com/madsmtm/objc2 | `AVSpeechSynthesizer`, `AVSpeechSynthesisVoice` and `AVAudioPCMBuffer` bindings (`aulo-speech-system`) |
+| objc2-avf-audio | local (macOS) | https://github.com/madsmtm/objc2 | `AVSpeechSynthesizer`, `AVSpeechSynthesisVoice` and `AVAudioPCMBuffer` bindings (`aulo-speech-system`); `AVAudioApplication.recordPermission`, the read-only microphone TCC state (`aulo-audio`) |
 | objc2-foundation | local (macOS) | https://github.com/madsmtm/objc2 | `NSString`, `NSArray`, `NSNumber` for AVFoundation calls; `NSLocale`, `NSOperationQueue` and `NSError` for speech recognition; `NSRunLoop` in the synthesis test (`aulo-speech-system`); `NSDate` and `NSRunLoop` for the main run loop that `aulo bench speech` pumps (`aulo-speech-bench`) |
 | objc2-speech | local (macOS) | https://github.com/madsmtm/objc2 | `SFSpeechRecognizer` forced on-device for the macOS system STT (`aulo-speech-system`); `SpeechAnalyzer` is Swift-only |
 | opentelemetry | local | https://github.com/open-telemetry/opentelemetry-rust | OTel API for the optional OTLP trace export in `aulo-telemetry` (`otlp` feature) |
@@ -85,4 +85,5 @@ Only what the project uses today. Crates are added by the task that wires each o
 | ulid | local | https://github.com/dylanhart/ulid-rs | Sortable ids for bots, chats, turns, calls and stored rows |
 | url | local | https://github.com/servo/rust-url | Host of a URL for the speakable-text normalizer (`aulo-voice`); the endpoint check (`checked_endpoint`: TLS, or plain only to this machine) that `aulo-speech-cloud` and `aulo-realtime` share, in `aulo-types` |
 | windows | local (Windows) | https://github.com/microsoft/windows-rs | WinRT `SpeechSynthesizer` and `DataReader` bindings for the Windows system voices (`aulo-speech-system`); only the `Media_SpeechSynthesis` family of features |
+| windows-registry | local (Windows) | https://github.com/microsoft/windows-rs | Safe, read-only access to the microphone consent values of the capability access manager (`aulo-audio`); MIT OR Apache-2.0 |
 | wiremock | local (dev) | https://github.com/LukeMathWalker/wiremock-rs | Local HTTP fixture server for the `aulo-models` downloader and `aulo-speech-cloud` transcription and speech tests and the `aulo-realtime` client secret tests |

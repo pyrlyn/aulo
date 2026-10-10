@@ -68,6 +68,8 @@ objc2-speech = { version = "0.3.2", default-features = false }
 block2 = "0.6.2"
 # WinRT SpeechSynthesizer for the Windows system voices in aulo-speech-system; members pick the namespaces they use
 windows = { version = "0.62.2", default-features = false }
+# safe registry reads (the microphone consent switches) in aulo-audio on Windows; Microsoft's windows-rs repo, MIT OR Apache-2.0
+windows-registry = "0.6.1"
 # microphone capture (cpal) and 16 kHz resampling in aulo-audio; Linux builds need libasound2-dev.
 # A git dependency pinned to the crates-packages merge commit until the crate is published; then it switches to the crates.io version.
 speech-capture = { git = "https://github.com/pyrlyn/crates-packages", rev = "552263d2481295f19452fc961e7ec81b87203723", default-features = false }

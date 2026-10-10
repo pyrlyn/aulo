@@ -10,8 +10,8 @@ use aulo_speech::{AudioFormat, AudioFrame};
 use ringbuf::traits::{Consumer, Observer, Split};
 use ringbuf::{HeapCons, HeapRb};
 
-use crate::AudioError;
 use crate::sink::{FRAME_SAMPLES, SampleSink};
+use crate::{AudioError, MicPermissionProbe};
 
 /// Frames the ring holds when the caller has no preference: 3 s of audio,
 /// enough to ride out a busy consumer without letting the backlog grow stale.
@@ -81,6 +81,22 @@ impl std::fmt::Debug for Capture {
 }
 
 impl Capture {
+    /// [`Capture::start`] after asking `probe`: a refused or never-asked
+    /// microphone fails with [`AudioError::Permission`] before any device is
+    /// opened, instead of recording silence or prompting from the daemon.
+    pub fn start_checked<P: MicPermissionProbe, B: InputBackend>(
+        probe: &P,
+        backend: &B,
+        selector: &DeviceSelector,
+        ring_frames: usize,
+    ) -> Result<Self, AudioError> {
+        let permission = probe.status();
+        if permission.blocks_capture() {
+            return Err(AudioError::Permission(permission));
+        }
+        Self::start(backend, selector, ring_frames)
+    }
+
     /// Opens the selected device and starts streaming into a ring of
     /// `ring_frames` frames.
     pub fn start<B: InputBackend>(
@@ -148,7 +164,8 @@ impl Capture {
 mod tests {
     use super::*;
     use crate::FRAME_MS;
-    use crate::testkit::{FakeBackend, FakeDeviceSpec};
+    use crate::MicPermission;
+    use crate::testkit::{FakeBackend, FakeDeviceSpec, FakeProbe};
 
     fn backend() -> FakeBackend {
         FakeBackend::new(vec![
@@ -282,6 +299,33 @@ mod tests {
         fake.feed(&[6.0; FRAME_SAMPLES]);
         assert_eq!(capture.next_frame().unwrap().samples()[0], 6.0);
         assert_eq!(capture.overflowed_samples(), 3 * FRAME_SAMPLES as u64);
+    }
+
+    #[test]
+    fn a_refused_microphone_fails_before_any_device_is_opened() {
+        let fake = backend();
+        for refusal in [
+            MicPermission::Denied,
+            MicPermission::Restricted,
+            MicPermission::NotDetermined,
+        ] {
+            let probe = FakeProbe::new(refusal);
+            let err =
+                Capture::start_checked(&probe, &fake, &DeviceSelector::Default, 1).unwrap_err();
+            assert_eq!(err, AudioError::Permission(refusal));
+            assert_eq!(probe.asked(), 1);
+        }
+        assert!(fake.started_devices().is_empty() && !fake.is_streaming());
+    }
+
+    #[test]
+    fn every_other_permission_starts_the_capture() {
+        let fake = backend();
+        for answer in [MicPermission::Granted, MicPermission::Unknown] {
+            let probe = FakeProbe::new(answer);
+            let capture = Capture::start_checked(&probe, &fake, &DeviceSelector::Default, 1);
+            assert_eq!(capture.unwrap().device_name(), "Built-in Microphone");
+        }
     }
 
     #[test]

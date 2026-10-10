@@ -14,9 +14,18 @@ aulo-speech = { path = "../aulo-speech" }
 aulo-speech-system = { path = "../aulo-speech-system" }
 # Only with the `opus` feature: it adds a C build (libopus), so it stays off by default.
 opus = { workspace = true, optional = true }
+aulo-types = { path = "../aulo-types" }
 ringbuf = { workspace = true }
 speech-capture = { workspace = true }
 thiserror = { workspace = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+# TCC state of the microphone via AVAudioApplication.recordPermission
+objc2-avf-audio = { workspace = true, features = ["std", "AVAudioApplication"] }
+
+[target.'cfg(windows)'.dependencies]
+# Safe read of the microphone consent values in the registry
+windows-registry = { workspace = true }
 
 [features]
 # Opus encoding and decoding of 20 ms frames for low-bandwidth remote clients (T6.7); PCM16 stays the default.

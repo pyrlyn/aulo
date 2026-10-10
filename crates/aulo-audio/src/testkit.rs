@@ -2,11 +2,12 @@
 //! calling [`FakeBackend::feed`], so capture runs deterministically without a
 //! microphone or a sleep.
 
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
-use crate::AudioError;
 use crate::capture::{DeviceSelector, InputBackend, InputDevice, StreamGuard};
 use crate::sink::SampleSink;
+use crate::{AudioError, MicPermission, MicPermissionProbe};
 
 /// A fake device: its name and the rate it delivers mono samples at.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -119,5 +120,32 @@ struct Stopper(Arc<Mutex<State>>);
 impl Drop for Stopper {
     fn drop(&mut self) {
         lock(&self.0).sink = None;
+    }
+}
+
+/// A probe that answers with a fixed permission and counts the questions.
+#[derive(Debug, Clone)]
+pub struct FakeProbe {
+    answer: MicPermission,
+    asked: Arc<AtomicUsize>,
+}
+
+impl FakeProbe {
+    pub fn new(answer: MicPermission) -> Self {
+        Self {
+            answer,
+            asked: Arc::default(),
+        }
+    }
+
+    pub fn asked(&self) -> usize {
+        self.asked.load(Ordering::Relaxed)
+    }
+}
+
+impl MicPermissionProbe for FakeProbe {
+    fn status(&self) -> MicPermission {
+        self.asked.fetch_add(1, Ordering::Relaxed);
+        self.answer
     }
 }
