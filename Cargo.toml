@@ -69,8 +69,8 @@ block2 = "0.6.2"
 # WinRT SpeechSynthesizer for the Windows system voices in aulo-speech-system; members pick the namespaces they use
 windows = { version = "0.62.2", default-features = false }
 # microphone capture (cpal) and 16 kHz resampling in aulo-audio; Linux builds need libasound2-dev.
-# Pinned to a pyrlyn/crates-packages commit until the crate is published; then it switches to the crates.io version.
-speech-capture = { git = "https://github.com/pyrlyn/crates-packages", rev = "88b1f2937a81f2735ee39074664e0702a842eec7", default-features = false }
+# A git dependency pinned to the crates-packages merge commit until the crate is published; then it switches to the crates.io version.
+speech-capture = { git = "https://github.com/pyrlyn/crates-packages", rev = "552263d2481295f19452fc961e7ec81b87203723", default-features = false }
 # fixed-size lock-free SPSC rings between platform audio callbacks and engine polls (spec §5.3)
 ringbuf = "0.5.2"
 # safe libopus bindings for the optional Opus codec of remote audio frames in aulo-audio (feature `opus`); the bundled
