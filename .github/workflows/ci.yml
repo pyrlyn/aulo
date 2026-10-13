@@ -44,6 +44,14 @@ jobs:
       # espeak-ng lets the Linux system-voice test run against the real binary. libprotobuf-dev
       # carries the well-known types (timestamp.proto) that --no-install-recommends drops.
       setup-command: |
+        # sherpa-onnx-sys (upstream build script) downloads its prebuilt native libs into
+        # target/sherpa-onnx-prebuilt/<archive>/lib and skips the download whenever that lib
+        # directory exists. Swatinem/rust-cache saves target/ but its cleanup deletes the files
+        # outside the profile dirs and keeps the directories, so a restored cache holds an empty
+        # lib dir. Whenever sherpa-onnx-sys is rebuilt (new linker, flags, toolchain), its build
+        # script then finds the empty dir and rustc fails with "could not find native static
+        # library sherpa-onnx-c-api". Removing the stale dir makes it download a complete archive.
+        rm -rf target/sherpa-onnx-prebuilt
         case "$RUNNER_OS" in
           Linux)
             sudo apt-get update -qq
