@@ -1,0 +1,12 @@
+# Static CRT (+crt-static) on windows-msvc: sherpa-onnx-sys links its prebuilt
+# `win-*-static-MT-Release` archive, built with /MT (static CRT), while Rust and cc-built C code
+# (aws-lc-sys) default to /MD (dynamic CRT, __imp_ imports). link.exe papers over the mismatch
+# (LNK4217 warnings) but rust-lld fails with "undefined symbol: __declspec(dllimport) qsort_s /
+# _wassert / ...". Building the whole program with the static CRT matches the sherpa-onnx archive
+# under either linker. A RUSTFLAGS environment variable replaces these rustflags; keep
+# +crt-static in it when setting RUSTFLAGS on Windows.
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
+
+[target.aarch64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
