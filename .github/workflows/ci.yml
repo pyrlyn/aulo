@@ -29,13 +29,14 @@ jobs:
   # GitHub image that ships Xcode 27.
   rust:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
-    uses: pyrlyn/ci/.github/workflows/ci-rust.yml@f880dee803f157cd4268a503418b4ecaf4da7078 # main
+    uses: pyrlyn/ci/.github/workflows/ci-rust.yml@9748fe1e5a2007d695e4e1a1d9b16492660dd8bc # main 2026-10-11 (mold input)
     # ci-rust cancels the whole run when a job fails (cancel-run-on-failure), which needs
     # `actions: write` on the calling job.
     permissions:
       contents: read
       actions: write
     with:
+      mold: true # mold + clang on Linux runners (mise.toml [env])
       clippy-args: --locked
       test-command: cargo test $PACKAGE_ARGS --all-targets $FEATURE_ARGS --locked
       # The reusable workflow has no package input, only this hook, so the system packages
