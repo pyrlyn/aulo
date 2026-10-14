@@ -65,7 +65,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | sse-core | local | https://github.com/PizzasBear/sse-rs | Zero-I/O server-sent-events parser for streaming transcription replies in `aulo-speech-cloud` (`eventsource-stream` has had no release since 2022) |
 | subtle | local | https://github.com/dalek-cryptography/subtle | Constant-time comparison of the API token digest (`aulo-server`) |
 | tempfile | local (dev) | https://github.com/Stebalien/tempfile | Temporary databases and directories in tests |
-| speech-capture | local (path, not published yet) | https://github.com/pyrlyn/crates-packages | Opens the microphone, by name or the default device, and streams mono samples to the capture ring in `aulo-audio`; it owns `cpal` (CoreAudio, WASAPI, ALSA; Linux needs `libasound2-dev`, already in CI). Default features off: no file decode |
+| speech-capture | local (path, not published yet) | https://github.com/pyrlyn/crates | Opens the microphone, by name or the default device, and streams mono samples to the capture ring in `aulo-audio`; it owns `cpal` (CoreAudio, WASAPI, ALSA; Linux needs `libasound2-dev`, already in CI). Default features off: no file decode |
 | thiserror | local | https://github.com/dtolnay/thiserror | Typed errors in library crates |
 | tokio | local | https://github.com/tokio-rs/tokio | Async runtime; Unix socket, named pipe and TCP listeners in `aulo-server`; SIGINT/SIGTERM shutdown in `aulod`; one-worker runtime that runs the cloud engines under `aulo bench speech` (`aulo-speech-bench`) |
 | tokio-rustls | local (dev) | https://github.com/rustls/tokio-rustls | TLS stream under the pinned gRPC client in the `aulo-server` tests |
@@ -89,3 +89,10 @@ Only what the project uses today. Crates are added by the task that wires each o
 | windows | local (Windows) | https://github.com/microsoft/windows-rs | WinRT `SpeechSynthesizer` and `DataReader` bindings for the Windows system voices (`aulo-speech-system`); only the `Media_SpeechSynthesis` family of features |
 | windows-registry | local (Windows) | https://github.com/microsoft/windows-rs | Safe, read-only access to the microphone consent values of the capability access manager (`aulo-audio`); MIT OR Apache-2.0 |
 | wiremock | local (dev) | https://github.com/LukeMathWalker/wiremock-rs | Local HTTP fixture server for the `aulo-models` downloader and `aulo-speech-cloud` transcription and speech tests and the `aulo-realtime` client secret tests |
+
+## Linkers
+
+- **Windows (MSVC):** `rust-lld` through `.cargo/config.toml` (`[target.*-pc-windows-msvc] linker`). It ships with rustup, nothing to install.
+- **Linux:** `mold`, pinned in `mise.toml` for Linux only and driven by `clang`. mise `[env]` sets `CARGO_TARGET_{X86_64,AARCH64}_UNKNOWN_LINUX_GNU_RUSTFLAGS` to `-C linker=clang -C link-arg=-fuse-ld=mold` only when mise has mold installed (`mise install`); otherwise the variable is empty and the default linker stays. A Linux machine without mold (or without mise) builds as before; to use mold, run `mise install` and make sure `clang` is on PATH (`apt install clang`). `RUSTFLAGS`, when set, overrides these flags. CI installs mold on Linux runners.
+- **macOS:** Apple's native linker (mold has no macOS support).
+- **Cranelift:** not used. It needs a nightly toolchain and this repository is on stable.
