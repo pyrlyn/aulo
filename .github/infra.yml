@@ -14,3 +14,7 @@ snyk:
 # No .NET project here: the dotnet job would only pass as a no-op.
 dotnet:
   enabled: false
+
+# License files against pyrlyn/ci's canonical ones (replaces license-check.yml).
+license:
+  enabled: true
