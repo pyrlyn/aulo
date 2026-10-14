@@ -16,3 +16,11 @@ rustflags = ["-C", "target-feature=+crt-static"]
 [target.aarch64-pc-windows-msvc]
 linker = "rust-lld"
 rustflags = ["-C", "target-feature=+crt-static"]
+
+# whisper-rs-sys forwards every CMAKE_* variable to whisper.cpp's CMake build, which otherwise
+# compiles with /MD (its cmake_minimum_required predates CMP0091, so the static-CRT choice the
+# cmake crate makes for +crt-static is ignored) and rust-lld rejects the /MT sherpa-onnx archive
+# next to it (/failifmismatch RuntimeLibrary). Only MSVC reads these; other targets ignore them.
+[env]
+CMAKE_POLICY_DEFAULT_CMP0091 = "NEW"
+CMAKE_MSVC_RUNTIME_LIBRARY = "MultiThreaded"
