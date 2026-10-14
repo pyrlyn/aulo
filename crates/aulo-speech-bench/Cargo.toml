@@ -14,6 +14,7 @@ aulo-speech = { path = "../aulo-speech" }
 aulo-speech-cloud = { path = "../aulo-speech-cloud" }
 aulo-speech-sherpa = { path = "../aulo-speech-sherpa" }
 aulo-speech-system = { path = "../aulo-speech-system" }
+aulo-speech-whisper = { path = "../aulo-speech-whisper" }
 hound.workspace = true
 serde_json.workspace = true
 # The cloud engines upload on a runtime of their own; one worker is enough for one engine at a time.
@@ -24,6 +25,8 @@ tokio = { workspace = true, features = ["rt-multi-thread"] }
 objc2-foundation = { workspace = true, features = ["std", "NSDate", "NSRunLoop"] }
 
 [features]
+# Compiles whisper.cpp, so the `whisper-cpp` engine can run.
+whisper = ["aulo-speech-whisper/whisper"]
 # A scripted STT engine for tests and benchmarks; never on in a release build.
 testkit = []
 

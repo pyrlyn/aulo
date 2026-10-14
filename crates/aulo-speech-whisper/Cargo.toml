@@ -1,0 +1,27 @@
+[package]
+name = "aulo-speech-whisper"
+description = "aulo local speech-to-text on whisper.cpp (ggml tiny.en), through the shared speech-capture transcriber"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+aulo-models = { path = "../aulo-models" }
+aulo-speech = { path = "../aulo-speech" }
+aulo-speech-local = { path = "../aulo-speech-local" }
+# Optional: whisper.cpp is a heavy cmake C++ build that only the `whisper` feature compiles.
+speech-capture = { workspace = true, optional = true, features = ["whisper"] }
+
+[features]
+whisper = ["dep:speech-capture"]
+
+[dev-dependencies]
+# The shared word error rate and fixture clips; a dev-only cycle, since the benchmark crate depends on this one.
+aulo-speech-bench = { path = "../aulo-speech-bench" }
+tempfile.workspace = true
+
+[lints]
+workspace = true

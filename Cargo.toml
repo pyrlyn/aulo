@@ -99,6 +99,8 @@ hound = "3.5.1"
 # local speech engines (Parakeet STT, Kokoro TTS); owned by aulo-speech-sherpa. Exact pin: sherpa-onnx-sys pins
 # the same version and its build script downloads that release's native lib (spike T0.5, R2/R7)
 sherpa-onnx = "=1.13.8"
+# Whisper transcriber (whisper.cpp) shared with cox and runa; owned by aulo-speech-whisper and compiled only with its
+# `whisper` feature. That crate turns on speech-capture's `whisper` feature; the dependency itself is declared above.
 # zero-I/O server-sent-events parser for streaming transcription replies
 sse-core = { version = "0.2.3", default-features = false, features = ["std"] }
 # serialization of config, events and stored rows
