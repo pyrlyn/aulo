@@ -2,11 +2,12 @@
 
 use std::io;
 use std::path::Path;
+use std::sync::Arc;
 
 use anyhow::{Context, Result};
-use aulo_config::Config;
+use aulo_config::{Config, system_store};
 use aulo_server::auth::TokenStore;
-use aulo_server::{ApiServer, CancellationToken, Limits, Listen, TcpListen, bind};
+use aulo_server::{ApiServer, CancellationToken, ConfigApi, Limits, Listen, TcpListen, bind};
 
 pub async fn serve(config: &Config, home: &Path) -> Result<()> {
     // Before binding, so a signal during startup still takes the clean path.
@@ -49,6 +50,10 @@ pub async fn serve(config: &Config, home: &Path) -> Result<()> {
     if let Some(token) = &token {
         server = server.with_token(token);
     }
+    // Provider keys are write-only on this service. The store is the OS
+    // keychain unless AULO_KEYCHAIN is off; constructing it does not prompt.
+    server =
+        server.add_service(ConfigApi::new(config.clone(), Arc::from(system_store())).service());
     server.serve(listeners, shutdown).await?;
     tracing::info!("aulod stopped");
     Ok(())

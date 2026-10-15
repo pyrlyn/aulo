@@ -1,0 +1,10 @@
+bin.name = "aulo"
+args = ["auth", "ls"]
+fs.cwd = "empty.in"
+fs.sandbox = true
+env.add.AULO_HOME = "."
+env.add.AULO_KEYCHAIN = "off"
+stdout = """
+no providers configured
+"""
+stderr = ""

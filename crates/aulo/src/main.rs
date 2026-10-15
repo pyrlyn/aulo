@@ -1,6 +1,7 @@
 //! The `aulo` command line. Parsing and error presentation live here; what a
 //! command does lives in the library crates it calls.
 
+mod auth_cmd;
 mod bench_cmd;
 mod config_cmd;
 
@@ -23,6 +24,9 @@ enum Command {
     /// Show or print configuration.
     #[command(subcommand)]
     Config(config_cmd::ConfigCommand),
+    /// Store, remove or list provider API keys. Values are never printed.
+    #[command(subcommand)]
+    Auth(auth_cmd::AuthCommand),
 }
 
 fn main() -> Result<()> {
@@ -30,5 +34,6 @@ fn main() -> Result<()> {
     match Cli::parse().command {
         Command::Bench(command) => bench_cmd::run(command, &mut stdout),
         Command::Config(command) => config_cmd::run(command, &mut stdout),
+        Command::Auth(command) => auth_cmd::run(command, &mut stdout),
     }
 }

@@ -23,7 +23,6 @@
 - T2.3. CI workflows
 - T3.7. aulo CLI: text chat client
 - T4.1. aulo-providers: build providers from config
-- T4.2. Credentials in the OS keychain
 - T4.3. Local server presets and auto-detection
 - T4.4. Model catalog and per-chat model switching
 - T4.5. Tiers and job routing

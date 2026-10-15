@@ -1,0 +1,3 @@
+[providers.endpoints.openai]
+kind = "openai"
+api_key = "sk-live-SHOULD-NOT-APPEAR"

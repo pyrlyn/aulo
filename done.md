@@ -523,3 +523,15 @@ Check: `cargo test -p aulo-speech-system stt` — 10 passed (new: `a_held_final_
 Three audit items. `aulo-speech-local/src/model.rs` told users to run `aulo models pull <id>` — no such subcommand exists (`aulo` has `bench` and `config`); the message now names the directory and the pinned model instead. `scripts/sync-issues.py` crashed with a bare `KeyError` when a plan card was missing from the summary table; it exits with a named `sys.exit` like the missing-meta case now. The third item — `daemon.listen` failing at two different points — dissolved with T16.1: the token loads (or fails, with context) before anything binds, and the off-loopback-without-TLS refusal is the typed `UnauthenticatedRemote`, so both paths fail fast with named errors.
 Model: ZCode / GLM-5.3 · Status: done 2026-10-07 · Priority: P3 · Complexity: 1 · Files: `crates/aulo-speech-local/src/model.rs`, `scripts/sync-issues.py`
 Check: `cargo test -p aulo-speech-local model` — 2 passed; `python3 -c "import ast; ast.parse(open('scripts/sync-issues.py').read())"`; `cargo fmt --check` clean.
+
+### T4.2. Credentials in the OS keychain
+
+Stage: S4 · Area: providers · Depends on: T4.1 · Blocks: 2 task(s)
+
+`aulo auth set/rm/ls <provider>`: keys go to the keychain (keyring), env vars win, inline keys in config are rejected (runa pattern). gRPC ConfigService can set a key but never return it.
+
+Done when:
+
+- test: config with an inline key fails with the file name
+
+Outcome: `keychain-secret` (the shared runa/cox helper, pinned to the same `pyrlyn/crates` revision as `speech-capture`) rejects secret-named keys in config files, `AULO_*` configuration variables and caller overrides; the error names the file or variable and does not contain the value. `aulo auth set` reads the key from stdin into the OS keychain (`AULO_KEYCHAIN=off` refuses). Resolution order is `AULO_<ID>_API_KEY`, then the provider's conventional variable (`OPENAI_API_KEY` and the other hosted ones), then the keychain. `ConfigService.SetProviderKey` writes that store; `ListProviders` reports `key_set` only and `GetConfig` is redacted JSON with no key field. T4.1 can call `resolve_provider_key` when it builds providers. Decisions: provider ids are 1–64 bytes of `[A-Za-z0-9._-]` not starting with `.` or `-`; keys are trimmed and capped at 4096 bytes; `ListModels`, `ListAudioDevices`, `SetDevice` and `SetConfig` stay unimplemented until their tasks; any authenticated caller may set a key until token scopes (T13.3) exist.

@@ -1,0 +1,12 @@
+bin.name = "aulo"
+args = ["auth", "set", "openai"]
+status.code = 1
+fs.cwd = "empty.in"
+fs.sandbox = true
+env.add.AULO_HOME = "."
+env.add.AULO_KEYCHAIN = "off"
+stdin = "sk-live-SHOULD-NOT-APPEAR\n"
+stdout = ""
+stderr = """
+Error: the OS keychain is switched off
+"""

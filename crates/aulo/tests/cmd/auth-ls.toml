@@ -1,0 +1,11 @@
+bin.name = "aulo"
+args = ["auth", "ls"]
+fs.cwd = "auth.in"
+fs.sandbox = true
+env.add.AULO_HOME = "."
+env.add.AULO_KEYCHAIN = "off"
+stdout = """
+local	ollama	unset
+openai	openai	unset
+"""
+stderr = ""

@@ -68,6 +68,45 @@ pub enum ProviderKind {
     OpenaiCompatible,
 }
 
+impl ProviderKind {
+    /// The config spelling (`openai-compatible`, `lm-studio`).
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Runa => "runa",
+            Self::Ollama => "ollama",
+            Self::LmStudio => "lm-studio",
+            Self::LlamaCpp => "llama-cpp",
+            Self::Openai => "openai",
+            Self::Anthropic => "anthropic",
+            Self::Gemini => "gemini",
+            Self::Xai => "xai",
+            Self::Openrouter => "openrouter",
+            Self::Deepseek => "deepseek",
+            Self::OpenaiCompatible => "openai-compatible",
+        }
+    }
+
+    /// The conventional environment variable for a hosted provider.
+    /// Local servers have none; an endpoint can still set `AULO_<ID>_API_KEY`.
+    #[must_use]
+    pub const fn api_key_env(self) -> Option<&'static str> {
+        match self {
+            Self::Openai => Some("OPENAI_API_KEY"),
+            Self::Anthropic => Some("ANTHROPIC_API_KEY"),
+            Self::Gemini => Some("GEMINI_API_KEY"),
+            Self::Xai => Some("XAI_API_KEY"),
+            Self::Openrouter => Some("OPENROUTER_API_KEY"),
+            Self::Deepseek => Some("DEEPSEEK_API_KEY"),
+            Self::Runa
+            | Self::Ollama
+            | Self::LmStudio
+            | Self::LlamaCpp
+            | Self::OpenaiCompatible => None,
+        }
+    }
+}
+
 /// One provider and model per tier; an unset tier is not configured.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(default, deny_unknown_fields)]

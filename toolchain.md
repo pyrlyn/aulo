@@ -26,7 +26,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | anyhow | local | https://github.com/dtolnay/anyhow | Error context in the `aulo` and `aulod` binaries only (surface crates) |
 | base64 | local | https://github.com/marshallpierce/rust-base64 | Decodes the base64 audio inside the ElevenLabs WebSocket messages in `aulo-speech-cloud`; encodes and decodes the audio of the OpenAI realtime sockets in `aulo-realtime` |
 | block2 | local (macOS) | https://github.com/madsmtm/objc2 | Objective-C block for the `AVSpeechSynthesizer` buffer callback (`aulo-speech-system`) |
-| clap | local | https://github.com/clap-rs/clap | Command-line parsing for `aulo` (`aulo config show`, `aulo config default`) and `aulod` |
+| clap | local | https://github.com/clap-rs/clap | Command-line parsing for `aulo` (`aulo config`, `aulo auth`, `aulo bench`) and `aulod` |
 | diesel | local | https://github.com/diesel-rs/diesel | Typed SQLite access in `aulo-store` (no raw SQL) |
 | diesel_migrations | local | https://github.com/diesel-rs/diesel | Embedded, filename-keyed schema migrations |
 | divan | local (dev) | https://github.com/nvzqz/divan | Benchmarks of the deterministic speech-harness parts (word error rate, resampling, measurement against fake engines) in `aulo-speech-bench` |
@@ -36,7 +36,8 @@ Only what the project uses today. Crates are added by the task that wires each o
 | hound | local | https://github.com/ruuda/hound | Encodes the buffered utterance as 16-bit PCM WAV for the upload in `aulo-speech-cloud`; decodes the WAV streams of `espeak-ng --stdout` and WinRT `SpeechSynthesizer` in `aulo-speech-system`; reads fixture WAVs in the `aulo-speech-sherpa` and `aulo-speech-system` tests; decodes the embedded fixture clips in `aulo-speech-bench` |
 | hyper-util | local (dev) | https://github.com/hyperium/hyper-util | `TokioIo` adapter for the gRPC client over a Unix socket in `aulo-server` tests |
 | insta | local (dev) | https://github.com/mitsuhiko/insta | Snapshot tests of the speakable-text normalizer (`aulo-voice`) |
-| keyring | local | https://github.com/open-source-cooperative/keyring-rs | OS keychain that holds the `aulod` API token (`aulo-server`) |
+| keychain-secret | local (git, not published yet) | https://github.com/pyrlyn/crates | Provider API keys from an environment variable or the OS keychain, never a config file (`aulo-config`, T4.2). Same git revision as `speech-capture` | 
+| keyring | local | https://github.com/open-source-cooperative/keyring-rs | OS keychain that holds the `aulod` API token (`aulo-server`); also the store inside `keychain-secret` |
 | libsqlite3-sys | local | https://github.com/rusqlite/rusqlite | Bundled SQLite for Diesel |
 | objc2 | local (macOS) | https://github.com/madsmtm/objc2 | Objective-C runtime (`Retained`, downcasts) for the macOS system voices (`aulo-speech-system`) |
 | objc2-avf-audio | local (macOS) | https://github.com/madsmtm/objc2 | `AVSpeechSynthesizer`, `AVSpeechSynthesisVoice` and `AVAudioPCMBuffer` bindings (`aulo-speech-system`); `AVAudioApplication.recordPermission`, the read-only microphone TCC state (`aulo-audio`) |

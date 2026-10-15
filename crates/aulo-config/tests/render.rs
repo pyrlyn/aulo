@@ -68,6 +68,12 @@ base_url = "https://user:s3cret@host/v1?api_key=abc123""#,
     }
     assert!(out.contains("[REDACTED]"));
     assert!(out.contains("/plugins"));
+
+    let json = config.to_json_redacted().unwrap();
+    for secret in ["s3cret", "abc123", "hunter2", "p4ss", "abcdefgh12345678"] {
+        assert!(!json.contains(secret), "{secret} leaked:\n{json}");
+    }
+    assert!(!json.contains("null"), "{json}");
 }
 
 #[test]

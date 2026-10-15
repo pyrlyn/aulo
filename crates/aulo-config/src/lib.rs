@@ -9,6 +9,7 @@ mod load;
 mod model;
 mod render;
 mod schema;
+mod secrets;
 
 pub use error::ConfigError;
 pub use load::{LoadOptions, Loaded, Origin, Provenance, aulo_home};
@@ -19,6 +20,10 @@ pub use model::{
 };
 pub use render::mask;
 pub use schema::schema_json;
+pub use secrets::{
+    CredentialsError, KeyState, MemoryStore, ProviderKeyInfo, SecretStore, configured_keys,
+    delete_key, key_state, resolve_provider_key, store_key, system_store,
+};
 
 /// The commented-out settings file `aulo config default` prints. Tests keep it
 /// in step with [`Config`], so it cannot drift from the real defaults.

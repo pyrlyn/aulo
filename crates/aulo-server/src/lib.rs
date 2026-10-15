@@ -7,6 +7,7 @@
 
 pub mod auth;
 mod chat;
+mod config_api;
 mod error;
 mod limits;
 mod listener;
@@ -16,6 +17,7 @@ mod server;
 pub mod tls;
 
 pub use chat::ChatApi;
+pub use config_api::ConfigApi;
 pub use error::ServerError;
 pub use limits::{Limits, MessageLimits};
 pub use listener::{Bound, Listen, TcpListen, bind, local_socket_path};
