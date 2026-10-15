@@ -24,6 +24,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | Package | Where | Source | Why here |
 | --- | --- | --- | --- |
 | anyhow | local | https://github.com/dtolnay/anyhow | Error context in the `aulo` and `aulod` binaries only (surface crates) |
+| async-trait | local (dev) | https://github.com/dtolnay/async-trait | Implements `llm-wire`'s `Provider` on the fake providers in the `llm-router` route tests |
 | base64 | local | https://github.com/marshallpierce/rust-base64 | Decodes the base64 audio inside the ElevenLabs WebSocket messages in `aulo-speech-cloud`; encodes and decodes the audio of the OpenAI realtime sockets in `aulo-realtime` |
 | block2 | local (macOS) | https://github.com/madsmtm/objc2 | Objective-C block for the `AVSpeechSynthesizer` buffer callback (`aulo-speech-system`) |
 | clap | local | https://github.com/clap-rs/clap | Command-line parsing for `aulo` (`aulo config show`, `aulo config default`) and `aulod` |
@@ -38,8 +39,10 @@ Only what the project uses today. Crates are added by the task that wires each o
 | insta | local (dev) | https://github.com/mitsuhiko/insta | Snapshot tests of the speakable-text normalizer (`aulo-voice`) |
 | keyring | local | https://github.com/open-source-cooperative/keyring-rs | OS keychain that holds the `aulod` API token (`aulo-server`) |
 | libsqlite3-sys | local | https://github.com/rusqlite/rusqlite | Bundled SQLite for Diesel |
-| llm-wire | git (`pyrlyn/crates` `f0deed54`) | https://github.com/pyrlyn/crates | Provider trait and neutral request types. `llm-router` routes a job to the provider registered for its tier; the wire crates stay out of this repo |
-| async-trait | local (dev) | https://github.com/dtolnay/async-trait | Implements `llm-wire`'s `Provider` on the fake providers in the `llm-router` route tests |
+| llm-http | local (git, not published yet) | https://github.com/pyrlyn/crates | `Transport` (base URL, timeout, retries) that the provider wires' constructors take, in `aulo-providers`. Pinned to a crates commit |
+| llm-wire | local (git, not published yet) | https://github.com/pyrlyn/crates | Provider trait and neutral request types. `aulo-providers` builds them; `llm-router` routes a job to the provider registered for its tier. Pinned to a crates commit |
+| llm-wire-anthropic | local (git, not published yet) | https://github.com/pyrlyn/crates | Anthropic Messages client built for an `anthropic` endpoint, in `aulo-providers`. Pinned to a crates commit |
+| llm-wire-openai | local (git, not published yet) | https://github.com/pyrlyn/crates | OpenAI Responses client for `openai`, and the Chat Completions client for every OpenAI-compatible endpoint, in `aulo-providers`. Pinned to a crates commit |
 | objc2 | local (macOS) | https://github.com/madsmtm/objc2 | Objective-C runtime (`Retained`, downcasts) for the macOS system voices (`aulo-speech-system`) |
 | objc2-avf-audio | local (macOS) | https://github.com/madsmtm/objc2 | `AVSpeechSynthesizer`, `AVSpeechSynthesisVoice` and `AVAudioPCMBuffer` bindings (`aulo-speech-system`); `AVAudioApplication.recordPermission`, the read-only microphone TCC state (`aulo-audio`) |
 | objc2-foundation | local (macOS) | https://github.com/madsmtm/objc2 | `NSString`, `NSArray`, `NSNumber` for AVFoundation calls; `NSLocale`, `NSOperationQueue` and `NSError` for speech recognition; `NSRunLoop` in the synthesis test (`aulo-speech-system`); `NSDate` and `NSRunLoop` for the main run loop that `aulo bench speech` pumps (`aulo-speech-bench`) |
@@ -81,13 +84,13 @@ Only what the project uses today. Crates are added by the task that wires each o
 | tonic-prost-build | local (build) | https://github.com/hyperium/tonic | Generates server and client code from the protos |
 | tonic-reflection | local | https://github.com/hyperium/tonic | gRPC server reflection for grpcurl and buf curl, only in `aulo-server` |
 | tower | local (dev) | https://github.com/tower-rs/tower | `service_fn` connector for the gRPC client over a Unix socket in `aulo-server` tests |
-| tracing | local | https://github.com/tokio-rs/tracing | Structured logs and spans |
+| tracing | local | https://github.com/tokio-rs/tracing | Structured logs and spans; a skipped provider section is a `warn` in `aulo-providers` |
 | tracing-appender | local | https://github.com/tokio-rs/tracing | Daily-rotating, non-blocking log files with a bounded file count |
 | tracing-opentelemetry | local | https://github.com/tokio-rs/tracing-opentelemetry | Bridges tracing spans to OTel, `otlp` feature only |
 | tracing-subscriber | local | https://github.com/tokio-rs/tracing | EnvFilter, JSON and human log formatters |
 | trycmd | local (dev) | https://github.com/assert-rs/snapbox | Full command-output fixtures for the `aulo` CLI and `aulod` (`crates/aulo/tests/cmd/`, `crates/aulo/tests/aulod/`) |
 | ulid | local | https://github.com/dylanhart/ulid-rs | Sortable ids for bots, chats, turns, calls and stored rows |
-| url | local | https://github.com/servo/rust-url | Host of a URL for the speakable-text normalizer (`aulo-voice`); the endpoint check (`checked_endpoint`: TLS, or plain only to this machine) that `aulo-speech-cloud` and `aulo-realtime` share, in `aulo-types` |
+| url | local | https://github.com/servo/rust-url | Host of a URL for the speakable-text normalizer (`aulo-voice`); the endpoint check (`checked_endpoint`: TLS, or plain only to this machine) that `aulo-speech-cloud` and `aulo-realtime` share, in `aulo-types`; provider `base_url` checks (http(s), host, no embedded credentials) in `aulo-providers` |
 | windows | local (Windows) | https://github.com/microsoft/windows-rs | WinRT `SpeechSynthesizer` and `DataReader` bindings for the Windows system voices (`aulo-speech-system`); only the `Media_SpeechSynthesis` family of features |
 | windows-registry | local (Windows) | https://github.com/microsoft/windows-rs | Safe, read-only access to the microphone consent values of the capability access manager (`aulo-audio`); MIT OR Apache-2.0 |
 | wiremock | local (dev) | https://github.com/LukeMathWalker/wiremock-rs | Local HTTP fixture server for the `aulo-models` downloader and `aulo-speech-cloud` transcription and speech tests and the `aulo-realtime` client secret tests |

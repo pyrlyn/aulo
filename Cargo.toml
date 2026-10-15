@@ -73,9 +73,15 @@ windows-registry = "0.6.1"
 # microphone capture (cpal) and 16 kHz resampling in aulo-audio; Linux builds need libasound2-dev.
 # A git dependency pinned to the crates merge commit until the crate is published; then it switches to the crates.io version.
 speech-capture = { git = "https://github.com/pyrlyn/crates", rev = "552263d2481295f19452fc961e7ec81b87203723", default-features = false }
-# Provider trait and neutral request types shared with cox. llm-router routes jobs
-# onto providers that implement it. Git pin until the crate is published.
+# Provider contract (the Provider trait and the neutral request types). Unpublished; pin the crates rev.
+# llm-router routes jobs onto providers that implement it.
 llm-wire = { git = "https://github.com/pyrlyn/crates", rev = "f0deed54f6f8166b31404c2129b59355c45cf044" }
+# HTTP transport section the provider wires' constructors take. Same pin as llm-wire.
+llm-http = { git = "https://github.com/pyrlyn/crates", rev = "f0deed54f6f8166b31404c2129b59355c45cf044" }
+# OpenAI Chat Completions and Responses wires, also every OpenAI-compatible endpoint. Same pin as llm-wire.
+llm-wire-openai = { git = "https://github.com/pyrlyn/crates", rev = "f0deed54f6f8166b31404c2129b59355c45cf044" }
+# Anthropic Messages wire. Same pin as llm-wire.
+llm-wire-anthropic = { git = "https://github.com/pyrlyn/crates", rev = "f0deed54f6f8166b31404c2129b59355c45cf044" }
 # async_trait so tests can implement llm-wire's Provider (the trait is defined with it)
 async-trait = "0.1.92"
 # fixed-size lock-free SPSC rings between platform audio callbacks and engine polls (spec §5.3)

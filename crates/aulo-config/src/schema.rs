@@ -10,44 +10,31 @@ pub fn schema_json() -> Result<String, serde_json::Error> {
     let settings = SchemaSettings::draft2020_12()
         .with_transform(RecursiveTransform(drop_null as fn(&mut Schema)));
     let schema = settings.into_generator().into_root_schema_for::<Config>();
-    stable_schema_json(schema)
+    stable_pretty(&schema)
 }
 
-/// Pretty-print `schema` with a trailing newline and lexicographic object keys.
-///
-/// `serde_json`'s `preserve_order` (pulled in by llm-wire) keeps object keys in
-/// insertion order. schemars emits unpinned keywords in that order, and leaves
-/// `properties` and `$defs` in map order entirely, so a schema would change
-/// whenever another crate enables the feature. Sorting every map first makes
-/// those keys lexicographic, which is what the committed file records.
-/// Serializing the [`Schema`] (not the raw [`Value`]) keeps schemars' pinned
-/// keyword order, so `$schema` stays ahead of `$defs`.
-fn stable_schema_json(schema: Schema) -> Result<String, serde_json::Error> {
-    let mut value = schema.to_value();
-    sort_maps(&mut value);
-    let schema = Schema::try_from(value)?;
-    let mut json = serde_json::to_string_pretty(&schema)?;
+/// Pretty-print with object keys sorted. `llm-wire` enables `serde_json`'s
+/// `preserve_order` for the whole workspace, which would otherwise rewrite
+/// this committed file whenever that crate is in the build.
+fn stable_pretty(value: &impl serde::Serialize) -> Result<String, serde_json::Error> {
+    let mut json = serde_json::to_string_pretty(&sorted(serde_json::to_value(value)?))?;
     json.push('\n');
     Ok(json)
 }
 
-/// Object keys in alphabetical order, at every level. Arrays keep their order.
-fn sort_maps(value: &mut Value) {
+fn sorted(value: Value) -> Value {
     match value {
-        Value::Array(items) => {
-            for item in items {
-                sort_maps(item);
-            }
-        }
+        Value::Array(items) => Value::Array(items.into_iter().map(sorted).collect()),
         Value::Object(map) => {
-            let mut entries: Vec<(String, Value)> = std::mem::take(map).into_iter().collect();
-            entries.sort_by(|left, right| left.0.cmp(&right.0));
-            for (key, mut child) in entries {
-                sort_maps(&mut child);
-                map.insert(key, child);
+            let mut entries: Vec<_> = map.into_iter().collect();
+            entries.sort_by(|(left, _), (right, _)| left.cmp(right));
+            let mut sorted_map = serde_json::Map::new();
+            for (key, child) in entries {
+                sorted_map.insert(key, sorted(child));
             }
+            Value::Object(sorted_map)
         }
-        Value::Null | Value::Bool(_) | Value::Number(_) | Value::String(_) => {}
+        other => other,
     }
 }
 

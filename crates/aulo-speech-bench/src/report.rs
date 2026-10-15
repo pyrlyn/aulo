@@ -128,28 +128,25 @@ pub fn render_table(rows: &[Row]) -> String {
 }
 
 pub fn render_json(rows: &[Row]) -> String {
-    // `llm-wire` turns on serde_json's `preserve_order`, so a `Map` keeps
-    // insertion order instead of sorting keys. Sort here so the CLI JSON
-    // stays the alphabetical form the fixture records, with or without that
-    // feature.
-    let value = sort_keys(Value::Array(rows.iter().map(Row::json).collect()));
+    // Sort object keys so the CLI text does not change when another crate
+    // enables `serde_json`'s `preserve_order` (llm-wire does, workspace-wide).
+    let value = sorted(Value::Array(rows.iter().map(Row::json).collect()));
     let mut text = value.to_string();
     text.push('\n');
     text
 }
 
-/// Object keys in alphabetical order, at every level. Arrays keep their order.
-fn sort_keys(value: Value) -> Value {
+fn sorted(value: Value) -> Value {
     match value {
-        Value::Array(items) => Value::Array(items.into_iter().map(sort_keys).collect()),
+        Value::Array(items) => Value::Array(items.into_iter().map(sorted).collect()),
         Value::Object(map) => {
-            let mut entries: Vec<(String, Value)> = map.into_iter().collect();
-            entries.sort_by(|left, right| left.0.cmp(&right.0));
-            let mut sorted = serde_json::Map::new();
+            let mut entries: Vec<_> = map.into_iter().collect();
+            entries.sort_by(|(left, _), (right, _)| left.cmp(right));
+            let mut sorted_map = serde_json::Map::new();
             for (key, child) in entries {
-                sorted.insert(key, sort_keys(child));
+                sorted_map.insert(key, sorted(child));
             }
-            Value::Object(sorted)
+            Value::Object(sorted_map)
         }
         other => other,
     }
@@ -213,6 +210,9 @@ tts   openai           -     -     -         failed: xxxxxxxxxxxxxxxxxxxxxxxxxxx
         assert_eq!(json[0]["first_ms"], Value::Null);
         assert_eq!(json[1]["first_ms"], 412.0);
         assert_eq!(json[3]["status"], "unavailable");
+        assert!(render_json(&rows()).contains(
+            r#"{"engine":"sherpa-kokoro","kind":"tts","reason":"model `kokoro-multi-lang-v1_0` is not installed","status":"unavailable"}"#
+        ));
         assert_eq!(json[4]["status"], "failed");
         assert!(
             json[4]["reason"]
@@ -220,13 +220,5 @@ tts   openai           -     -     -         failed: xxxxxxxxxxxxxxxxxxxxxxxxxxx
                 .unwrap()
                 .ends_with("and then some")
         );
-    }
-
-    #[test]
-    fn json_object_keys_stay_alphabetical() {
-        let text = render_json(&rows());
-        assert!(text.contains(
-            r#"{"engine":"sherpa-kokoro","kind":"tts","reason":"model `kokoro-multi-lang-v1_0` is not installed","status":"unavailable"}"#
-        ));
     }
 }

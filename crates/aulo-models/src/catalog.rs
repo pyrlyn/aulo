@@ -1,8 +1,7 @@
 use std::collections::BTreeSet;
 
-use schemars::{JsonSchema, Schema};
+use schemars::JsonSchema;
 use serde::Deserialize;
-use serde_json::Value;
 
 use crate::error::ModelError;
 
@@ -135,40 +134,29 @@ impl Catalog {
 
 /// The JSON Schema of [`Catalog`], pretty-printed with a trailing newline.
 pub fn schema_json() -> Result<String, serde_json::Error> {
-    stable_schema_json(schemars::schema_for!(Catalog))
-}
-
-/// Pretty-print `schema` with a trailing newline and lexicographic object keys.
-///
-/// `preserve_order` (unified from llm-wire) would otherwise change key order
-/// inside `properties` and `$defs`. Sorting first matches the committed file,
-/// and serializing the [`Schema`] keeps schemars' pinned keyword order.
-fn stable_schema_json(schema: Schema) -> Result<String, serde_json::Error> {
-    let mut value = schema.to_value();
-    sort_maps(&mut value);
-    let schema = Schema::try_from(value)?;
-    let mut json = serde_json::to_string_pretty(&schema)?;
+    // Sort object keys. `llm-wire` enables `serde_json`'s `preserve_order`
+    // workspace-wide, and this text is committed.
+    let value = sorted(serde_json::to_value(schemars::schema_for!(Catalog))?);
+    let mut json = serde_json::to_string_pretty(&value)?;
     json.push('\n');
     Ok(json)
 }
 
-/// Object keys in alphabetical order, at every level. Arrays keep their order.
-fn sort_maps(value: &mut Value) {
+fn sorted(value: serde_json::Value) -> serde_json::Value {
     match value {
-        Value::Array(items) => {
-            for item in items {
-                sort_maps(item);
-            }
+        serde_json::Value::Array(items) => {
+            serde_json::Value::Array(items.into_iter().map(sorted).collect())
         }
-        Value::Object(map) => {
-            let mut entries: Vec<(String, Value)> = std::mem::take(map).into_iter().collect();
-            entries.sort_by(|left, right| left.0.cmp(&right.0));
-            for (key, mut child) in entries {
-                sort_maps(&mut child);
-                map.insert(key, child);
+        serde_json::Value::Object(map) => {
+            let mut entries: Vec<_> = map.into_iter().collect();
+            entries.sort_by(|(left, _), (right, _)| left.cmp(right));
+            let mut sorted_map = serde_json::Map::new();
+            for (key, child) in entries {
+                sorted_map.insert(key, sorted(child));
             }
+            serde_json::Value::Object(sorted_map)
         }
-        Value::Null | Value::Bool(_) | Value::Number(_) | Value::String(_) => {}
+        other => other,
     }
 }
 
