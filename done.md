@@ -535,3 +535,11 @@ Done when:
 - test: config with an inline key fails with the file name
 
 Outcome: `keychain-secret` (the shared runa/cox helper, pinned to the same `pyrlyn/crates` revision as `speech-capture`) rejects secret-named keys in config files, `AULO_*` configuration variables and caller overrides; the error names the file or variable and does not contain the value. `aulo auth set` reads the key from stdin into the OS keychain (`AULO_KEYCHAIN=off` refuses). Resolution order is `AULO_<ID>_API_KEY`, then the provider's conventional variable (`OPENAI_API_KEY` and the other hosted ones), then the keychain. `ConfigService.SetProviderKey` writes that store; `ListProviders` reports `key_set` only and `GetConfig` is redacted JSON with no key field. T4.1 can call `resolve_provider_key` when it builds providers. Decisions: provider ids are 1–64 bytes of `[A-Za-z0-9._-]` not starting with `.` or `-`; keys are trimmed and capped at 4096 bytes; `ListModels`, `ListAudioDevices`, `SetDevice` and `SetConfig` stay unimplemented until their tasks; any authenticated caller may set a key until token scopes (T13.3) exist.
+
+### T900. Update vulnerable dependencies
+
+The creator authorized dependency updates across the audit. Update only vulnerable dependencies and the resolver-required graph without weakening existing guards or advisory policy.
+
+Execution plan: reproduce the advisory audit; apply compatible package-manager updates; review the lockfile diff; run advisory regression checks and the project test/lint/format gates; publish a PR and merge only after required checks pass. No custom dependency implementation is needed. Rollback is a revert of the dependency-update commit.
+
+Validation: RustSec audit reports no vulnerabilities after rustls 0.23.46. Workspace nextest excluding the custom system-speech harness: 448 passed, 3 skipped. `cargo test -p aulo-speech-system --locked`: 72 unit tests and 2 espeak integration tests passed; the native macOS harness passed its available checks, with STT fixtures explicitly opt-in. Workspace clippy with warnings denied and formatting checks passed. The custom macOS harness does not implement nextest listing, so it was verified with cargo test instead. Existing rustls is reused; no new implementation or dependency was added.
