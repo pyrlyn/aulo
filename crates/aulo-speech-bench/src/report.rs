@@ -128,9 +128,31 @@ pub fn render_table(rows: &[Row]) -> String {
 }
 
 pub fn render_json(rows: &[Row]) -> String {
-    let mut text = Value::Array(rows.iter().map(Row::json).collect()).to_string();
+    // `llm-wire` turns on serde_json's `preserve_order`, so a `Map` keeps
+    // insertion order instead of sorting keys. Sort here so the CLI JSON
+    // stays the alphabetical form the fixture records, with or without that
+    // feature.
+    let value = sort_keys(Value::Array(rows.iter().map(Row::json).collect()));
+    let mut text = value.to_string();
     text.push('\n');
     text
+}
+
+/// Object keys in alphabetical order, at every level. Arrays keep their order.
+fn sort_keys(value: Value) -> Value {
+    match value {
+        Value::Array(items) => Value::Array(items.into_iter().map(sort_keys).collect()),
+        Value::Object(map) => {
+            let mut entries: Vec<(String, Value)> = map.into_iter().collect();
+            entries.sort_by(|left, right| left.0.cmp(&right.0));
+            let mut sorted = serde_json::Map::new();
+            for (key, child) in entries {
+                sorted.insert(key, sort_keys(child));
+            }
+            Value::Object(sorted)
+        }
+        other => other,
+    }
 }
 
 #[cfg(test)]
@@ -198,5 +220,13 @@ tts   openai           -     -     -         failed: xxxxxxxxxxxxxxxxxxxxxxxxxxx
                 .unwrap()
                 .ends_with("and then some")
         );
+    }
+
+    #[test]
+    fn json_object_keys_stay_alphabetical() {
+        let text = render_json(&rows());
+        assert!(text.contains(
+            r#"{"engine":"sherpa-kokoro","kind":"tts","reason":"model `kokoro-multi-lang-v1_0` is not installed","status":"unavailable"}"#
+        ));
     }
 }
