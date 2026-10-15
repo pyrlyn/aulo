@@ -1,0 +1,25 @@
+[package]
+name = "aulo-providers"
+description = "Builds llm-wire providers from the providers section of aulo config"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+aulo-config = { path = "../aulo-config" }
+llm-http.workspace = true
+llm-wire.workspace = true
+llm-wire-anthropic.workspace = true
+llm-wire-openai.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+url.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true
