@@ -1,7 +1,8 @@
 use std::collections::BTreeSet;
 
-use schemars::JsonSchema;
+use schemars::{JsonSchema, Schema};
 use serde::Deserialize;
+use serde_json::Value;
 
 use crate::error::ModelError;
 
@@ -134,9 +135,41 @@ impl Catalog {
 
 /// The JSON Schema of [`Catalog`], pretty-printed with a trailing newline.
 pub fn schema_json() -> Result<String, serde_json::Error> {
-    let mut json = serde_json::to_string_pretty(&schemars::schema_for!(Catalog))?;
+    stable_schema_json(schemars::schema_for!(Catalog))
+}
+
+/// Pretty-print `schema` with a trailing newline and lexicographic object keys.
+///
+/// `preserve_order` (unified from llm-wire) would otherwise change key order
+/// inside `properties` and `$defs`. Sorting first matches the committed file,
+/// and serializing the [`Schema`] keeps schemars' pinned keyword order.
+fn stable_schema_json(schema: Schema) -> Result<String, serde_json::Error> {
+    let mut value = schema.to_value();
+    sort_maps(&mut value);
+    let schema = Schema::try_from(value)?;
+    let mut json = serde_json::to_string_pretty(&schema)?;
     json.push('\n');
     Ok(json)
+}
+
+/// Object keys in alphabetical order, at every level. Arrays keep their order.
+fn sort_maps(value: &mut Value) {
+    match value {
+        Value::Array(items) => {
+            for item in items {
+                sort_maps(item);
+            }
+        }
+        Value::Object(map) => {
+            let mut entries: Vec<(String, Value)> = std::mem::take(map).into_iter().collect();
+            entries.sort_by(|left, right| left.0.cmp(&right.0));
+            for (key, mut child) in entries {
+                sort_maps(&mut child);
+                map.insert(key, child);
+            }
+        }
+        Value::Null | Value::Bool(_) | Value::Number(_) | Value::String(_) => {}
+    }
 }
 
 pub(crate) fn is_safe_id(id: &str) -> bool {

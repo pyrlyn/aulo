@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 
 use schemars::Schema;
 use schemars::generate::SchemaSettings;
+use serde_json::Value;
 
 pub use limits::MAX_MANIFEST_BYTES;
 pub use model::{Audio, Capabilities, Entry, Kind, PluginManifest, Process};
@@ -82,7 +83,39 @@ pub fn schema_json() -> Result<String, serde_json::Error> {
     let schema: Schema = SchemaSettings::draft2020_12()
         .into_generator()
         .into_root_schema_for::<PluginManifest>();
+    stable_schema_json(schema)
+}
+
+/// Pretty-print `schema` with a trailing newline and lexicographic object keys.
+///
+/// `preserve_order` (unified from llm-wire) would otherwise change key order
+/// inside `properties` and `$defs`. Sorting first matches the committed file,
+/// and serializing the [`Schema`] keeps schemars' pinned keyword order.
+fn stable_schema_json(schema: Schema) -> Result<String, serde_json::Error> {
+    let mut value = schema.to_value();
+    sort_maps(&mut value);
+    let schema = Schema::try_from(value)?;
     let mut json = serde_json::to_string_pretty(&schema)?;
     json.push('\n');
     Ok(json)
+}
+
+/// Object keys in alphabetical order, at every level. Arrays keep their order.
+fn sort_maps(value: &mut Value) {
+    match value {
+        Value::Array(items) => {
+            for item in items {
+                sort_maps(item);
+            }
+        }
+        Value::Object(map) => {
+            let mut entries: Vec<(String, Value)> = std::mem::take(map).into_iter().collect();
+            entries.sort_by(|left, right| left.0.cmp(&right.0));
+            for (key, mut child) in entries {
+                sort_maps(&mut child);
+                map.insert(key, child);
+            }
+        }
+        Value::Null | Value::Bool(_) | Value::Number(_) | Value::String(_) => {}
+    }
 }
