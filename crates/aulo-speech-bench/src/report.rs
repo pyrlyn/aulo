@@ -128,9 +128,28 @@ pub fn render_table(rows: &[Row]) -> String {
 }
 
 pub fn render_json(rows: &[Row]) -> String {
-    let mut text = Value::Array(rows.iter().map(Row::json).collect()).to_string();
+    // Sort object keys so the CLI text does not change when another crate
+    // enables `serde_json`'s `preserve_order` (llm-wire does, workspace-wide).
+    let value = sorted(Value::Array(rows.iter().map(Row::json).collect()));
+    let mut text = value.to_string();
     text.push('\n');
     text
+}
+
+fn sorted(value: Value) -> Value {
+    match value {
+        Value::Array(items) => Value::Array(items.into_iter().map(sorted).collect()),
+        Value::Object(map) => {
+            let mut entries: Vec<_> = map.into_iter().collect();
+            entries.sort_by(|(left, _), (right, _)| left.cmp(right));
+            let mut sorted_map = serde_json::Map::new();
+            for (key, child) in entries {
+                sorted_map.insert(key, sorted(child));
+            }
+            Value::Object(sorted_map)
+        }
+        other => other,
+    }
 }
 
 #[cfg(test)]
@@ -191,6 +210,9 @@ tts   openai           -     -     -         failed: xxxxxxxxxxxxxxxxxxxxxxxxxxx
         assert_eq!(json[0]["first_ms"], Value::Null);
         assert_eq!(json[1]["first_ms"], 412.0);
         assert_eq!(json[3]["status"], "unavailable");
+        assert!(render_json(&rows()).contains(
+            r#"{"engine":"sherpa-kokoro","kind":"tts","reason":"model `kokoro-multi-lang-v1_0` is not installed","status":"unavailable"}"#
+        ));
         assert_eq!(json[4]["status"], "failed");
         assert!(
             json[4]["reason"]

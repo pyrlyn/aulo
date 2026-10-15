@@ -1,0 +1,44 @@
+# Every provider kind, plus two openai-compatible endpoints (vLLM has no kind
+# of its own; a custom base URL is the same wire).
+
+[providers.endpoints.runa]
+kind = "runa"
+
+[providers.endpoints.ollama]
+kind = "ollama"
+
+[providers.endpoints.lm-studio]
+kind = "lm-studio"
+
+[providers.endpoints.llama-cpp]
+kind = "llama-cpp"
+
+[providers.endpoints.openai]
+kind = "openai"
+
+[providers.endpoints.anthropic]
+kind = "anthropic"
+
+[providers.endpoints.gemini]
+kind = "gemini"
+
+[providers.endpoints.xai]
+kind = "xai"
+
+[providers.endpoints.openrouter]
+kind = "openrouter"
+
+[providers.endpoints.deepseek]
+kind = "deepseek"
+
+[providers.endpoints.vllm]
+kind = "openai-compatible"
+base_url = "http://127.0.0.1:8000/v1"
+
+[providers.endpoints.custom]
+kind = "openai-compatible"
+base_url = "https://llm.example.com/v1/"
+
+[providers.tiers.main]
+provider = "ollama"
+model = "llama3.2"
