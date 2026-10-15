@@ -9,8 +9,11 @@
 ## variables (`AULO_VOICE__LISTEN`, `__` separates levels), command-line flags.
 ## `aulo config show --origin` prints where each value comes from.
 ##
-## API keys never go in this file. They live in the OS keychain or in the
-## environment. There is no setting for one, and unknown keys are rejected.
+## API keys never go in this file. `aulo auth set <provider>` reads a key from
+## stdin and stores it in the OS keychain. A per-endpoint variable
+## (`AULO_OPENAI_API_KEY`) or the provider's own variable (`OPENAI_API_KEY`)
+## wins over the keychain. An `api_key` setting is rejected and the error
+## names the file. `AULO_KEYCHAIN=off` disables the keychain.
 
 ## ---- aulod transport ----------------------------------------------------
 

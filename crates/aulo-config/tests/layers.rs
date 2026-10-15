@@ -101,6 +101,78 @@ fn aulo_home_env_selects_the_global_file() {
 }
 
 #[test]
+fn inline_api_key_names_the_file_and_hides_the_value() {
+    Jail::expect_with(|jail| {
+        let secret = "sk-live-SHOULD-NOT-LEAK";
+        write(
+            jail,
+            "home/config.toml",
+            &format!("[providers.endpoints.openai]\nkind = \"openai\"\napi_key = \"{secret}\"\n"),
+        );
+        let err = load_err(&opts(jail));
+        let file = jail.directory().join("home/config.toml");
+        let text = err.to_string();
+        assert!(text.contains(&file.display().to_string()), "{text}");
+        assert!(text.contains("api_key"), "{text}");
+        assert!(text.contains("rejected"), "{text}");
+        assert!(!text.contains(secret), "{text}");
+        Ok(())
+    });
+}
+
+#[test]
+fn inline_api_key_in_the_project_file_names_that_file() {
+    Jail::expect_with(|jail| {
+        let secret = "sk-live-PROJECT-SECRET";
+        write(
+            jail,
+            "project/.aulo.toml",
+            &format!("[providers.endpoints.local]\nkind = \"ollama\"\napi-key = \"{secret}\"\n"),
+        );
+        let err = load_err(&opts(jail));
+        let file = jail.directory().join("project/.aulo.toml");
+        let text = err.to_string();
+        assert!(text.contains(&file.display().to_string()), "{text}");
+        assert!(text.contains("api-key"), "{text}");
+        assert!(!text.contains(secret), "{text}");
+        Ok(())
+    });
+}
+
+#[test]
+fn inline_api_key_in_the_environment_names_the_variable() {
+    Jail::expect_with(|jail| {
+        let secret = "sk-live-ENV-SECRET";
+        jail.set_env("AULO_PROVIDERS__ENDPOINTS__LOCAL__API_KEY", secret);
+        let err = load_err(&opts(jail));
+        let text = err.to_string();
+        assert!(
+            text.contains("AULO_PROVIDERS__ENDPOINTS__LOCAL__API_KEY"),
+            "{text}"
+        );
+        assert!(!text.contains(secret), "{text}");
+        Ok(())
+    });
+}
+
+#[test]
+fn inline_api_key_in_overrides_names_the_override_layer() {
+    Jail::expect_with(|jail| {
+        let secret = "sk-live-OVERRIDE-SECRET";
+        let mut options = opts(jail);
+        options.overrides = Some(json!({
+            "providers": { "endpoints": { "local": { "api_key": secret } } }
+        }));
+        let err = load_err(&options);
+        let text = err.to_string();
+        assert!(text.contains("command-line overrides"), "{text}");
+        assert!(text.contains("api_key"), "{text}");
+        assert!(!text.contains(secret), "{text}");
+        Ok(())
+    });
+}
+
+#[test]
 fn unknown_key_names_the_file() {
     Jail::expect_with(|jail| {
         write(jail, "project/.aulo.toml", "[voice]\nbogus = 1\n");

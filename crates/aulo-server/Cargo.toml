@@ -12,6 +12,7 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+aulo-config = { path = "../aulo-config" }
 aulo-proto = { path = "../aulo-proto" }
 aulo-store = { path = "../aulo-store" }
 aulo-types = { path = "../aulo-types" }

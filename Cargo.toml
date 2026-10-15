@@ -138,6 +138,9 @@ toml = "1.1.6"
 getrandom = "0.4.3"
 # OS keychain that holds the API token
 keyring = "4.2.0"
+# Provider API keys: environment variable, then the OS keychain, never a config file.
+# Same git revision as speech-capture so the workspace has one checkout of pyrlyn/crates.
+keychain-secret = { git = "https://github.com/pyrlyn/crates", rev = "552263d2481295f19452fc961e7ec81b87203723" }
 # daemon euid for the local-socket peer check, without hand-written unsafe
 rustix = { version = "1.1.5", features = ["process"] }
 # constant-time comparison of the API token

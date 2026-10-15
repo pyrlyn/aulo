@@ -14,6 +14,7 @@ aulo-speech = { path = "../aulo-speech" }
 # The log redaction rules, reused to mask `config show` output.
 aulo-telemetry = { path = "../aulo-telemetry" }
 figment = { workspace = true, features = ["toml", "env"] }
+keychain-secret.workspace = true
 schemars.workspace = true
 serde.workspace = true
 serde_json.workspace = true

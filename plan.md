@@ -30,7 +30,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T2.3 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T3.7 | todo | P0 | 3 | 0% | |
 | T4.1 | todo | P0 | 3 | 0% | |
-| T4.2 | todo | P0 | 2 | 0% | |
+| T4.2 | done | P0 | 2 | 100% | |
 | T4.3 | todo | P1 | 2 | 0% | |
 | T4.4 | todo | P0 | 3 | 0% | |
 | T4.5 | todo | P1 | 3 | 0% | |
@@ -436,6 +436,8 @@ aulo auth set/rm/ls <provider>: keys go to the keychain (keyring), env vars win,
 Done when:
 
 - test: config with an inline key fails with the file name
+
+Outcome: `aulo-config` rejects a secret-named key (`api_key`, `password`, `*_api_key`) in a config file, in an `AULO_*` configuration variable and in caller overrides, and the error names the file or variable without the value. `aulo auth set/rm/ls` stores keys in the OS keychain through `keychain-secret` (env wins: `AULO_<ID>_API_KEY`, then the provider's conventional variable). `ConfigService.SetProviderKey` writes the same store and `GetConfig` / `ListProviders` never return the value. `AULO_KEYCHAIN=off` disables the keychain.
 
 ### T4.3. Local server presets and auto-detection
 

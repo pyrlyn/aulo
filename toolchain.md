@@ -27,7 +27,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | async-trait | local (dev) | https://github.com/dtolnay/async-trait | Implements `llm-wire`'s `Provider` on the fake providers in the `llm-router` route tests |
 | base64 | local | https://github.com/marshallpierce/rust-base64 | Decodes the base64 audio inside the ElevenLabs WebSocket messages in `aulo-speech-cloud`; encodes and decodes the audio of the OpenAI realtime sockets in `aulo-realtime` |
 | block2 | local (macOS) | https://github.com/madsmtm/objc2 | Objective-C block for the `AVSpeechSynthesizer` buffer callback (`aulo-speech-system`) |
-| clap | local | https://github.com/clap-rs/clap | Command-line parsing for `aulo` (`aulo config show`, `aulo config default`) and `aulod` |
+| clap | local | https://github.com/clap-rs/clap | Command-line parsing for `aulo` (`aulo config`, `aulo auth`, `aulo bench`) and `aulod` |
 | diesel | local | https://github.com/diesel-rs/diesel | Typed SQLite access in `aulo-store` (no raw SQL) |
 | diesel_migrations | local | https://github.com/diesel-rs/diesel | Embedded, filename-keyed schema migrations |
 | divan | local (dev) | https://github.com/nvzqz/divan | Benchmarks of the deterministic speech-harness parts (word error rate, resampling, measurement against fake engines) in `aulo-speech-bench` |
@@ -37,7 +37,8 @@ Only what the project uses today. Crates are added by the task that wires each o
 | hound | local | https://github.com/ruuda/hound | Encodes the buffered utterance as 16-bit PCM WAV for the upload in `aulo-speech-cloud`; decodes the WAV streams of `espeak-ng --stdout` and WinRT `SpeechSynthesizer` in `aulo-speech-system`; reads fixture WAVs in the `aulo-speech-sherpa` and `aulo-speech-system` tests; decodes the embedded fixture clips in `aulo-speech-bench` |
 | hyper-util | local (dev) | https://github.com/hyperium/hyper-util | `TokioIo` adapter for the gRPC client over a Unix socket in `aulo-server` tests |
 | insta | local (dev) | https://github.com/mitsuhiko/insta | Snapshot tests of the speakable-text normalizer (`aulo-voice`) |
-| keyring | local | https://github.com/open-source-cooperative/keyring-rs | OS keychain that holds the `aulod` API token (`aulo-server`) |
+| keychain-secret | local (git, not published yet) | https://github.com/pyrlyn/crates | Provider API keys from an environment variable or the OS keychain, never a config file (`aulo-config`, T4.2). Same git revision as `speech-capture` | 
+| keyring | local | https://github.com/open-source-cooperative/keyring-rs | OS keychain that holds the `aulod` API token (`aulo-server`); also the store inside `keychain-secret` |
 | libsqlite3-sys | local | https://github.com/rusqlite/rusqlite | Bundled SQLite for Diesel |
 | llm-http | local (git, not published yet) | https://github.com/pyrlyn/crates | `Transport` (base URL, timeout, retries) that the provider wires' constructors take, in `aulo-providers`. Pinned to a crates commit |
 | llm-wire | local (git, not published yet) | https://github.com/pyrlyn/crates | Provider trait and neutral request types. `aulo-providers` builds them; `llm-router` routes a job to the provider registered for its tier. Pinned to a crates commit |

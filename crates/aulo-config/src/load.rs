@@ -95,6 +95,10 @@ impl Config {
             figment = figment.merge(Named(Serialized::defaults(overrides), OVERRIDES));
         }
 
+        // Before figment: an unknown-field error can echo the value, and a
+        // secret must not appear in the message. The file name still does.
+        reject_inline_layers(options)?;
+
         let config = figment.extract().map_err(to_config_error)?;
         let provenance = provenance(&figment)?;
         Ok(Loaded { config, provenance })
@@ -103,6 +107,101 @@ impl Config {
 
 fn project_file(dir: &Path) -> PathBuf {
     dir.join(".aulo.toml")
+}
+
+/// Refuses a secret-named key in a config file, in `AULO_*` configuration
+/// variables, or in caller overrides. Credential variables (`OPENAI_API_KEY`,
+/// `AULO_<ID>_API_KEY`) have no `__` and are not configuration.
+fn reject_inline_layers(options: &LoadOptions) -> Result<(), ConfigError> {
+    if let Some(home) = options.home.clone().or_else(aulo_home) {
+        reject_inline_file(&home.join("config.toml"))?;
+    }
+    if let Some(dir) = &options.project_dir {
+        reject_inline_file(&project_file(dir))?;
+    }
+    reject_inline_env()?;
+    if let Some(overrides) = &options.overrides {
+        reject_inline_json(overrides, "")?;
+    }
+    Ok(())
+}
+
+fn reject_inline_file(path: &Path) -> Result<(), ConfigError> {
+    let text = match std::fs::read_to_string(path) {
+        Ok(text) => text,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => {
+            return Err(ConfigError {
+                origin: Some(Origin::File(path.to_owned())),
+                message: format!("cannot read: {error}"),
+            });
+        }
+    };
+    match keychain_secret::reject_inline_secrets(&text, &path.display().to_string()) {
+        Ok(()) => Ok(()),
+        // Figment reports a syntax error and already names the file.
+        Err(keychain_secret::Error::InvalidToml { .. }) => Ok(()),
+        Err(keychain_secret::Error::Inline { key, .. }) => {
+            Err(inline_rejected(key, Origin::File(path.to_owned())))
+        }
+        Err(error) => Err(ConfigError {
+            origin: Some(Origin::File(path.to_owned())),
+            message: error.to_string(),
+        }),
+    }
+}
+
+fn reject_inline_env() -> Result<(), ConfigError> {
+    for (name, _) in std::env::vars() {
+        let Some(rest) = name.strip_prefix("AULO_") else {
+            continue;
+        };
+        // A dedicated credential variable is one segment (`AULO_OPENAI_API_KEY`).
+        // Configuration uses `__` between levels.
+        if !rest.contains("__") {
+            continue;
+        }
+        let last = rest.rsplit("__").next().unwrap_or(rest);
+        if keychain_secret::is_secret_key(last) {
+            return Err(inline_rejected(last.to_owned(), Origin::Env(name)));
+        }
+    }
+    Ok(())
+}
+
+fn reject_inline_json(value: &serde_json::Value, path: &str) -> Result<(), ConfigError> {
+    match value {
+        serde_json::Value::Object(map) => {
+            for (key, child) in map {
+                let child_path = if path.is_empty() {
+                    key.clone()
+                } else {
+                    format!("{path}.{key}")
+                };
+                if keychain_secret::is_secret_key(key) {
+                    return Err(inline_rejected(child_path, Origin::Override));
+                }
+                reject_inline_json(child, &child_path)?;
+            }
+            Ok(())
+        }
+        serde_json::Value::Array(items) => {
+            for (index, child) in items.iter().enumerate() {
+                reject_inline_json(child, &format!("{path}[{index}]"))?;
+            }
+            Ok(())
+        }
+        _ => Ok(()),
+    }
+}
+
+fn inline_rejected(key: String, origin: Origin) -> ConfigError {
+    ConfigError {
+        origin: Some(origin),
+        message: format!(
+            "the secret at `{key}` is rejected; set it with `aulo auth set` or an environment variable, not in configuration"
+        ),
+    }
 }
 
 /// Gives a provider a stable name so its layer can be told apart from env.
