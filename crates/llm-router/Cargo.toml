@@ -1,0 +1,25 @@
+[package]
+name = "llm-router"
+description = "Routes a model job to the provider configured for its tier"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+# The Provider trait the router hands back. No wire crates: the caller builds
+# the providers (aulo-providers) and this crate only chooses among them.
+llm-wire = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+# Provider is an async_trait; the fake providers in the route tests implement it.
+async-trait = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt", "sync"] }
+tokio-util = { workspace = true }
+
+[lints]
+workspace = true

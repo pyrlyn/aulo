@@ -24,6 +24,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | Package | Where | Source | Why here |
 | --- | --- | --- | --- |
 | anyhow | local | https://github.com/dtolnay/anyhow | Error context in the `aulo` and `aulod` binaries only (surface crates) |
+| async-trait | local (dev) | https://github.com/dtolnay/async-trait | Implements `llm-wire`'s `Provider` on the fake providers in the `llm-router` route tests |
 | base64 | local | https://github.com/marshallpierce/rust-base64 | Decodes the base64 audio inside the ElevenLabs WebSocket messages in `aulo-speech-cloud`; encodes and decodes the audio of the OpenAI realtime sockets in `aulo-realtime` |
 | block2 | local (macOS) | https://github.com/madsmtm/objc2 | Objective-C block for the `AVSpeechSynthesizer` buffer callback (`aulo-speech-system`) |
 | clap | local | https://github.com/clap-rs/clap | Command-line parsing for `aulo` (`aulo config show`, `aulo config default`) and `aulod` |
@@ -39,7 +40,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | keyring | local | https://github.com/open-source-cooperative/keyring-rs | OS keychain that holds the `aulod` API token (`aulo-server`) |
 | libsqlite3-sys | local | https://github.com/rusqlite/rusqlite | Bundled SQLite for Diesel |
 | llm-http | local (git, not published yet) | https://github.com/pyrlyn/crates | `Transport` (base URL, timeout, retries) that the provider wires' constructors take, in `aulo-providers`. Pinned to a crates commit |
-| llm-wire | local (git, not published yet) | https://github.com/pyrlyn/crates | Provider trait and neutral request types the assembled providers implement, in `aulo-providers`. Pinned to a crates commit |
+| llm-wire | local (git, not published yet) | https://github.com/pyrlyn/crates | Provider trait and neutral request types. `aulo-providers` builds them; `llm-router` routes a job to the provider registered for its tier. Pinned to a crates commit |
 | llm-wire-anthropic | local (git, not published yet) | https://github.com/pyrlyn/crates | Anthropic Messages client built for an `anthropic` endpoint, in `aulo-providers`. Pinned to a crates commit |
 | llm-wire-openai | local (git, not published yet) | https://github.com/pyrlyn/crates | OpenAI Responses client for `openai`, and the Chat Completions client for every OpenAI-compatible endpoint, in `aulo-providers`. Pinned to a crates commit |
 | objc2 | local (macOS) | https://github.com/madsmtm/objc2 | Objective-C runtime (`Retained`, downcasts) for the macOS system voices (`aulo-speech-system`) |

@@ -14,7 +14,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.4 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.5 | in progress | P0 | 2 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.6 | todo | P0 | 3 | 0% | |
-| T1.7 | todo | P1 | 3 | 0% | |
 | T1.8 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.9 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.10 | in progress | P0 | 2 | 60% | Claude Code / claude-sonnet-5-5 |
@@ -234,16 +233,6 @@ cox depends on llm-wire, llm-http, llm-openai, llm-anthropic and llm-catalog; th
 Done when:
 
 - cox CI green with no duplicated provider code left
-
-### T1.7. llm-router: one provider per tier
-
-Stage: S1 · Area: shared · Depends on: T1.6 · Blocks: 1 task(s)
-
-cox-session builds one provider per session from tiers.code.provider. Add packages/crates/llm-router that builds a provider per tier and routes jobs to tiers, so the voice front, the main agent and the sentinel can use different providers. cox adopts it.
-
-Done when:
-
-- a test routes two tiers to two different providers
 
 ### T1.8. Extract perm-rules: permission rule engine
 

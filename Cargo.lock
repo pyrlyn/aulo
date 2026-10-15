@@ -2523,6 +2523,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "llm-router"
+version = "0.0.0"
+dependencies = [
+ "async-trait",
+ "llm-wire",
+ "serde",
+ "thiserror 2.0.21",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
 name = "llm-wire"
 version = "0.1.0"
 source = "git+https://github.com/pyrlyn/crates?rev=f0deed54f6f8166b31404c2129b59355c45cf044#f0deed54f6f8166b31404c2129b59355c45cf044"

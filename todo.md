@@ -6,7 +6,6 @@
 - T1.4. Extract llm-anthropic: Messages wire
 - T1.5. Extract llm-catalog: model catalog and prices
 - T1.6. Switch cox to the extracted llm crates
-- T1.7. llm-router: one provider per tier
 - T1.8. Extract perm-rules: permission rule engine
 - T1.9. Extract proc-sandbox: Seatbelt, bwrap, Landlock+seccomp
 - T1.10. Extract shell-classify: bash risk classifier
