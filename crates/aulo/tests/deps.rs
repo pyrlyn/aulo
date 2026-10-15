@@ -30,6 +30,8 @@ enum Role {
 /// Spec §4.2, one row per crate.
 const ROLES: &[(&str, Role)] = &[
     ("aulo-types", Role::Contract),
+    // Shared routing table (T1.7). No I/O: it holds providers the caller built.
+    ("llm-router", Role::Contract),
     ("aulo-proto", Role::Contract),
     ("aulo-speech", Role::Contract),
     ("aulo-plugin-sdk", Role::Contract),

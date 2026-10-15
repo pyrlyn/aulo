@@ -38,6 +38,8 @@ Only what the project uses today. Crates are added by the task that wires each o
 | insta | local (dev) | https://github.com/mitsuhiko/insta | Snapshot tests of the speakable-text normalizer (`aulo-voice`) |
 | keyring | local | https://github.com/open-source-cooperative/keyring-rs | OS keychain that holds the `aulod` API token (`aulo-server`) |
 | libsqlite3-sys | local | https://github.com/rusqlite/rusqlite | Bundled SQLite for Diesel |
+| llm-wire | git (`pyrlyn/crates` `f0deed54`) | https://github.com/pyrlyn/crates | Provider trait and neutral request types. `llm-router` routes a job to the provider registered for its tier; the wire crates stay out of this repo |
+| async-trait | local (dev) | https://github.com/dtolnay/async-trait | Implements `llm-wire`'s `Provider` on the fake providers in the `llm-router` route tests |
 | objc2 | local (macOS) | https://github.com/madsmtm/objc2 | Objective-C runtime (`Retained`, downcasts) for the macOS system voices (`aulo-speech-system`) |
 | objc2-avf-audio | local (macOS) | https://github.com/madsmtm/objc2 | `AVSpeechSynthesizer`, `AVSpeechSynthesisVoice` and `AVAudioPCMBuffer` bindings (`aulo-speech-system`); `AVAudioApplication.recordPermission`, the read-only microphone TCC state (`aulo-audio`) |
 | objc2-foundation | local (macOS) | https://github.com/madsmtm/objc2 | `NSString`, `NSArray`, `NSNumber` for AVFoundation calls; `NSLocale`, `NSOperationQueue` and `NSError` for speech recognition; `NSRunLoop` in the synthesis test (`aulo-speech-system`); `NSDate` and `NSRunLoop` for the main run loop that `aulo bench speech` pumps (`aulo-speech-bench`) |

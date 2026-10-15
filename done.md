@@ -1,5 +1,17 @@
 # aulo — done
 
+### T1.7. llm-router: one provider per tier
+
+Stage: S1 · Area: shared · Depends on: T1.6 · Blocks: 1 task(s)
+
+cox-session builds one provider per session from `tiers.code.provider`. `llm-router` holds one provider per tier and routes a job to that tier, so the voice front, the main agent and the sentinel can use different providers.
+
+Done when:
+
+- a test routes two tiers to two different providers
+
+Outcome: `crates/llm-router` (contract, no I/O) maps `Job` onto `Tier` (`cheap < voice < main < sentinel`) and returns the `llm_wire::Provider` registered for that tier. `route` fails closed with `RouteError::NoProvider` when the tier is empty. Titles and summaries default to `cheap`; a builder override can move one job. The route test registers a local provider on `voice` and an OpenAI provider on `main`, streams one request through each, and checks the call landed on that provider. Decisions: the crate lives in this workspace because these pull requests target pyrlyn/aulo, and it depends on `llm-wire` from pyrlyn/crates at `f0deed54` rather than copying the trait. The tiers are aulo's four (spec §10), not `llm_wire::Tier` (`cheap`/`code`/`think`); changing that enum would break cox. Cox adoption waits until the crate is published, the same gate as the other extracted crates. A router may omit a tier; asking for it fails closed, so the two-provider test does not have to invent sentinel and cheap backends.
+
 ### T0.1. Decide the licence and how cox code is reused
 
 Stage: S0 · Area: decision · Depends on: none · Blocks: 8 task(s)

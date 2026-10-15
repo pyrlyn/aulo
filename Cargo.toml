@@ -73,6 +73,11 @@ windows-registry = "0.6.1"
 # microphone capture (cpal) and 16 kHz resampling in aulo-audio; Linux builds need libasound2-dev.
 # A git dependency pinned to the crates merge commit until the crate is published; then it switches to the crates.io version.
 speech-capture = { git = "https://github.com/pyrlyn/crates", rev = "552263d2481295f19452fc961e7ec81b87203723", default-features = false }
+# Provider trait and neutral request types shared with cox. llm-router routes jobs
+# onto providers that implement it. Git pin until the crate is published.
+llm-wire = { git = "https://github.com/pyrlyn/crates", rev = "f0deed54f6f8166b31404c2129b59355c45cf044" }
+# async_trait so tests can implement llm-wire's Provider (the trait is defined with it)
+async-trait = "0.1.92"
 # fixed-size lock-free SPSC rings between platform audio callbacks and engine polls (spec §5.3)
 ringbuf = "0.5.2"
 # safe libopus bindings for the optional Opus codec of remote audio frames in aulo-audio (feature `opus`); the bundled
