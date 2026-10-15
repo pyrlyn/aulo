@@ -82,7 +82,28 @@ pub fn schema_json() -> Result<String, serde_json::Error> {
     let schema: Schema = SchemaSettings::draft2020_12()
         .into_generator()
         .into_root_schema_for::<PluginManifest>();
-    let mut json = serde_json::to_string_pretty(&schema)?;
+    // Sort object keys. `llm-wire` enables `serde_json`'s `preserve_order`
+    // workspace-wide, and this text is committed.
+    let value = sorted(serde_json::to_value(schema)?);
+    let mut json = serde_json::to_string_pretty(&value)?;
     json.push('\n');
     Ok(json)
+}
+
+fn sorted(value: serde_json::Value) -> serde_json::Value {
+    match value {
+        serde_json::Value::Array(items) => {
+            serde_json::Value::Array(items.into_iter().map(sorted).collect())
+        }
+        serde_json::Value::Object(map) => {
+            let mut entries: Vec<_> = map.into_iter().collect();
+            entries.sort_by(|(left, _), (right, _)| left.cmp(right));
+            let mut sorted_map = serde_json::Map::new();
+            for (key, child) in entries {
+                sorted_map.insert(key, sorted(child));
+            }
+            serde_json::Value::Object(sorted_map)
+        }
+        other => other,
+    }
 }

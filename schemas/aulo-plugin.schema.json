@@ -1,185 +1,137 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "PluginManifest",
-  "description": "Root of `aulo-plugin.toml`. Written by third parties, so every value is\nuntrusted until [`PluginManifest::from_toml`](super::PluginManifest::from_toml)\nhas accepted it.",
-  "type": "object",
-  "properties": {
-    "capabilities": {
-      "description": "What the plugin asks for. Everything is denied unless listed here and\nthen approved by the user.",
-      "$ref": "#/$defs/Capabilities",
-      "default": {
-        "audio": [],
-        "exec": false,
-        "fs_read": [],
-        "fs_write": [],
-        "net": []
-      }
-    },
-    "entry": {
-      "description": "How the host runs the plugin. Required for `tools` and the streaming\nkinds; skills and shell hooks need no process.",
-      "$ref": "#/$defs/Entry"
-    },
-    "id": {
-      "description": "Lowercase letters, digits and single hyphens, starting with a letter. No\nunderscore: tools surface as `plugin__<id>__<tool>`, and `__` is the separator.",
-      "type": "string",
-      "maxLength": 32,
-      "minLength": 1,
-      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
-    },
-    "kinds": {
-      "description": "What the plugin provides. At least one.",
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/Kind"
-      },
-      "minItems": 1,
-      "uniqueItems": true
-    },
-    "version": {
-      "description": "Semantic version of the plugin (semver.org), for example `1.4.0`.",
-      "type": "string"
-    }
-  },
-  "additionalProperties": false,
-  "required": [
-    "id",
-    "version",
-    "kinds"
-  ],
   "$defs": {
     "Audio": {
-      "type": "string",
       "enum": [
         "capture",
         "playback"
-      ]
+      ],
+      "type": "string"
     },
     "Capabilities": {
+      "additionalProperties": false,
       "description": "Requested capabilities. Missing means none.",
-      "type": "object",
       "properties": {
         "audio": {
-          "description": "Microphone and speaker access.",
-          "type": "array",
           "default": [],
+          "description": "Microphone and speaker access.",
           "items": {
             "$ref": "#/$defs/Audio"
           },
+          "type": "array",
           "uniqueItems": true
         },
         "exec": {
+          "default": false,
           "description": "Whether the plugin may start other programs.",
-          "type": "boolean",
-          "default": false
+          "type": "boolean"
         },
         "fs_read": {
-          "description": "Absolute directories the plugin may read.",
-          "type": "array",
           "default": [],
+          "description": "Absolute directories the plugin may read.",
           "items": {
             "type": "string"
           },
-          "maxItems": 64
+          "maxItems": 64,
+          "type": "array"
         },
         "fs_write": {
-          "description": "Absolute directories the plugin may write.",
-          "type": "array",
           "default": [],
+          "description": "Absolute directories the plugin may write.",
           "items": {
             "type": "string"
           },
-          "maxItems": 64
+          "maxItems": 64,
+          "type": "array"
         },
         "net": {
-          "description": "Hosts the plugin may reach: lowercase DNS names, IP addresses, or\n`*.example.com` for subdomains. No scheme, port or path.",
-          "type": "array",
           "default": [],
+          "description": "Hosts the plugin may reach: lowercase DNS names, IP addresses, or\n`*.example.com` for subdomains. No scheme, port or path.",
           "items": {
             "type": "string"
           },
-          "maxItems": 64
+          "maxItems": 64,
+          "type": "array"
         }
       },
-      "additionalProperties": false
+      "type": "object"
     },
     "Entry": {
       "description": "How the host launches the plugin. Paths are relative to the plugin's own\ndirectory so a package cannot point outside itself.",
       "oneOf": [
         {
+          "additionalProperties": false,
           "description": "MCP server over stdio: the default ABI for tools.",
-          "type": "object",
           "properties": {
             "args": {
-              "type": "array",
               "default": [],
               "items": {
                 "type": "string"
-              }
+              },
+              "type": "array"
             },
             "command": {
               "description": "A bare program name resolved on `PATH`, or a path relative to the plugin directory.",
               "type": "string"
             },
             "type": {
-              "type": "string",
-              "const": "mcp-process"
+              "const": "mcp-process",
+              "type": "string"
             }
           },
-          "additionalProperties": false,
           "required": [
             "type",
             "command"
-          ]
+          ],
+          "type": "object"
         },
         {
+          "additionalProperties": false,
           "description": "gRPC server on a Unix socket: STT, TTS and LLM providers.",
-          "type": "object",
           "properties": {
             "args": {
-              "type": "array",
               "default": [],
               "items": {
                 "type": "string"
-              }
+              },
+              "type": "array"
             },
             "command": {
               "description": "A bare program name resolved on `PATH`, or a path relative to the plugin directory.",
               "type": "string"
             },
             "type": {
-              "type": "string",
-              "const": "grpc-process"
+              "const": "grpc-process",
+              "type": "string"
             }
           },
-          "additionalProperties": false,
           "required": [
             "type",
             "command"
-          ]
+          ],
+          "type": "object"
         },
         {
+          "additionalProperties": false,
           "description": "In-process WASM module for small tools and hooks.",
-          "type": "object",
           "properties": {
             "module": {
               "description": "Relative path of the `.wasm` file.",
               "type": "string"
             },
             "type": {
-              "type": "string",
-              "const": "wasm"
+              "const": "wasm",
+              "type": "string"
             }
           },
-          "additionalProperties": false,
           "required": [
             "type",
             "module"
-          ]
+          ],
+          "type": "object"
         }
       ]
     },
     "Kind": {
-      "type": "string",
       "enum": [
         "tools",
         "stt",
@@ -187,7 +139,55 @@
         "llm-provider",
         "skills",
         "hooks"
-      ]
+      ],
+      "type": "string"
     }
-  }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Root of `aulo-plugin.toml`. Written by third parties, so every value is\nuntrusted until [`PluginManifest::from_toml`](super::PluginManifest::from_toml)\nhas accepted it.",
+  "properties": {
+    "capabilities": {
+      "$ref": "#/$defs/Capabilities",
+      "default": {
+        "audio": [],
+        "exec": false,
+        "fs_read": [],
+        "fs_write": [],
+        "net": []
+      },
+      "description": "What the plugin asks for. Everything is denied unless listed here and\nthen approved by the user."
+    },
+    "entry": {
+      "$ref": "#/$defs/Entry",
+      "description": "How the host runs the plugin. Required for `tools` and the streaming\nkinds; skills and shell hooks need no process."
+    },
+    "id": {
+      "description": "Lowercase letters, digits and single hyphens, starting with a letter. No\nunderscore: tools surface as `plugin__<id>__<tool>`, and `__` is the separator.",
+      "maxLength": 32,
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "type": "string"
+    },
+    "kinds": {
+      "description": "What the plugin provides. At least one.",
+      "items": {
+        "$ref": "#/$defs/Kind"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "version": {
+      "description": "Semantic version of the plugin (semver.org), for example `1.4.0`.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "kinds"
+  ],
+  "title": "PluginManifest",
+  "type": "object"
 }
