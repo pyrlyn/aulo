@@ -523,3 +523,11 @@ Check: `cargo test -p aulo-speech-system stt` — 10 passed (new: `a_held_final_
 Three audit items. `aulo-speech-local/src/model.rs` told users to run `aulo models pull <id>` — no such subcommand exists (`aulo` has `bench` and `config`); the message now names the directory and the pinned model instead. `scripts/sync-issues.py` crashed with a bare `KeyError` when a plan card was missing from the summary table; it exits with a named `sys.exit` like the missing-meta case now. The third item — `daemon.listen` failing at two different points — dissolved with T16.1: the token loads (or fails, with context) before anything binds, and the off-loopback-without-TLS refusal is the typed `UnauthenticatedRemote`, so both paths fail fast with named errors.
 Model: ZCode / GLM-5.3 · Status: done 2026-10-07 · Priority: P3 · Complexity: 1 · Files: `crates/aulo-speech-local/src/model.rs`, `scripts/sync-issues.py`
 Check: `cargo test -p aulo-speech-local model` — 2 passed; `python3 -c "import ast; ast.parse(open('scripts/sync-issues.py').read())"`; `cargo fmt --check` clean.
+
+### T900. Update vulnerable dependencies
+
+The creator authorized dependency updates across the audit. Update only vulnerable dependencies and the resolver-required graph without weakening existing guards or advisory policy.
+
+Execution plan: reproduce the advisory audit; apply compatible package-manager updates; review the lockfile diff; run advisory regression checks and the project test/lint/format gates; publish a PR and merge only after required checks pass. No custom dependency implementation is needed. Rollback is a revert of the dependency-update commit.
+
+Validation: RustSec audit reports no vulnerabilities after rustls 0.23.46. Workspace nextest excluding the custom system-speech harness: 448 passed, 3 skipped. `cargo test -p aulo-speech-system --locked`: 72 unit tests and 2 espeak integration tests passed; the native macOS harness passed its available checks, with STT fixtures explicitly opt-in. Workspace clippy with warnings denied and formatting checks passed. The custom macOS harness does not implement nextest listing, so it was verified with cargo test instead. Existing rustls is reused; no new implementation or dependency was added.
