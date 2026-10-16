@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "file": ".github/workflows/proto.yml",
+      "rule": "concurrency-limits",
+      "fingerprint": "c41f0955d93b4ce5",
+      "context": "081b2e27040f94d3",
+      "occurrence": 0,
+      "message": "workflow has no \"concurrency:\", so every run of it executes at the same time even when a newer run supersedes the older ones. add a top-level \"concurrency:\" with a \"group:\" and \"cancel-in-progress: true\". use a group per pull request such as \"${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}\", so that a new push cancels only the older runs of the same pull request and not the runs of the others"
+    },
+    {
+      "file": ".github/workflows/proto.yml",
+      "rule": "missing-timeout",
+      "fingerprint": "6a25a3b44088aafc",
+      "context": "8f303e5c4cc74d6f",
+      "occurrence": 0,
+      "message": "\"timeout-minutes\" is not set at this job. Set it to avoid wasting runner minutes when the job hangs"
+    },
+    {
+      "file": ".github/workflows/proto.yml",
+      "rule": "artipacked",
+      "fingerprint": "0755218fd1429a98",
+      "context": "f0f1babb0a291eeb",
+      "occurrence": 0,
+      "message": "actions/checkout leaves the GITHUB_TOKEN in the git config of the workspace, where a later step such as an artifact upload can publish it. set \"persist-credentials: false\" under \"with:\" unless a later step needs to push"
+    }
+  ]
+}
