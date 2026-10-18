@@ -8,6 +8,20 @@ fn command_output_fixtures() {
 }
 
 #[test]
+fn command_fixtures_ignore_inherited_provider_credentials() {
+    let out = Command::new(std::env::current_exe().unwrap())
+        .args(["--exact", "command_output_fixtures", "--nocapture"])
+        .env("OPENAI_API_KEY", "fixture-only-not-a-secret")
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+}
+
+#[test]
 fn version_flag_names_the_binary() {
     let out = Command::new(AULO).arg("--version").output().unwrap();
     assert!(out.status.success());
