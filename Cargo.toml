@@ -72,7 +72,7 @@ windows = { version = "0.62.2", default-features = false }
 windows-registry = "0.6.1"
 # microphone capture (cpal) and 16 kHz resampling in aulo-audio; Linux builds need libasound2-dev.
 # A git dependency pinned to the crates merge commit until the crate is published; then it switches to the crates.io version.
-speech-capture = { git = "https://github.com/pyrlyn/crates", rev = "552263d2481295f19452fc961e7ec81b87203723", default-features = false }
+speech-capture = { path = "../../packages/crates/rust/speech-capture", default-features = false }
 # Provider contract (the Provider trait and the neutral request types). Unpublished; pin the crates rev.
 # llm-router routes jobs onto providers that implement it.
 llm-wire = { git = "https://github.com/pyrlyn/crates", rev = "f0deed54f6f8166b31404c2129b59355c45cf044" }

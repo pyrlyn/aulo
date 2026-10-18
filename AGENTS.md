@@ -30,3 +30,14 @@ If an `AGENTS.md` or `CLAUDE.md` exists higher in the tree, follow it too; on co
 - `plugins/` — plugin SDK examples (T11.5).
 - `docs/` — guides, threat model, spike reports (`docs/spikes/`).
 - `scripts/sync-issues.py` — creates GitHub issues from `plan.md` (dry run by default).
+
+## Commands
+
+jactionlint and hk are pinned in `mise.toml`. `.github/jactionlint.yaml` applies the default profile and the
+baseline `.github/jactionlint-baseline.json`. `hk.pkl` runs jactionlint as a pre-push hook:
+
+```bash
+mise x -- jactionlint                  # lint workflows, composite actions, dependabot.yml
+mise x -- jactionlint --baseline-write # refresh the baseline after fixing findings
+mise x -- hk install --mise            # install the pre-push hook once per clone
+```

@@ -10,11 +10,14 @@ Only what the project uses today. Crates are added by the task that wires each o
 | gh | brew / mise | Creates labels, milestones and issues from `plan.md` | https://github.com/cli/cli |
 | rustc, cargo, rustfmt, clippy | mise (`mise.toml`, 1.99.0) | Build, format and lint the workspace | https://github.com/rust-lang/rust |
 | just | mise (`mise.toml`) | Task runner (`justfile`) | https://github.com/casey/just |
+| jactionlint | mise (`mise.toml` pins `github:jdx/jactionlint` 2.0.2) | Lint the workflows (the pre-push hook and `mise x -- jactionlint`); CI lints through pyrlyn/ci's `lint.yml` | https://github.com/jdx/jactionlint |
+| hk | mise (`mise.toml` pins 2.5.0) | Runs jactionlint as a pre-push hook (`hk.pkl`) | https://github.com/jdx/hk |
+| shellcheck | mise (`mise.toml` pins 0.11.0) | Checks `run:` scripts inside jactionlint | https://github.com/koalaman/shellcheck |
 | buf (1.73.0) | brew | Lints and builds the protos, `buf format`, breaking-change check (`proto/buf.yaml`) | https://github.com/bufbuild/buf |
 | protoc (libprotoc 36.2) | brew (`PROTOC` or `PATH`) | `aulo-proto` build script compiles `proto/aulo/v1`; not vendored so the version follows the platform package | https://github.com/protocolbuffers/protobuf |
 | sherpa-onnx native lib (1.13.8, static) | downloaded by the `sherpa-onnx-sys` build script from the k2-fsa GitHub release into `<target>/sherpa-onnx-prebuilt/`, once per target directory; offline: `SHERPA_ONNX_ARCHIVE_DIR` (directory holding the release archive) or `SHERPA_ONNX_LIB_DIR` (unpacked `lib/`) | Prebuilt sherpa-onnx and onnxruntime linked into `aulo-speech-sherpa`; contains GPL-3.0 espeak-ng (spec §17 D9) | https://github.com/k2-fsa/sherpa-onnx/releases/tag/v1.13.8 |
 | cmake and a C++ toolchain | mise / brew (`cmake`); Xcode command line tools, build-essential or MSVC | Build whisper.cpp for the `whisper` cargo feature only (`whisper-rs-sys` runs cmake); the default build and CI need neither | https://github.com/Kitware/CMake |
-| mise | brew | Pins the Rust toolchain and just | https://github.com/jdx/mise |
+| mise | brew | Pins the Rust toolchain, just, jactionlint, hk and shellcheck | https://github.com/jdx/mise |
 | cmake | mise / brew / system | Builds the bundled libopus when `aulo-audio` is built with feature `opus` (T6.7); not needed for a default build | https://github.com/Kitware/CMake |
 | espeak-ng | apt (`espeak-ng`) on Linux; optional elsewhere | Zero-download fallback voice, run as a separate process (GPL-3.0) by the Linux `system` engine in `aulo-speech-system`; the Linux CI runner needs it for the real-binary test | https://github.com/espeak-ng/espeak-ng |
 | protoc-gen-doc (v1.5.1) | buf remote plugin `buf.build/community/pseudomuto-doc` (`buf.gen.yaml`), nothing to install | Generates the Markdown gRPC API reference in `docs/api/` (`just api-docs`) | https://github.com/pseudomuto/protoc-gen-doc |
