@@ -2,6 +2,7 @@ bin.name = "aulo"
 args = ["auth", "ls"]
 fs.cwd = "auth.in"
 fs.sandbox = true
+env.inherit = false
 env.add.AULO_HOME = "."
 env.add.AULO_KEYCHAIN = "off"
 stdout = """

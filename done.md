@@ -555,3 +555,11 @@ The creator authorized dependency updates across the audit. Update only vulnerab
 Execution plan: reproduce the advisory audit; apply compatible package-manager updates; review the lockfile diff; run advisory regression checks and the project test/lint/format gates; publish a PR and merge only after required checks pass. No custom dependency implementation is needed. Rollback is a revert of the dependency-update commit.
 
 Validation: RustSec audit reports no vulnerabilities after rustls 0.23.46. Workspace nextest excluding the custom system-speech harness: 448 passed, 3 skipped. `cargo test -p aulo-speech-system --locked`: 72 unit tests and 2 espeak integration tests passed; the native macOS harness passed its available checks, with STT fixtures explicitly opt-in. Workspace clippy with warnings denied and formatting checks passed. The custom macOS harness does not implement nextest listing, so it was verified with cargo test instead. Existing rustls is reused; no new implementation or dependency was added.
+
+### T16.7. Isolate credential-list fixtures from developer credentials
+
+The auth-ls fixture expects no credentials but inherits OPENAI_API_KEY, making the suite fail on configured developer machines.
+
+Execution plan: reproduce with a synthetic inherited API key using a subprocess regression in crates/aulo/tests/cli.rs; disable environment inheritance for the isolated auth-ls fixture using trycmd configuration; run the CLI tests with fake credentials, then workspace tests, lint and formatting. Reuse trycmd environment controls instead of adding a custom environment filter.
+
+Validation: the subprocess regression failed before isolation with a synthetic OPENAI_API_KEY. All workspace cargo tests and clippy --workspace --all-targets -- -D warnings pass after the fix, as does cargo fmt --check. The existing trycmd env.inherit option isolates the no-credentials fixture without changing production credential resolution.
