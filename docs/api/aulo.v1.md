@@ -2241,7 +2241,7 @@ all=true needs `control`.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | start | [TalkStart](#aulo-v1-TalkStart) |  |  |
-| audio | [bytes](#bytes) |  | One frame of microphone audio in the format given in Start, ideally 20 ms (640 bytes of PCM). At most 16 KiB (512 ms); a larger frame closes the stream. The server buffers audio in a fixed-size ring and counts overflow, so a client that sends faster than real time loses audio. |
+| audio | [bytes](#bytes) |  | One frame of microphone audio in the format given in Start, ideally 20 ms (640 bytes of PCM). At most 16 KiB (512 ms) of PCM; a larger frame closes the stream. Opus frames have the smaller caps given on the format. The server buffers audio in a fixed-size ring and counts overflow, so a client that sends faster than real time loses audio. |
 | control | [TalkControl](#aulo-v1-TalkControl) |  |  |
 
 
@@ -2327,7 +2327,8 @@ TtsChunk event with the same turn_id and seq, which is sent first.
 | Name | Number | Description |
 | ---- | ------ | ----------- |
 | AUDIO_FORMAT_UNSPECIFIED | 0 |  |
-| AUDIO_FORMAT_PCM_S16LE_16KHZ_MONO | 1 | Signed 16-bit little-endian PCM, 16 kHz, mono: the default for remote clients. Opus is added later as another value (T6.7). |
+| AUDIO_FORMAT_PCM_S16LE_16KHZ_MONO | 1 | Signed 16-bit little-endian PCM, 16 kHz, mono: the default for remote clients. |
+| AUDIO_FORMAT_OPUS_16KHZ_MONO | 2 | Opus (RFC 6716), 16 kHz, mono, for low-bandwidth clients. Every audio frame is exactly one Opus packet, ideally 20 ms. At most 1500 bytes and 6 Opus frames (120 ms); a packet over a cap, an empty packet or one that does not decode closes the stream. |
 
 
 

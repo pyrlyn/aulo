@@ -1,0 +1,27 @@
+# A usable endpoint beside sections that must only warn.
+
+[providers.endpoints.ollama]
+kind = "ollama"
+
+[providers.endpoints.custom]
+kind = "openai-compatible"
+
+[providers.endpoints.embedded]
+kind = "openai"
+base_url = "https://user:s3cr3t-token@api.openai.com/v1"
+
+[providers.endpoints.weird]
+kind = "ollama"
+base_url = "ftp://files.example.com/models"
+
+[providers.tiers.main]
+provider = "custom"
+model = "m"
+
+[providers.tiers.cheap]
+provider = "missing"
+model = "m"
+
+[providers.tiers.voice]
+provider = "ollama"
+model = "llama3.2"

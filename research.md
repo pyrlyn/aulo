@@ -477,6 +477,39 @@ Kokoro catalog entry `kokoro-multi-lang-v1_0` (T7.9), checked 2026-10-07:
 - Ultravox — https://github.com/fixie-ai/ultravox, MIT, v0.6 (2025-08-18), push 2025-12 (slowing).
 - Sesame CSM — https://github.com/SesameAILabs/csm, Apache-2.0, last push 2025-05 (stale).
 
+### 4.8 Opus codec for remote audio (T6.7)
+
+Choice: `opus` 0.4.0 (safe bindings) over `opusic-sys` 0.7.5, which bundles libopus 1.6.1 and builds it with cmake.
+Versions, dates, licences and download counts from the crates.io API (`crates.io/api/v1/crates/<name>`), repository facts
+from the GitHub REST API, and crate contents from the published `.crate` files, all checked on 2026-10-07.
+
+| Crate | Latest, updated | Licence | Build | Verdict |
+|---|---|---|---|---|
+| `opus` — https://github.com/SpaceManiac/opus-rs | 0.4.0, 2026-08-23; 2.6M downloads, 1.4M recent | MIT/Apache-2.0 | libopus via `opusic-sys` | **chosen**: safe API (`Encoder`, `Decoder`, `packet::get_nb_frames`), maintained, real libopus decoder for untrusted input |
+| `opusic-sys` — https://github.com/DoumanAsh/opusic-sys | 0.7.5, 2026-08-06; MSRV 1.82 | BSD-3-Clause | feature `bundled` (default) builds libopus 1.6.1 with `cmake`; without it, `libopus` from `$PATH` or `OPUS_LIB_DIR` | the sys crate under `opus`; README: "bundled" needs `cmake` (`opusic-sys-0.7.5/README.md`) |
+| `audiopus` / `audiopus_sys` — https://github.com/lakelezz/audiopus | 0.2.0 / 0.2.2, both 2021-04-22; last push 2023-05-09 | ISC | bundled or system libopus | rejected: unmaintained since 2021 |
+| `opus-rs` (restsend) — https://github.com/restsend/opus-rs | 0.1.37, 2026-10-07; 186k downloads | BSD-3-Clause | pure Rust, no C | rejected for now: a hand port of libopus 1.6 with 278 `unsafe` occurrences (`grep -c` over `src/`), 0.1.x with a release almost daily, and a decoder fed by untrusted clients should be libopus, which is fuzzed continuously upstream. Revisit if the C build becomes a blocker |
+| `unsafe-libopus` — https://github.com/DCNick3/unsafe-libopus | 0.2.0, 2024-11-21 | BSD-3-Clause | pure Rust (c2rust output of libopus **1.3.1**) | rejected: README calls it "full of unsafe", is two minor versions behind libopus, and needs a fork of `opus` |
+| `opus-codec` — https://github.com/Deniskore/opus-codec | 0.2.0, 2026-08-16 | MIT OR Apache-2.0 | bindgen + cmake + pkg-config at build time | rejected: heavier build (bindgen needs libclang) than `opus` for the same libopus |
+| `magnum-opus`, `opus-sys` | 2020-06-06, 2016-07-04 | MIT/Apache-2.0, MIT | | rejected: abandoned |
+
+- libopus itself: https://github.com/xiph/opus, tag `v1.6.1` (the `tags` API lists `v1.6.1`, `v1.6`, `v1.5.2`); licence
+  BSD-3-Clause (`COPYING` in the repo and in the bundled `opusic-sys-0.7.5/opus/`). Compatible with the project's
+  licence; `opusic-sys` states it "has the same license requirements as C source code" (README).
+- Build cost: the C build is behind the off-by-default `opus` feature of `aulo-audio`, so the default workspace build
+  and CI are unchanged. The GitHub-hosted `ubuntu-24.04`, `windows-2025` and `macos-15-arm64` images list CMake
+  (https://github.com/actions/runner-images, `images/*/…-Readme.md`). Windows MSVC and Linux aarch64 builds of
+  `opusic-sys` are **unverified**: only macOS arm64 was built here.
+- Caps (our choice, not a spec number): a packet is at most 1500 bytes (a single Opus frame is at most 1275 bytes,
+  RFC 6716 §3.2.1, https://www.rfc-editor.org/rfc/rfc6716) and at most 6 frames, which bounds the decode buffer at
+  120 ms, the longest Opus packet.
+- SNR target (spec.md names none, so this is a proposal): 8 dB, round trip of 3 s of synthetic voiced speech (120 Hz
+  pulse train through three formant resonators, 4 Hz syllable envelope) at 16 kHz, 20 ms frames, VoIP mode, aligned by
+  the encoder's lookahead (104 samples). Measured: 9.8 dB at 12 kbit/s, 10.1 at 16, 10.4 at 24 (the default, 11.5 kbit/s
+  average), 10.5 at 32 and 10.4 at 64. Opus is perceptual, so the waveform SNR plateaus near 10 dB whatever the rate
+  and a higher target would only test the signal; 8 dB keeps about 2 dB of margin. **Unverified on real speech**: no
+  recorded clip was used, and WER through the STT engine on decoded audio is not measured here.
+
 ---
 
 ## Part 5. Conclusions and ideas to borrow (for a Rust voice computer-control agent)

@@ -16,6 +16,16 @@ impl Config {
     pub fn to_toml_redacted(&self) -> Result<String, ConfigError> {
         toml::to_string(&redacted_value(self)?).map_err(render_error)
     }
+
+    /// The config as JSON with secrets masked and `null` removed, so it
+    /// validates against the committed schema. Provider keys are not fields
+    /// of [`Config`]; a URL userinfo or a credential-shaped string still is.
+    pub fn to_json_redacted(&self) -> Result<String, ConfigError> {
+        let mut value = serde_json::to_value(self).map_err(render_error)?;
+        mask_json(&mut value);
+        strip_nulls(&mut value);
+        serde_json::to_string(&value).map_err(render_error)
+    }
 }
 
 impl Loaded {
@@ -75,6 +85,26 @@ fn mask_strings(value: &mut Value) {
         Value::String(text) => *text = mask(text),
         Value::Array(items) => items.iter_mut().for_each(mask_strings),
         Value::Table(table) => table.iter_mut().for_each(|(_, v)| mask_strings(v)),
+        _ => {}
+    }
+}
+
+fn mask_json(value: &mut serde_json::Value) {
+    match value {
+        serde_json::Value::String(text) => *text = mask(text),
+        serde_json::Value::Array(items) => items.iter_mut().for_each(mask_json),
+        serde_json::Value::Object(map) => map.values_mut().for_each(mask_json),
+        _ => {}
+    }
+}
+
+fn strip_nulls(value: &mut serde_json::Value) {
+    match value {
+        serde_json::Value::Array(items) => items.iter_mut().for_each(strip_nulls),
+        serde_json::Value::Object(map) => {
+            map.retain(|_, child| !child.is_null());
+            map.values_mut().for_each(strip_nulls);
+        }
         _ => {}
     }
 }

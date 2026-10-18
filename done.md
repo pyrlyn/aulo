@@ -1,5 +1,17 @@
 # aulo — done
 
+### T1.7. llm-router: one provider per tier
+
+Stage: S1 · Area: shared · Depends on: T1.6 · Blocks: 1 task(s)
+
+cox-session builds one provider per session from `tiers.code.provider`. `llm-router` holds one provider per tier and routes a job to that tier, so the voice front, the main agent and the sentinel can use different providers.
+
+Done when:
+
+- a test routes two tiers to two different providers
+
+Outcome: `crates/llm-router` (contract, no I/O) maps `Job` onto `Tier` (`cheap < voice < main < sentinel`) and returns the `llm_wire::Provider` registered for that tier. `route` fails closed with `RouteError::NoProvider` when the tier is empty. Titles and summaries default to `cheap`; a builder override can move one job. The route test registers a local provider on `voice` and an OpenAI provider on `main`, streams one request through each, and checks the call landed on that provider. Decisions: the crate lives in this workspace because these pull requests target pyrlyn/aulo, and it depends on `llm-wire` from pyrlyn/crates at `f0deed54` rather than copying the trait. The tiers are aulo's four (spec §10), not `llm_wire::Tier` (`cheap`/`code`/`think`); changing that enum would break cox. Cox adoption waits until the crate is published, the same gate as the other extracted crates. A router may omit a tier; asking for it fails closed, so the two-provider test does not have to invent sentinel and cheap backends. Pulling `llm-wire` turns on `serde_json`'s `preserve_order` for the whole workspace. Bench JSON and the three committed JSON Schemas sort object keys before printing so that feature does not change fixtures. Main already records those schemas in full key order, so this merge keeps that printer.
+
 ### T0.1. Decide the licence and how cox code is reused
 
 Stage: S0 · Area: decision · Depends on: none · Blocks: 8 task(s)
@@ -523,3 +535,31 @@ Check: `cargo test -p aulo-speech-system stt` — 10 passed (new: `a_held_final_
 Three audit items. `aulo-speech-local/src/model.rs` told users to run `aulo models pull <id>` — no such subcommand exists (`aulo` has `bench` and `config`); the message now names the directory and the pinned model instead. `scripts/sync-issues.py` crashed with a bare `KeyError` when a plan card was missing from the summary table; it exits with a named `sys.exit` like the missing-meta case now. The third item — `daemon.listen` failing at two different points — dissolved with T16.1: the token loads (or fails, with context) before anything binds, and the off-loopback-without-TLS refusal is the typed `UnauthenticatedRemote`, so both paths fail fast with named errors.
 Model: ZCode / GLM-5.3 · Status: done 2026-10-07 · Priority: P3 · Complexity: 1 · Files: `crates/aulo-speech-local/src/model.rs`, `scripts/sync-issues.py`
 Check: `cargo test -p aulo-speech-local model` — 2 passed; `python3 -c "import ast; ast.parse(open('scripts/sync-issues.py').read())"`; `cargo fmt --check` clean.
+
+### T4.2. Credentials in the OS keychain
+
+Stage: S4 · Area: providers · Depends on: T4.1 · Blocks: 2 task(s)
+
+`aulo auth set/rm/ls <provider>`: keys go to the keychain (keyring), env vars win, inline keys in config are rejected (runa pattern). gRPC ConfigService can set a key but never return it.
+
+Done when:
+
+- test: config with an inline key fails with the file name
+
+Outcome: `keychain-secret` (the shared runa/cox helper, pinned to the same `pyrlyn/crates` revision as `speech-capture`) rejects secret-named keys in config files, `AULO_*` configuration variables and caller overrides; the error names the file or variable and does not contain the value. `aulo auth set` reads the key from stdin into the OS keychain (`AULO_KEYCHAIN=off` refuses). Resolution order is `AULO_<ID>_API_KEY`, then the provider's conventional variable (`OPENAI_API_KEY` and the other hosted ones), then the keychain. `ConfigService.SetProviderKey` writes that store; `ListProviders` reports `key_set` only and `GetConfig` is redacted JSON with no key field. T4.1 can call `resolve_provider_key` when it builds providers. Decisions: provider ids are 1–64 bytes of `[A-Za-z0-9._-]` not starting with `.` or `-`; keys are trimmed and capped at 4096 bytes; `ListModels`, `ListAudioDevices`, `SetDevice` and `SetConfig` stay unimplemented until their tasks; any authenticated caller may set a key until token scopes (T13.3) exist.
+
+### T900. Update vulnerable dependencies
+
+The creator authorized dependency updates across the audit. Update only vulnerable dependencies and the resolver-required graph without weakening existing guards or advisory policy.
+
+Execution plan: reproduce the advisory audit; apply compatible package-manager updates; review the lockfile diff; run advisory regression checks and the project test/lint/format gates; publish a PR and merge only after required checks pass. No custom dependency implementation is needed. Rollback is a revert of the dependency-update commit.
+
+Validation: RustSec audit reports no vulnerabilities after rustls 0.23.46. Workspace nextest excluding the custom system-speech harness: 448 passed, 3 skipped. `cargo test -p aulo-speech-system --locked`: 72 unit tests and 2 espeak integration tests passed; the native macOS harness passed its available checks, with STT fixtures explicitly opt-in. Workspace clippy with warnings denied and formatting checks passed. The custom macOS harness does not implement nextest listing, so it was verified with cargo test instead. Existing rustls is reused; no new implementation or dependency was added.
+
+### T16.7. Isolate credential-list fixtures from developer credentials
+
+The auth-ls fixture expects no credentials but inherits OPENAI_API_KEY, making the suite fail on configured developer machines.
+
+Execution plan: reproduce with a synthetic inherited API key using a subprocess regression in crates/aulo/tests/cli.rs; disable environment inheritance for the isolated auth-ls fixture using trycmd configuration; run the CLI tests with fake credentials, then workspace tests, lint and formatting. Reuse trycmd environment controls instead of adding a custom environment filter.
+
+Validation: the subprocess regression failed before isolation with a synthetic OPENAI_API_KEY. All workspace cargo tests and clippy --workspace --all-targets -- -D warnings pass after the fix, as does cargo fmt --check. The existing trycmd env.inherit option isolates the no-credentials fixture without changing production credential resolution.

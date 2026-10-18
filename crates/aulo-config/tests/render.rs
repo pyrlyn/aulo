@@ -63,11 +63,25 @@ base_url = "https://user:s3cret@host/v1?api_key=abc123""#,
     config.plugins.dirs.push(PathBuf::from("/plugins"));
 
     let out = config.to_toml_redacted().unwrap();
-    for secret in ["s3cret", "abc123", "hunter2", "p4ss", "abcdefgh12345678"] {
-        assert!(!out.contains(secret), "{secret} leaked:\n{out}");
-    }
+    assert_fixtures_absent(&out);
     assert!(out.contains("[REDACTED]"));
     assert!(out.contains("/plugins"));
+
+    let json = config.to_json_redacted().unwrap();
+    assert_fixtures_absent(&json);
+    assert!(!json.contains("null"), "redacted JSON still contains null");
+}
+
+/// Fixture values from the test above. The failure text names neither the
+/// value nor the rendered document: CodeQL treats an assertion message as a
+/// log, and a message that interpolates the value is cleartext logging.
+fn assert_fixtures_absent(rendered: &str) {
+    for fixture in ["s3cret", "abc123", "hunter2", "p4ss", "abcdefgh12345678"] {
+        assert!(
+            !rendered.contains(fixture),
+            "redacted output still contains a fixture value"
+        );
+    }
 }
 
 #[test]

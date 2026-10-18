@@ -6,7 +6,6 @@
 - T1.4. Extract llm-anthropic: Messages wire
 - T1.5. Extract llm-catalog: model catalog and prices
 - T1.6. Switch cox to the extracted llm crates
-- T1.7. llm-router: one provider per tier
 - T1.8. Extract perm-rules: permission rule engine
 - T1.9. Extract proc-sandbox: Seatbelt, bwrap, Landlock+seccomp
 - T1.10. Extract shell-classify: bash risk classifier
@@ -23,7 +22,6 @@
 - T2.3. CI workflows
 - T3.7. aulo CLI: text chat client
 - T4.1. aulo-providers: build providers from config
-- T4.2. Credentials in the OS keychain
 - T4.3. Local server presets and auto-detection
 - T4.4. Model catalog and per-chat model switching
 - T4.5. Tiers and job routing

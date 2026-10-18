@@ -195,6 +195,7 @@ Crate roles follow rust.md: contracts, domain, adapters, assembly, surfaces, tes
 | Crate | Role | Purpose |
 | --- | --- | --- |
 | `aulo-types` | contract | Ids, aulo events, voice state |
+| `llm-router` | contract | One provider per tier; routes a job to that tier's provider (T1.7). Depends on `llm-wire`; no I/O |
 | `aulo-proto` | contract | gRPC protos and generated code (tonic, prost) |
 | `aulo-speech` | contract | `SttEngine`, `TtsEngine`, `Vad`, `KeywordSpotter`, `TurnDetector` traits |
 | `aulo-config` | adapter (config owner) | Typed config, JSON Schema, layers, provenance |

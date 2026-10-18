@@ -1,6 +1,26 @@
 [tools]
+"cargo:https://github.com/pyrlyn/tools" = "rev:90448075a5ff0f2fe3ae69579ed333b18dcfcd51" # `mise run sweep`, `just cache`, `just swarfr` (ptools)
+"cargo:cargo-sweep" = "0.8.0" # `mise run sweep`: drops build artifacts unused for 1 day (ptools sweep)
+mold = { version = "2.42.1", os = ["linux"] } # linker, Linux only; mise [env] below turns it on where it is installed
 rust = { version = "1.99.0", components = "rustfmt,clippy" }
 just = "1.58.0"
 "github:jdx/jactionlint" = "2.0.2" # the pre-push hook and local `mise x -- jactionlint`
 hk = "2.5.0" # runs jactionlint as a pre-push hook (hk.pkl); `mise x -- hk install --mise`
 shellcheck = "0.11.0" # used by jactionlint for run: scripts; CI uses the runner image's copy
+
+[env]
+# mold as the Linux linker only where mise has installed it (clang is the driver): without mold
+# the variable is empty and the default linker stays, so a Linux machine without mold or clang
+# still builds. Not in .cargo/config.toml: a missing mold there would break every Linux build.
+# Cargo takes these only when RUSTFLAGS is unset. macOS keeps Apple ld; Windows uses rust-lld
+# through .cargo/config.toml. The probe variable stops `mise which` from recursing.
+CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS = "{% if os() == 'linux' and get_env(name='MISE_MOLD_PROBE', default='') == '' %}{{ exec(command='MISE_MOLD_PROBE=1 \"' ~ mise_bin ~ '\" which mold >/dev/null 2>&1 && echo \"-C linker=clang -C link-arg=-fuse-ld=mold\" || true') }}{% endif %}"
+CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUSTFLAGS = "{% if os() == 'linux' and get_env(name='MISE_MOLD_PROBE', default='') == '' %}{{ exec(command='MISE_MOLD_PROBE=1 \"' ~ mise_bin ~ '\" which mold >/dev/null 2>&1 && echo \"-C linker=clang -C link-arg=-fuse-ld=mold\" || true') }}{% endif %}"
+
+[tasks.sweep]
+description = "Remove cargo build artifacts unused for 1 day (cargo-sweep, via ptools)"
+run = "ptools sweep --days 1"
+
+[tasks.sweep-dry]
+description = "Preview what sweep would remove; deletes nothing"
+run = "ptools sweep --days 1 --dry-run"

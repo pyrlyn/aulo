@@ -30,6 +30,8 @@ enum Role {
 /// Spec §4.2, one row per crate.
 const ROLES: &[(&str, Role)] = &[
     ("aulo-types", Role::Contract),
+    // Shared routing table (T1.7). No I/O: it holds providers the caller built.
+    ("llm-router", Role::Contract),
     ("aulo-proto", Role::Contract),
     ("aulo-speech", Role::Contract),
     ("aulo-plugin-sdk", Role::Contract),
@@ -109,6 +111,8 @@ const OWNERS: &[(&[&str], &[&str])] = &[
         &["aulo-speech-sherpa"],
     ),
     (&["whisper-rs", "whisper-rs-sys"], &["aulo-speech-whisper"]),
+    // libopus is a C build, so one crate owns it; the server uses it through aulo-audio.
+    (&["opus", "opusic-sys"], &["aulo-audio"]),
     (&["wasmtime", "extism"], &["aulo-plugin"]),
     (&["chromiumoxide"], &["aulo-browser"]),
     (&["uniffi", "uniffi_bindgen", "uniffi_build"], &["aulo-ffi"]),

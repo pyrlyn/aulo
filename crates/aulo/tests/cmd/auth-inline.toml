@@ -1,0 +1,11 @@
+bin.name = "aulo"
+args = ["auth", "ls"]
+status.code = 1
+fs.cwd = "inline-key.in"
+fs.sandbox = true
+env.add.AULO_HOME = "."
+env.add.AULO_KEYCHAIN = "off"
+stdout = ""
+stderr = """
+Error: invalid config in [..]/config.toml: the secret at `providers.endpoints.openai.api_key` is rejected; set it with `aulo auth set` or an environment variable, not in configuration
+"""

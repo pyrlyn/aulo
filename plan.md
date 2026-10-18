@@ -14,7 +14,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.4 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.5 | in progress | P0 | 2 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.6 | todo | P0 | 3 | 0% | |
-| T1.7 | todo | P1 | 3 | 0% | |
 | T1.8 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.9 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.10 | in progress | P0 | 2 | 60% | Claude Code / claude-sonnet-5-5 |
@@ -31,7 +30,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T2.3 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T3.7 | todo | P0 | 3 | 0% | |
 | T4.1 | todo | P0 | 3 | 0% | |
-| T4.2 | todo | P0 | 2 | 0% | |
+| T4.2 | done | P0 | 2 | 100% | |
 | T4.3 | todo | P1 | 2 | 0% | |
 | T4.4 | todo | P0 | 3 | 0% | |
 | T4.5 | todo | P1 | 3 | 0% | |
@@ -235,16 +234,6 @@ Done when:
 
 - cox CI green with no duplicated provider code left
 
-### T1.7. llm-router: one provider per tier
-
-Stage: S1 · Area: shared · Depends on: T1.6 · Blocks: 1 task(s)
-
-cox-session builds one provider per session from tiers.code.provider. Add packages/crates/llm-router that builds a provider per tier and routes jobs to tiers, so the voice front, the main agent and the sentinel can use different providers. cox adopts it.
-
-Done when:
-
-- a test routes two tiers to two different providers
-
 ### T1.8. Extract perm-rules: permission rule engine
 
 Stage: S1 · Area: shared · Depends on: T0.1 · Blocks: 1 task(s)
@@ -447,6 +436,8 @@ aulo auth set/rm/ls <provider>: keys go to the keychain (keyring), env vars win,
 Done when:
 
 - test: config with an inline key fails with the file name
+
+Outcome: `aulo-config` rejects a secret-named key (`api_key`, `password`, `*_api_key`) in a config file, in an `AULO_*` configuration variable and in caller overrides, and the error names the file or variable without the value. `aulo auth set/rm/ls` stores keys in the OS keychain through `keychain-secret` (env wins: `AULO_<ID>_API_KEY`, then the provider's conventional variable). `ConfigService.SetProviderKey` writes the same store and `GetConfig` / `ListProviders` never return the value. `AULO_KEYCHAIN=off` disables the keychain.
 
 ### T4.3. Local server presets and auto-detection
 
@@ -1758,4 +1749,3 @@ Findings from a code audit on 2026-10-07. Verified-clean areas worth noting: str
 ### T16.6. Unwired store/grants surface
 
 `Store::list_chats` (`aulo-store/src/lib.rs:142-149`) plus `create_bot`/`append_message`/`record_tool_call`/`record_usage` and the whole grants/audit surface (`safety.rs:13-107`) have zero non-test callers — the daemon never opens the database (`crates/aulo/src/daemon/serve.rs` mounts no service). Expected before T4/T5 land, but until then this code runs only under test. Done means: an integration test drives the store and one grant through `aulod` (or the surface is explicitly gated).
-

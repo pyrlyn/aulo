@@ -1,0 +1,5 @@
+[providers.endpoints.local]
+kind = "ollama"
+
+[providers.endpoints.openai]
+kind = "openai"

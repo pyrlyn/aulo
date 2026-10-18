@@ -10,9 +10,32 @@ pub fn schema_json() -> Result<String, serde_json::Error> {
     let settings = SchemaSettings::draft2020_12()
         .with_transform(RecursiveTransform(drop_null as fn(&mut Schema)));
     let schema = settings.into_generator().into_root_schema_for::<Config>();
-    let mut json = serde_json::to_string_pretty(&schema)?;
+    stable_pretty(&schema)
+}
+
+/// Pretty-print with object keys sorted. `llm-wire` enables `serde_json`'s
+/// `preserve_order` for the whole workspace, which would otherwise rewrite
+/// this committed file whenever that crate is in the build.
+fn stable_pretty(value: &impl serde::Serialize) -> Result<String, serde_json::Error> {
+    let mut json = serde_json::to_string_pretty(&sorted(serde_json::to_value(value)?))?;
     json.push('\n');
     Ok(json)
+}
+
+fn sorted(value: Value) -> Value {
+    match value {
+        Value::Array(items) => Value::Array(items.into_iter().map(sorted).collect()),
+        Value::Object(map) => {
+            let mut entries: Vec<_> = map.into_iter().collect();
+            entries.sort_by(|(left, _), (right, _)| left.cmp(right));
+            let mut sorted_map = serde_json::Map::new();
+            for (key, child) in entries {
+                sorted_map.insert(key, sorted(child));
+            }
+            Value::Object(sorted_map)
+        }
+        other => other,
+    }
 }
 
 /// TOML has no null: an absent key is how a file says `None`, so `Option<T>`
