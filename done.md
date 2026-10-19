@@ -563,3 +563,9 @@ The auth-ls fixture expects no credentials but inherits OPENAI_API_KEY, making t
 Execution plan: reproduce with a synthetic inherited API key using a subprocess regression in crates/aulo/tests/cli.rs; disable environment inheritance for the isolated auth-ls fixture using trycmd configuration; run the CLI tests with fake credentials, then workspace tests, lint and formatting. Reuse trycmd environment controls instead of adding a custom environment filter.
 
 Validation: the subprocess regression failed before isolation with a synthetic OPENAI_API_KEY. All workspace cargo tests and clippy --workspace --all-targets -- -D warnings pass after the fix, as does cargo fmt --check. The existing trycmd env.inherit option isolates the no-credentials fixture without changing production credential resolution.
+
+### T16.6. Unwired store/grants surface
+
+`aulod` never opened `~/.aulo/aulo.db`, so chat, grant and audit methods ran only under test.
+
+Outcome: the daemon opens `{home}/aulo.db` and mounts `ChatService` and `ApprovalService` list/revoke on one connection. `crates/aulo/tests/persist.rs` starts `aulod`, reads one grant from that file, creates and lists a chat, and revokes the grant over the local socket. `Decide` answers not-found and does not insert a row. Message, tool-call, usage and audit writes stay on the store for T4.8 and T5.9; `create_bot` stays for T14.1.
