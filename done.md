@@ -1,5 +1,17 @@
 # aulo — done
 
+### T9.20. Isolated agent session (separate OS user or VM)
+
+Stage: S9 · Area: control · Depends on: T9.18 · Blocks: 0 task(s)
+
+Research and prototype running GUI work in a separate OS user session (macOS second user with screen sharing, Windows agent workspace) or a VM, like the Grok Bot and Muse agent computers.
+
+Done when:
+
+- docs/spikes/isolation.md with a working prototype or a no-go
+
+Outcome: `scripts/isolation-spike.py` creates a temporary user and a private Xvfb, checks the other user is denied the home file and the display socket, and deletes the user. A VM is a no-go on this host (no QEMU or container runtime, `/dev/kvm` not group-accessible). Recorded in `docs/spikes/isolation.md`.
+
 ### T1.7. llm-router: one provider per tier
 
 Stage: S1 · Area: shared · Depends on: T1.6 · Blocks: 1 task(s)

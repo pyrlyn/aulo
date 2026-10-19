@@ -99,7 +99,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T9.17 | todo | P1 | 2 | 0% | |
 | T9.18 | todo | P1 | 2 | 0% | |
 | T9.19 | todo | P2 | 1 | 0% | |
-| T9.20 | todo | P3 | 5 | 0% | |
+| T9.20 | done | P3 | 5 | 100% | |
 | T10.1 | todo | P0 | 3 | 0% | |
 | T10.2 | todo | P1 | 2 | 0% | |
 | T10.3 | todo | P2 | 3 | 0% | |
@@ -1162,6 +1162,8 @@ Research and prototype running GUI work in a separate OS user session (macOS sec
 Done when:
 
 - docs/spikes/isolation.md with a working prototype or a no-go
+
+Outcome: `docs/spikes/isolation.md` and `scripts/isolation-spike.py`. On this Linux host a temporary user with a mode-0700 home and a private Xvfb cannot be read or connected to by the calling user, and the isolated user can open the display. The probe deletes the user. A VM was not started: QEMU, Docker and Podman are absent, and `/dev/kvm` is not usable by the unprivileged user. macOS and Windows were not probed. The desktop stays the default; the container in T13.5 is the isolation to build.
 
 ## S10. MCP
 
