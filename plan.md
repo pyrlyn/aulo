@@ -28,7 +28,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.19 | in progress | P1 | 3 | 80% | Claude Code / claude-sonnet-5-5 |
 | T1.20 | in progress | P2 | 3 | 80% | Claude Code / claude-sonnet-5-5 |
 | T2.3 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
-| T3.7 | todo | P0 | 3 | 0% | |
+| T3.7 | done | P0 | 3 | 100% | |
 | T4.1 | todo | P0 | 3 | 0% | |
 | T4.2 | done | P0 | 2 | 100% | |
 | T4.3 | todo | P1 | 2 | 0% | |
@@ -414,6 +414,8 @@ aulo chat (rustyline REPL over Converse), aulo chats ls/rm, aulo status. Renders
 Done when:
 
 - trycmd fixtures against a test daemon with a scripted provider
+
+Outcome: `aulo status`, `aulo chats ls`, `aulo chats rm` and `aulo chat` talk to the local daemon through `aulo-server` (the CLI does not depend on tonic). `aulod` always mounts `ChatService`. `aulod --scripted` (hidden) also mounts `SessionService.Converse` on llm-wire's scenario provider; tool calls are rendered and not executed. The real agent session stays T4.8, so a daemon without `--scripted` answers chat with "this aulod has no conversation service". Trycmd fixtures cover status, an empty list, a text turn, a tool call and a bad id against that daemon; a pipe-mode test sends SIGINT and checks the turn ends with `interrupted`. Model and tool text is stripped of terminal and bidi controls and capped (user text over 64 KiB is rejected; a turn keeps 64 KiB).
 
 ## S4. Models, providers and agent loop
 

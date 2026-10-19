@@ -1,0 +1,7 @@
+bin.name = "aulo"
+args = ["chat"]
+stdin = "hello\n"
+stdout = """
+hello from the scripted provider
+"""
+stderr = ""

@@ -1,0 +1,6 @@
+bin.name = "aulo"
+args = ["chats", "ls"]
+stdout = """
+no chats
+"""
+stderr = ""

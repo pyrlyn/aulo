@@ -1,0 +1,7 @@
+bin.name = "aulo"
+args = ["chats", "rm", "not-an-id"]
+status.code = 1
+stdout = ""
+stderr = """
+Error: chat_id is not a valid ULID
+"""

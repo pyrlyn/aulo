@@ -1,5 +1,17 @@
 # aulo — done
 
+### T3.7. aulo CLI: text chat client
+
+Stage: S3 · Area: api · Depends on: T3.5, T3.6, T4.8 · Blocks: 2 task(s)
+
+aulo chat (rustyline REPL over Converse), aulo chats ls/rm, aulo status. Renders streamed text and tool calls; Ctrl-C sends Interrupt.
+
+Done when:
+
+- trycmd fixtures against a test daemon with a scripted provider
+
+Outcome: `aulo status`, `aulo chats ls`, `aulo chats rm` and `aulo chat` talk to the local daemon through `aulo-server`, so the CLI does not depend on tonic. `aulod` always mounts `ChatService`. `aulod --scripted` (hidden) also mounts `SessionService.Converse` on llm-wire's scenario provider; tool calls are events to render and nothing runs a process. The real agent session stays T4.8: a daemon without `--scripted` answers `aulo chat` with "this aulod has no conversation service". Trycmd fixtures cover status, an empty list, a text turn, a tool call and a bad id against that test daemon. A pipe-mode test sends SIGINT during a held turn and checks the reply ends with `interrupted`. Text from the model or a tool is stripped of terminal and bidi controls and capped: user text over 64 KiB is rejected, one delta stays within 16 KiB, and a turn keeps at most 64 KiB. Decisions: one `Converse` stream per turn, because the server reads `Attach` before it returns the stream and a request timeout would otherwise cut a long REPL; Ctrl-C at the prompt leaves without an Interrupt, and a second Ctrl-C during a turn quits.
+
 ### T1.7. llm-router: one provider per tier
 
 Stage: S1 · Area: shared · Depends on: T1.6 · Blocks: 1 task(s)
