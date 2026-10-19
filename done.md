@@ -563,3 +563,15 @@ The auth-ls fixture expects no credentials but inherits OPENAI_API_KEY, making t
 Execution plan: reproduce with a synthetic inherited API key using a subprocess regression in crates/aulo/tests/cli.rs; disable environment inheritance for the isolated auth-ls fixture using trycmd configuration; run the CLI tests with fake credentials, then workspace tests, lint and formatting. Reuse trycmd environment controls instead of adding a custom environment filter.
 
 Validation: the subprocess regression failed before isolation with a synthetic OPENAI_API_KEY. All workspace cargo tests and clippy --workspace --all-targets -- -D warnings pass after the fix, as does cargo fmt --check. The existing trycmd env.inherit option isolates the no-credentials fixture without changing production credential resolution.
+
+### T5.13. Threat model
+
+Stage: S5 · Area: safety · Depends on: T5.1 · Blocks: 0 task(s)
+
+docs/threat-model.md: trust boundaries (model, tools, MCP servers, plugins, web content, remote clients), STRIDE per boundary, and the guard that covers each threat.
+
+Done when:
+
+- every guard in the doc points to a test or task
+
+Outcome: `docs/threat-model.md` lists the assets, the trusted computing base, and one STRIDE table per boundary: remote client, local socket and pipe, model, tools, MCP, plugins, web pages and screenshots, speech and downloads, config and the audit log. The spec §7 pipeline is a table whose steps cite T5.1 through T5.12. A guard cell is either `test:` with a crate path and a function that exists in the tree, or `task:` with a plan id. The document states that T5.1 is not implemented and that a process already running as the daemon user is inside the trust boundary.
