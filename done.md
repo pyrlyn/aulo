@@ -563,3 +563,15 @@ The auth-ls fixture expects no credentials but inherits OPENAI_API_KEY, making t
 Execution plan: reproduce with a synthetic inherited API key using a subprocess regression in crates/aulo/tests/cli.rs; disable environment inheritance for the isolated auth-ls fixture using trycmd configuration; run the CLI tests with fake credentials, then workspace tests, lint and formatting. Reuse trycmd environment controls instead of adding a custom environment filter.
 
 Validation: the subprocess regression failed before isolation with a synthetic OPENAI_API_KEY. All workspace cargo tests and clippy --workspace --all-targets -- -D warnings pass after the fix, as does cargo fmt --check. The existing trycmd env.inherit option isolates the no-credentials fixture without changing production credential resolution.
+
+### T4.9. Scripted-provider test harness
+
+Stage: S4 · Area: agent · Depends on: T4.6 · Blocks: 1 task(s)
+
+aulo-testkit: scripted provider (from llm-wire test-util), test daemon on a temp home, helpers to drive Converse.
+
+Done when:
+
+- used by T4.6 and T4.8 tests
+
+Outcome: `aulo-testkit` exports `Scripted` (an `llm-wire` `Provider` over `test-util` scenarios), `TestDaemon` (config, SQLite chat store and the local socket under a temporary home) and `ConverseSession` / `drive` (`Attach`, `UserTurn`, `SwitchModel`, `Interrupt`). T4.6 and T4.8 are not in the tree yet, so the crate's own test is the caller: it mounts a stand-in `SessionService` on the daemon and checks that a user turn comes back as the scripted text. A `title` job does not consume an unpinned turn. The testkit depends on `aulo-server`, not on the `aulo` surface binary.
