@@ -498,6 +498,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "aulo-screen"
+version = "0.0.0"
+dependencies = [
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "aulo-server"
 version = "0.0.0"
 dependencies = [
