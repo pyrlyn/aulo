@@ -1,5 +1,17 @@
 # aulo — done
 
+### T5.7. Unattended mode is read-only
+
+Stage: S5 · Area: safety · Depends on: T5.3 · Blocks: 1 task(s)
+
+When no client is attached or the run is a routine, write/exec/input tools are denied or queued for approval; reads still work.
+
+Done when:
+
+- test: routine run cannot write a file
+
+Outcome: `crates/aulo-unattended` denies writes, exec and input for a routine or a detached client. A routine `write_file` leaves the path absent. An attached interactive run can write, and a routine can read that file. Queuing the denial for approval is T5.3.
+
 ### T1.7. llm-router: one provider per tier
 
 Stage: S1 · Area: shared · Depends on: T1.6 · Blocks: 1 task(s)
