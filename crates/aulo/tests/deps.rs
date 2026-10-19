@@ -113,6 +113,15 @@ const OWNERS: &[(&[&str], &[&str])] = &[
     (&["whisper-rs", "whisper-rs-sys"], &["aulo-speech-whisper"]),
     // libopus is a C build, so one crate owns it; the server uses it through aulo-audio.
     (&["opus", "opusic-sys"], &["aulo-audio"]),
+    // WebRTC AEC3 is a C++ build (and pulls abseil). One crate owns it.
+    (
+        &[
+            "webrtc-audio-processing",
+            "webrtc-audio-processing-sys",
+            "webrtc-audio-processing-config",
+        ],
+        &["aulo-audio"],
+    ),
     (&["wasmtime", "extism"], &["aulo-plugin"]),
     (&["chromiumoxide"], &["aulo-browser"]),
     (&["uniffi", "uniffi_bindgen", "uniffi_build"], &["aulo-ffi"]),
