@@ -4432,6 +4432,7 @@ dependencies = [
 [[package]]
 name = "speech-capture"
 version = "0.1.0"
+source = "git+https://github.com/pyrlyn/crates?rev=f0deed54f6f8166b31404c2129b59355c45cf044#f0deed54f6f8166b31404c2129b59355c45cf044"
 dependencies = [
  "cpal",
  "ringbuf",
