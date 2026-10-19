@@ -31,7 +31,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T3.7 | todo | P0 | 3 | 0% | |
 | T4.1 | todo | P0 | 3 | 0% | |
 | T4.2 | done | P0 | 2 | 100% | |
-| T4.3 | todo | P1 | 2 | 0% | |
+| T4.3 | done | P1 | 2 | 100% | |
 | T4.4 | todo | P0 | 3 | 0% | |
 | T4.5 | todo | P1 | 3 | 0% | |
 | T4.6 | todo | P0 | 4 | 0% | |
@@ -448,6 +448,8 @@ Presets for runa (127.0.0.1:8080/v1), Ollama (11434), LM Studio (1234, native mo
 Done when:
 
 - wiremock tests detect each server kind
+
+Outcome: `detect_local` probes the loopback presets (runa and llama.cpp share `127.0.0.1:8080/v1`, Ollama is `11434`, LM Studio is `1234`). `GET /v1/models` names runa (`owned_by` `"runa"`), llama.cpp (`"llamacpp"`) and older Ollama (`"ollama"`). Current Ollama copies the model namespace into `owned_by`, so it is recognized from `GET /api/version` plus that list. LM Studio is recognized from the native lists `GET /api/v0/models` and `GET /api/v1/models`, and those rows (with load state) are what is reported. A server that is down or not one of these kinds is skipped. Bodies are capped at 256 KiB, ids at 256 bytes and 256 models; control characters are dropped; redirects are not followed; no API key is sent. The daemon does not call it yet, because nothing on the serve path builds providers.
 
 ### T4.4. Model catalog and per-chat model switching
 

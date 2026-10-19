@@ -147,7 +147,7 @@ rustix = { version = "1.1.5", features = ["process"] }
 subtle = "2.6.1"
 # service_fn connector for the gRPC client over a Unix socket in tests
 tower = "0.5.3"
-# local HTTP fixture server in the aulo-models tests
+# local HTTP fixture server in crate tests (models, speech, realtime, providers)
 wiremock = "0.6.5"
 # structured logs
 tracing = "0.1.44"

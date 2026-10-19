@@ -474,10 +474,14 @@ dependencies = [
  "llm-wire",
  "llm-wire-anthropic",
  "llm-wire-openai",
+ "reqwest 0.13.5",
+ "serde_json",
  "tempfile",
  "thiserror 2.0.21",
+ "tokio",
  "tracing",
  "url",
+ "wiremock",
 ]
 
 [[package]]

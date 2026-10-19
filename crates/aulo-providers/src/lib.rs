@@ -14,13 +14,21 @@
 //! Credentials are not resolved here: every client is built without a key
 //! (T4.2 attaches the keychain and env-var lookup). A missing key is not a
 //! broken section.
+//!
+//! [`detect_local`] probes the loopback presets at startup and lists the
+//! models each running server is serving (T4.3).
 
 mod build;
+mod detect;
 mod preset;
 
 pub use build::{ProviderSet, ProviderWarning, SkipReason, build_providers};
+pub use detect::{
+    DetectedServer, LoadState, MAX_BODY_BYTES, MAX_ID_BYTES, MAX_MODELS, ProbeError, ServerKind,
+    detect_local, probe_client, probe_origin, probe_origins,
+};
 pub use llm_wire::{Provider, ProviderId};
 pub use preset::{
     ANTHROPIC_CONTEXT_TOKENS, DEFAULT_CONTEXT_TOKENS, DEFAULT_MAX_RETRIES, DEFAULT_TIMEOUT_SECS,
-    Wire, default_base_url, wire_for,
+    LOCAL_PROBE_ORIGINS, Wire, default_base_url, wire_for,
 };

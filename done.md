@@ -563,3 +563,15 @@ The auth-ls fixture expects no credentials but inherits OPENAI_API_KEY, making t
 Execution plan: reproduce with a synthetic inherited API key using a subprocess regression in crates/aulo/tests/cli.rs; disable environment inheritance for the isolated auth-ls fixture using trycmd configuration; run the CLI tests with fake credentials, then workspace tests, lint and formatting. Reuse trycmd environment controls instead of adding a custom environment filter.
 
 Validation: the subprocess regression failed before isolation with a synthetic OPENAI_API_KEY. All workspace cargo tests and clippy --workspace --all-targets -- -D warnings pass after the fix, as does cargo fmt --check. The existing trycmd env.inherit option isolates the no-credentials fixture without changing production credential resolution.
+
+### T4.3. Local server presets and auto-detection
+
+Stage: S4 · Area: providers · Depends on: T4.1 · Blocks: 0 task(s)
+
+Presets for runa (127.0.0.1:8080/v1), Ollama (11434), LM Studio (1234, native model list). Probe /v1/models at start and list what is served.
+
+Done when:
+
+- wiremock tests detect each server kind
+
+Outcome: `detect_local` probes the loopback presets (runa and llama.cpp share `127.0.0.1:8080/v1`, Ollama is `11434`, LM Studio is `1234`). `GET /v1/models` names runa (`owned_by` `"runa"`), llama.cpp (`"llamacpp"`) and older Ollama (`"ollama"`). Current Ollama copies the model namespace into `owned_by`, so it is recognized from `GET /api/version` plus that list. LM Studio is recognized from the native lists `GET /api/v0/models` and `GET /api/v1/models`, and those rows (with load state) are what is reported. A server that is down or not one of these kinds is skipped. Bodies are capped at 256 KiB, ids at 256 bytes and 256 models; control characters are dropped; redirects are not followed; no API key is sent. The daemon does not call it yet, because nothing on the serve path builds providers. Check: `cargo test -p aulo-providers` — 24 passed; `cargo clippy -p aulo-providers --all-targets -- -D warnings` clean.
