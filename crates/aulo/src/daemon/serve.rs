@@ -52,8 +52,13 @@ pub async fn serve(config: &Config, home: &Path) -> Result<()> {
     }
     // Provider keys are write-only on this service. The store is the OS
     // keychain unless AULO_KEYCHAIN is off; constructing it does not prompt.
-    server =
-        server.add_service(ConfigApi::new(config.clone(), Arc::from(system_store())).service());
+    // The model probe runs before the listeners accept clients, so the first
+    // ListModels already carries the served overlay. A down local server
+    // only drops that overlay.
+    let config_api = ConfigApi::new(config.clone(), Arc::from(system_store()))
+        .probe_local_models()
+        .await;
+    server = server.add_service(config_api.service());
     server.serve(listeners, shutdown).await?;
     tracing::info!("aulod stopped");
     Ok(())

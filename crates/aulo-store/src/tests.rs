@@ -64,6 +64,15 @@ fn chat_crud() {
     assert_eq!(s.get_chat(&chat.id).unwrap(), Some(chat.clone()));
     assert_eq!(s.get_chat("missing").unwrap(), None);
 
+    assert!(
+        s.set_chat_model(&chat.id, "anthropic/claude-sonnet-5")
+            .unwrap()
+    );
+    assert!(!s.set_chat_model("missing", "openai/gpt-5.5").unwrap());
+    let switched = s.get_chat(&chat.id).unwrap().unwrap();
+    assert_eq!(switched.model, "anthropic/claude-sonnet-5");
+    assert!(switched.updated_at >= chat.updated_at);
+
     assert!(s.rename_chat(&chat.id, "renamed").unwrap());
     assert!(!s.rename_chat("missing", "x").unwrap());
     assert_eq!(s.get_chat(&chat.id).unwrap().unwrap().title, "renamed");
