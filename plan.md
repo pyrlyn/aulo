@@ -157,7 +157,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T15.4 | todo | P1 | 2 | 0% | |
 | T15.5 | in progress | P1 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T16.5 | done | P2 | 3 | 100% | |
-| T16.6 | todo | P3 | 2 | 0% | |
+| T16.6 | done | P3 | 2 | 100% | |
 
 ## S0. Decisions and spikes
 
@@ -1753,3 +1753,5 @@ Outcome: the accept path reads `GetNamedPipeClientProcessId` and the client proc
 ### T16.6. Unwired store/grants surface
 
 `Store::list_chats` (`aulo-store/src/lib.rs:142-149`) plus `create_bot`/`append_message`/`record_tool_call`/`record_usage` and the whole grants/audit surface (`safety.rs:13-107`) have zero non-test callers — the daemon never opens the database (`crates/aulo/src/daemon/serve.rs` mounts no service). Expected before T4/T5 land, but until then this code runs only under test. Done means: an integration test drives the store and one grant through `aulod` (or the surface is explicitly gated).
+
+Outcome: `aulod` opens `{home}/aulo.db` and mounts `ChatService` plus the list/revoke half of `ApprovalService` on that connection. `crates/aulo/tests/persist.rs` starts the binary, lists a grant seeded in that file, creates and lists a chat, and revokes the grant over the local socket. `Decide` returns not-found and does not insert a grant; message, tool, usage and audit writes stay library entry points for T4.8 and T5.9.

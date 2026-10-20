@@ -583,3 +583,9 @@ Outcome: `docs/threat-model.md` lists the assets, the trusted computing base, an
 Fix: when a pipe instance connects, `GetNamedPipeClientProcessId` names the client process and that process's token user SID is compared with the daemon's. `LocalOwner` is granted only when they match and a second read still reports the same process id. A missing pid, an unreadable token, a different account, or a changed process id is refused with `authentication required`. `reject_remote_clients` and the pipe DACL stay as a second fence.
 
 Check: `cargo test -p aulo-server auth` covers the SID comparison, the reused-pid refusal, and a request with no connect info. The Win32 probe and a health check over a real pipe run on the Windows CI runner.
+
+### T16.6. Unwired store/grants surface
+
+`aulod` never opened `~/.aulo/aulo.db`, so chat, grant and audit methods ran only under test.
+
+Outcome: the daemon opens `{home}/aulo.db` and mounts `ChatService` and `ApprovalService` list/revoke on one connection. `crates/aulo/tests/persist.rs` starts `aulod`, reads one grant from that file, creates and lists a chat, and revokes the grant over the local socket. `Decide` answers not-found and does not insert a row. Message, tool-call, usage and audit writes stay on the store for T4.8 and T5.9; `create_bot` stays for T14.1.
