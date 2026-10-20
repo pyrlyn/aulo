@@ -54,6 +54,9 @@ pub async fn serve(config: &Config, home: &Path) -> Result<()> {
     // keychain unless AULO_KEYCHAIN is off; constructing it does not prompt.
     server =
         server.add_service(ConfigApi::new(config.clone(), Arc::from(system_store())).service());
+    // Chat rows and grant list/revoke. Inserting a grant stays with policy
+    // (T5.3); message, tool and usage writes stay with the agent (T4.8).
+    server = aulo_server::mount_database(server, home).context("cannot open the database")?;
     server.serve(listeners, shutdown).await?;
     tracing::info!("aulod stopped");
     Ok(())

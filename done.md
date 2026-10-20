@@ -564,6 +564,18 @@ Execution plan: reproduce with a synthetic inherited API key using a subprocess 
 
 Validation: the subprocess regression failed before isolation with a synthetic OPENAI_API_KEY. All workspace cargo tests and clippy --workspace --all-targets -- -D warnings pass after the fix, as does cargo fmt --check. The existing trycmd env.inherit option isolates the no-credentials fixture without changing production credential resolution.
 
+### T5.13. Threat model
+
+Stage: S5 · Area: safety · Depends on: T5.1 · Blocks: 0 task(s)
+
+docs/threat-model.md: trust boundaries (model, tools, MCP servers, plugins, web content, remote clients), STRIDE per boundary, and the guard that covers each threat.
+
+Done when:
+
+- every guard in the doc points to a test or task
+
+Outcome: `docs/threat-model.md` lists the assets, the trusted computing base, and one STRIDE table per boundary: remote client, local socket and pipe, model, tools, MCP, plugins, web pages and screenshots, speech and downloads, config and the audit log. The spec §7 pipeline is a table whose steps cite T5.1 through T5.12. A guard cell is either `test:` with a crate path and a function that exists in the tree, or `task:` with a plan id. The document states that T5.1 is not implemented and that a process already running as the daemon user is inside the trust boundary.
+
 ### T16.5. Windows named pipe admits any writing client as `LocalOwner`
 
 `local_pipe` inserted `Caller::LocalOwner` for every named-pipe request. The default DACL also lets Administrators and SYSTEM write, which is weaker than the Unix `SO_PEERCRED` uid check and weaker than the module's fail-closed claim. Found by the 2026-10-07 audit.
@@ -583,3 +595,8 @@ Done when:
 - wiremock tests detect each server kind
 
 Outcome: `detect_local` probes the loopback presets (runa and llama.cpp share `127.0.0.1:8080/v1`, Ollama is `11434`, LM Studio is `1234`). `GET /v1/models` names runa (`owned_by` `"runa"`), llama.cpp (`"llamacpp"`) and older Ollama (`"ollama"`). Current Ollama copies the model namespace into `owned_by`, so it is recognized from `GET /api/version` plus that list. LM Studio is recognized from the native lists `GET /api/v0/models` and `GET /api/v1/models`, and those rows (with load state) are what is reported. A server that is down or not one of these kinds is skipped. Bodies are capped at 256 KiB, ids at 256 bytes and 256 models; control characters are dropped; redirects are not followed; no API key is sent. The daemon does not call it yet, because nothing on the serve path builds providers. Check: `cargo test -p aulo-providers` — 24 passed; `cargo clippy -p aulo-providers --all-targets -- -D warnings` clean.
+### T16.6. Unwired store/grants surface
+
+`aulod` never opened `~/.aulo/aulo.db`, so chat, grant and audit methods ran only under test.
+
+Outcome: the daemon opens `{home}/aulo.db` and mounts `ChatService` and `ApprovalService` list/revoke on one connection. `crates/aulo/tests/persist.rs` starts `aulod`, reads one grant from that file, creates and lists a chat, and revokes the grant over the local socket. `Decide` answers not-found and does not insert a row. Message, tool-call, usage and audit writes stay on the store for T4.8 and T5.9; `create_bot` stays for T14.1.

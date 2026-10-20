@@ -43,7 +43,6 @@
 - T5.10. Secrets vault the model cannot read
 - T5.11. Human takeover
 - T5.12. Untrusted-content guards
-- T5.13. Threat model
 - T6.1. aulo-audio: capture
 - T6.2. aulo-audio: playback
 - T6.3. Device list, selection and hot-plug
@@ -146,4 +145,3 @@
 - T15.3. Windows app and Linux packages
 - T15.4. User guide
 - T15.5. API reference
-- T16.6. Unwired store/grants surface
