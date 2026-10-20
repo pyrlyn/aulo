@@ -137,3 +137,42 @@ async fn unix_socket_from_the_owner_is_accepted_without_a_token() {
     shutdown.cancel();
     task.await.unwrap().unwrap();
 }
+
+#[cfg(windows)]
+#[tokio::test]
+async fn named_pipe_from_the_owner_is_accepted_without_a_token() {
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    use hyper_util::rt::TokioIo;
+    use tokio::net::windows::named_pipe::ClientOptions;
+    use tower::service_fn;
+
+    static N: AtomicU64 = AtomicU64::new(0);
+    let name = format!(
+        r"\\.\pipe\aulo-auth-{}-{}",
+        std::process::id(),
+        N.fetch_add(1, Ordering::Relaxed)
+    );
+    let bound = bind(&Listen::NamedPipe(name.clone())).await.unwrap();
+    let shutdown = CancellationToken::new();
+    // A token installed for TCP must not be demanded on the named pipe.
+    let server = ApiServer::new(Limits::default())
+        .unwrap()
+        .with_token(&token());
+    let task = tokio::spawn(server.serve(vec![bound], shutdown.clone()));
+    let channel = Endpoint::from_static("http://[::]:50051")
+        .connect_with_connector(service_fn(move |_| {
+            let name = name.clone();
+            async move {
+                let client = tokio::task::spawn_blocking(move || ClientOptions::new().open(name))
+                    .await
+                    .map_err(std::io::Error::other)??;
+                Ok::<_, std::io::Error>(TokioIo::new(client))
+            }
+        }))
+        .await
+        .unwrap();
+    check(channel, None).await.unwrap();
+    shutdown.cancel();
+    task.await.unwrap().unwrap();
+}
