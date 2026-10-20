@@ -184,6 +184,17 @@ impl Store {
     }
 
     /// Returns `false` when no chat has that id.
+    ///
+    /// The next provider request for this chat is built from the stored
+    /// string (`provider/model`), so a switch here is what that request uses.
+    pub fn set_chat_model(&mut self, id: &str, model: &str) -> Result<bool, StoreError> {
+        let n = diesel::update(chats::table.find(id))
+            .set((chats::model.eq(model), chats::updated_at.eq(now_ms())))
+            .execute(&mut self.conn)?;
+        Ok(n > 0)
+    }
+
+    /// Returns `false` when no chat has that id.
     pub fn rename_chat(&mut self, id: &str, title: &str) -> Result<bool, StoreError> {
         let n = diesel::update(chats::table.find(id))
             .set((chats::title.eq(title), chats::updated_at.eq(now_ms())))
