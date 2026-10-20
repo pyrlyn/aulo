@@ -10,11 +10,14 @@ publish.workspace = true
 
 [dependencies]
 aulo-config = { path = "../aulo-config" }
+futures-util.workspace = true
+llm-catalog.workspace = true
 llm-http.workspace = true
 llm-wire.workspace = true
 llm-wire-anthropic.workspace = true
 llm-wire-openai.workspace = true
 reqwest.workspace = true
+serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
@@ -23,7 +26,7 @@ url.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true
-tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread"] }
 wiremock.workspace = true
 
 [lints]

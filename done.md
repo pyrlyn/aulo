@@ -584,6 +584,18 @@ Fix: when a pipe instance connects, `GetNamedPipeClientProcessId` names the clie
 
 Check: `cargo test -p aulo-server auth` covers the SID comparison, the reused-pid refusal, and a request with no connect info. The Win32 probe and a health check over a real pipe run on the Windows CI runner.
 
+### T4.4. Model catalog and per-chat model switching
+
+Stage: S4 · Area: providers · Depends on: T4.1, T1.5, T3.5 · Blocks: 3 task(s)
+
+ConfigService lists providers and models (catalog plus served overlay). A chat stores its provider/model; SwitchModel works mid-chat.
+
+Done when:
+
+- test switches model between turns and the next request uses it
+
+Outcome: `llm-catalog` (same `pyrlyn/crates` pin as `llm-wire`) supplies the built-in rows. `ModelCatalog::list` puts each row under a configured endpoint by id prefix (`claude-*` Anthropic, `gpt-*` OpenAI, a slash id on both OpenRouter and xAI), adds models a tier names, then overlays ids from `probe_served`. That probe is `GET {base}/v1/models` on local kinds (and on `openai-compatible` only when the base is loopback); hosted kinds are not probed. Bodies are capped at 256 KiB, ids at 128 bytes, redirects are not followed, and a failed probe is an empty list. `Store::set_chat_model` writes `provider/model`. `prepare_turn` splits on the first slash and builds the `llm-wire` request the next call sends (tier Code, job Main, 4096 output tokens until T4.6). `ConfigApi` probes local models before it accepts connections. The acceptance test stores `openai/gpt-5.5`, records the request, switches to `anthropic/claude-sonnet-5`, and checks the second request. The Converse bidi stream remains T4.8; server-kind detection remains T4.3.
+
 ### T4.3. Local server presets and auto-detection
 
 Stage: S4 · Area: providers · Depends on: T4.1 · Blocks: 0 task(s)
