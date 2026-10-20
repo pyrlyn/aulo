@@ -166,7 +166,7 @@ async fn named_pipe_from_the_owner_is_accepted_without_a_token() {
             async move {
                 let client = tokio::task::spawn_blocking(move || ClientOptions::new().open(name))
                     .await
-                    .map_err(|error| std::io::Error::other(error))??;
+                    .map_err(std::io::Error::other)??;
                 Ok::<_, std::io::Error>(TokioIo::new(client))
             }
         }))
