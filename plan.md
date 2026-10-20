@@ -53,7 +53,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T5.10 | todo | P1 | 4 | 0% | |
 | T5.11 | todo | P1 | 2 | 0% | |
 | T5.12 | todo | P1 | 3 | 0% | |
-| T5.13 | todo | P1 | 2 | 0% | |
+| T5.13 | done | P1 | 2 | 100% | |
 | T6.1 | in progress | P0 | 3 | 90% | Claude Code / claude-sonnet-5-5 |
 | T6.2 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T6.3 | todo | P1 | 2 | 0% | |
@@ -670,6 +670,8 @@ docs/threat-model.md: trust boundaries (model, tools, MCP servers, plugins, web 
 Done when:
 
 - every guard in the doc points to a test or task
+
+Outcome: `docs/threat-model.md` maps spec §7 and the daemon's trust boundaries (remote client, local socket and pipe, model, tools, MCP, plugins, web and screenshots, speech and downloads, config and audit). Every guard cell is `test:` plus a path and function that exists in this tree, or `task:` plus a plan id. T5.1 is cited as the policy gate and is not described as implemented.
 
 ## S6. Audio I/O
 
