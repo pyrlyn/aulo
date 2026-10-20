@@ -525,6 +525,7 @@ dependencies = [
  "tonic-reflection",
  "tower",
  "tracing",
+ "windows",
 ]
 
 [[package]]
