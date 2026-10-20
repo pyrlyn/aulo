@@ -177,7 +177,11 @@ fn grants_put_list_and_revoke() {
 
     assert!(s.revoke_grant(&a.id).unwrap());
     assert!(!s.revoke_grant(&a.id).unwrap());
-    assert_eq!(s.list_grants().unwrap(), vec![b]);
+    assert_eq!(s.list_grants().unwrap(), vec![b.clone()]);
+
+    let c = s.put_grant("app:Notes", "read", "allow", None).unwrap();
+    assert_eq!(s.list_grants_page(Some(&b.id), 1).unwrap(), vec![c.clone()]);
+    assert!(s.list_grants_page(Some(&c.id), 10).unwrap().is_empty());
 }
 
 #[test]

@@ -6,13 +6,13 @@
 //! values, so they go to the log only.
 
 mod convert;
-mod input;
+pub(crate) mod input;
 #[cfg(test)]
 mod tests;
 
 use std::sync::{Arc, Mutex, PoisonError};
 
-use aulo_proto::aulo::v1::chat_service_server::ChatService;
+use aulo_proto::aulo::v1::chat_service_server::{ChatService, ChatServiceServer};
 use aulo_proto::aulo::v1::{
     CreateChatRequest, CreateChatResponse, DeleteChatRequest, DeleteChatResponse, GetChatRequest,
     GetChatResponse, ListChatsRequest, ListChatsResponse, ListMessagesRequest,
@@ -34,6 +34,12 @@ impl ChatApi {
     #[must_use]
     pub fn new(store: Arc<Mutex<Store>>) -> Self {
         Self { store }
+    }
+
+    /// The tonic service `ApiServer::add_service` mounts.
+    #[must_use]
+    pub fn service(self) -> ChatServiceServer<Self> {
+        ChatServiceServer::new(self)
     }
 
     async fn with_store<T, F>(&self, op: &'static str, f: F) -> Result<T, Status>

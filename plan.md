@@ -53,7 +53,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T5.10 | todo | P1 | 4 | 0% | |
 | T5.11 | todo | P1 | 2 | 0% | |
 | T5.12 | done | P1 | 3 | 100% | |
-| T5.13 | todo | P1 | 2 | 0% | |
+| T5.13 | done | P1 | 2 | 100% | |
 | T6.1 | in progress | P0 | 3 | 90% | Claude Code / claude-sonnet-5-5 |
 | T6.2 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T6.3 | todo | P1 | 2 | 0% | |
@@ -156,8 +156,8 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T15.3 | todo | P2 | 3 | 0% | |
 | T15.4 | todo | P1 | 2 | 0% | |
 | T15.5 | in progress | P1 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
-| T16.5 | todo | P2 | 3 | 0% | |
-| T16.6 | todo | P3 | 2 | 0% | |
+| T16.5 | done | P2 | 3 | 100% | |
+| T16.6 | done | P3 | 2 | 100% | |
 
 ## S0. Decisions and spikes
 
@@ -672,6 +672,8 @@ docs/threat-model.md: trust boundaries (model, tools, MCP servers, plugins, web 
 Done when:
 
 - every guard in the doc points to a test or task
+
+Outcome: `docs/threat-model.md` maps spec §7 and the daemon's trust boundaries (remote client, local socket and pipe, model, tools, MCP, plugins, web and screenshots, speech and downloads, config and audit). Every guard cell is `test:` plus a path and function that exists in this tree, or `task:` plus a plan id. T5.1 is cited as the policy gate and is not described as implemented.
 
 ## S6. Audio I/O
 
@@ -1748,6 +1750,10 @@ Findings from a code audit on 2026-10-07. Verified-clean areas worth noting: str
 
 `crates/aulo-server/src/auth.rs:161-174` inserts `Caller::LocalOwner` for any pipe client, relying on the default DACL — weaker than the Unix `SO_PEERCRED` uid check (`auth.rs:136-153`) and than the module's "fails closed" claim. Done means: `GetNamedPipeClientProcessId` (or an equivalent owner check) is verified before `LocalOwner` is granted.
 
+Outcome: the accept path reads `GetNamedPipeClientProcessId` and the client process token, and `LocalOwner` is granted only when that account is the daemon's user. A missing identity, a different account, or a process id that changes during the read is refused with the same unauthenticated status as a Unix peer the kernel did not identify. The decision is tested on every host; the Win32 probe and a real pipe health check run on Windows.
+
 ### T16.6. Unwired store/grants surface
 
 `Store::list_chats` (`aulo-store/src/lib.rs:142-149`) plus `create_bot`/`append_message`/`record_tool_call`/`record_usage` and the whole grants/audit surface (`safety.rs:13-107`) have zero non-test callers — the daemon never opens the database (`crates/aulo/src/daemon/serve.rs` mounts no service). Expected before T4/T5 land, but until then this code runs only under test. Done means: an integration test drives the store and one grant through `aulod` (or the surface is explicitly gated).
+
+Outcome: `aulod` opens `{home}/aulo.db` and mounts `ChatService` plus the list/revoke half of `ApprovalService` on that connection. `crates/aulo/tests/persist.rs` starts the binary, lists a grant seeded in that file, creates and lists a chat, and revokes the grant over the local socket. `Decide` returns not-found and does not insert a grant; message, tool, usage and audit writes stay library entry points for T4.8 and T5.9.
