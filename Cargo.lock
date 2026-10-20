@@ -531,6 +531,7 @@ dependencies = [
  "tower",
  "tracing",
  "ulid",
+ "windows",
 ]
 
 [[package]]

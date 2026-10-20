@@ -35,6 +35,16 @@ ulid.workspace = true
 [target.'cfg(unix)'.dependencies]
 rustix.workspace = true
 
+[target.'cfg(windows)'.dependencies]
+# Named-pipe client process id and process-token SID, so LocalOwner is the
+# daemon's user and not every writer the default DACL allows.
+windows = { workspace = true, features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_System_Pipes",
+    "Win32_System_Threading",
+] }
+
 [dev-dependencies]
 aulo-telemetry = { path = "../aulo-telemetry" }
 hyper-util = { workspace = true, features = ["tokio"] }

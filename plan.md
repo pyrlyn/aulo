@@ -156,7 +156,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T15.3 | todo | P2 | 3 | 0% | |
 | T15.4 | todo | P1 | 2 | 0% | |
 | T15.5 | in progress | P1 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
-| T16.5 | todo | P2 | 3 | 0% | |
+| T16.5 | done | P2 | 3 | 100% | |
 | T16.6 | done | P3 | 2 | 100% | |
 
 ## S0. Decisions and spikes
@@ -1745,6 +1745,8 @@ Findings from a code audit on 2026-10-07. Verified-clean areas worth noting: str
 ### T16.5. Windows named pipe admits any writing client as `LocalOwner`
 
 `crates/aulo-server/src/auth.rs:161-174` inserts `Caller::LocalOwner` for any pipe client, relying on the default DACL — weaker than the Unix `SO_PEERCRED` uid check (`auth.rs:136-153`) and than the module's "fails closed" claim. Done means: `GetNamedPipeClientProcessId` (or an equivalent owner check) is verified before `LocalOwner` is granted.
+
+Outcome: the accept path reads `GetNamedPipeClientProcessId` and the client process token, and `LocalOwner` is granted only when that account is the daemon's user. A missing identity, a different account, or a process id that changes during the read is refused with the same unauthenticated status as a Unix peer the kernel did not identify. The decision is tested on every host; the Win32 probe and a real pipe health check run on Windows.
 
 ### T16.6. Unwired store/grants surface
 

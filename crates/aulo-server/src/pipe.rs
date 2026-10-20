@@ -3,6 +3,10 @@
 //! A pipe has no listener object: each instance serves one client, so a task
 //! keeps one spare instance open and hands connected ones to tonic. tonic only
 //! accepts IO types that implement `Connected`, hence the wrapper.
+//!
+//! The client's account is read when the instance connects and carried as
+//! [`PipeConnectInfo`](crate::auth::PipeConnectInfo). The auth interceptor
+//! grants `LocalOwner` only when that account is the daemon's user.
 
 use std::io;
 use std::pin::Pin;
@@ -61,7 +65,14 @@ pub(crate) fn incoming(
                 tracing::warn!(pipe = %name, error = %e, "named pipe connect failed");
                 continue;
             }
-            if tx.send(Ok(PipeIo(current))).await.is_err() {
+            // Fixed at accept time, so a later request on this connection
+            // cannot present a different identity.
+            let client = crate::auth::pipe_client(&current);
+            let io = PipeIo {
+                io: current,
+                info: crate::auth::PipeConnectInfo { client },
+            };
+            if tx.send(Ok(io)).await.is_err() {
                 break;
             }
         }
@@ -70,12 +81,17 @@ pub(crate) fn incoming(
 }
 
 #[derive(Debug)]
-pub(crate) struct PipeIo(NamedPipeServer);
+pub(crate) struct PipeIo {
+    io: NamedPipeServer,
+    info: crate::auth::PipeConnectInfo,
+}
 
 impl Connected for PipeIo {
-    type ConnectInfo = ();
+    type ConnectInfo = crate::auth::PipeConnectInfo;
 
-    fn connect_info(&self) -> Self::ConnectInfo {}
+    fn connect_info(&self) -> Self::ConnectInfo {
+        self.info
+    }
 }
 
 impl AsyncRead for PipeIo {
@@ -84,7 +100,7 @@ impl AsyncRead for PipeIo {
         cx: &mut Context<'_>,
         buf: &mut ReadBuf<'_>,
     ) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.get_mut().0).poll_read(cx, buf)
+        Pin::new(&mut self.get_mut().io).poll_read(cx, buf)
     }
 }
 
@@ -94,14 +110,14 @@ impl AsyncWrite for PipeIo {
         cx: &mut Context<'_>,
         buf: &[u8],
     ) -> Poll<io::Result<usize>> {
-        Pin::new(&mut self.get_mut().0).poll_write(cx, buf)
+        Pin::new(&mut self.get_mut().io).poll_write(cx, buf)
     }
 
     fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.get_mut().0).poll_flush(cx)
+        Pin::new(&mut self.get_mut().io).poll_flush(cx)
     }
 
     fn poll_shutdown(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.get_mut().0).poll_shutdown(cx)
+        Pin::new(&mut self.get_mut().io).poll_shutdown(cx)
     }
 }
