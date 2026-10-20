@@ -535,6 +535,7 @@ dependencies = [
  "tonic-reflection",
  "tower",
  "tracing",
+ "windows",
 ]
 
 [[package]]
@@ -4432,7 +4433,7 @@ dependencies = [
 [[package]]
 name = "speech-capture"
 version = "0.1.0"
-source = "git+https://github.com/pyrlyn/crates?rev=f0deed54f6f8166b31404c2129b59355c45cf044#f0deed54f6f8166b31404c2129b59355c45cf044"
+source = "git+https://github.com/pyrlyn/crates?rev=552263d2481295f19452fc961e7ec81b87203723#552263d2481295f19452fc961e7ec81b87203723"
 dependencies = [
  "cpal",
  "ringbuf",
