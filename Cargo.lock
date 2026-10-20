@@ -383,13 +383,18 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "aulo-config",
+ "aulo-proto",
  "aulo-server",
  "aulo-speech-bench",
+ "aulo-store",
  "aulo-telemetry",
  "clap",
+ "hyper-util",
  "serde_json",
  "tempfile",
  "tokio",
+ "tonic",
+ "tower",
  "tracing",
  "trycmd",
 ]
@@ -535,6 +540,7 @@ dependencies = [
  "tonic-reflection",
  "tower",
  "tracing",
+ "ulid",
  "windows",
 ]
 
