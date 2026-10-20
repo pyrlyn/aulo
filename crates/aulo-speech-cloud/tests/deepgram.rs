@@ -469,10 +469,16 @@ async fn handshake_failures_map_to_fallback_categories_without_echoing_the_body(
 
 #[tokio::test(flavor = "multi_thread")]
 async fn an_unreachable_server_is_unavailable() {
-    // Port 0 can never be listened on, so the connect fails at once on every platform. A port
-    // freed by dropping a listener could be taken by a parallel test before the connect.
+    // Port 0 is never listened on, so the connect is refused at once. Wait
+    // until that refusal wins, then push: `finish` must still report the
+    // failure when no audio was queued, rather than an empty transcript.
     let mut engine = engine(config("ws://127.0.0.1:0"));
-    let error = utterance(&mut *engine).await.unwrap_err();
+    let turn = TurnId::new();
+    engine.begin(turn, Some("en-US")).unwrap();
+    tokio::time::sleep(Duration::from_millis(200)).await;
+    push_frames(&mut *engine, FRAMES).unwrap();
+    engine.finish().unwrap();
+    let error = collect(&mut *engine, turn).await.unwrap_err();
     assert!(matches!(error, SpeechError::Unavailable(_)), "{error}");
 }
 
