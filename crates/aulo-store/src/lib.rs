@@ -6,6 +6,7 @@ mod safety;
 mod schema;
 mod search;
 
+use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use diesel::connection::SimpleConnection;
@@ -18,6 +19,12 @@ pub use models::{AuditRow, Bot, Chat, Grant, Message, ToolCall, Usage};
 pub use search::{MAX_QUERY_BYTES, SearchHit};
 
 use schema::{bots, chats, messages, tool_calls, usage};
+
+/// SQLite file for one home (`~/.aulo/aulo.db`, spec §14).
+#[must_use]
+pub fn database_path(home: &Path) -> PathBuf {
+    home.join("aulo.db")
+}
 
 /// Migrations are keyed by directory name, so two branches adding one never collide.
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
@@ -90,6 +97,7 @@ impl Store {
         .to_string()
     }
 
+    /// Inserts a bot. `aulod` does not call this; several named bots are T14.1.
     pub fn create_bot(&mut self, name: &str) -> Result<Bot, StoreError> {
         let bot = Bot {
             id: self.next_id(),
@@ -176,6 +184,17 @@ impl Store {
     }
 
     /// Returns `false` when no chat has that id.
+    ///
+    /// The next provider request for this chat is built from the stored
+    /// string (`provider/model`), so a switch here is what that request uses.
+    pub fn set_chat_model(&mut self, id: &str, model: &str) -> Result<bool, StoreError> {
+        let n = diesel::update(chats::table.find(id))
+            .set((chats::model.eq(model), chats::updated_at.eq(now_ms())))
+            .execute(&mut self.conn)?;
+        Ok(n > 0)
+    }
+
+    /// Returns `false` when no chat has that id.
     pub fn rename_chat(&mut self, id: &str, title: &str) -> Result<bool, StoreError> {
         let n = diesel::update(chats::table.find(id))
             .set((chats::title.eq(title), chats::updated_at.eq(now_ms())))
@@ -190,6 +209,9 @@ impl Store {
     }
 
     /// Appends a message and bumps the chat's `updated_at` atomically.
+    ///
+    /// `aulod` does not call this, nor [`Store::record_tool_call`] or
+    /// [`Store::record_usage`]. Those writes belong to the agent (T4.8).
     pub fn append_message(
         &mut self,
         chat_id: &str,
