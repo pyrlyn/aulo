@@ -14,6 +14,7 @@ workspace = true
 [dependencies]
 aulo-config = { path = "../aulo-config" }
 aulo-proto = { path = "../aulo-proto" }
+aulo-providers = { path = "../aulo-providers" }
 aulo-store = { path = "../aulo-store" }
 aulo-types = { path = "../aulo-types" }
 getrandom.workspace = true
@@ -47,8 +48,10 @@ windows = { workspace = true, features = [
 
 [dev-dependencies]
 aulo-telemetry = { path = "../aulo-telemetry" }
+async-trait.workspace = true
 hyper-util = { workspace = true, features = ["tokio"] }
+llm-wire.workspace = true
 tempfile.workspace = true
-tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "sync"] }
 tokio-rustls.workspace = true
 tower = { workspace = true, features = ["util"] }
