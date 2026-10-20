@@ -564,6 +564,14 @@ Execution plan: reproduce with a synthetic inherited API key using a subprocess 
 
 Validation: the subprocess regression failed before isolation with a synthetic OPENAI_API_KEY. All workspace cargo tests and clippy --workspace --all-targets -- -D warnings pass after the fix, as does cargo fmt --check. The existing trycmd env.inherit option isolates the no-credentials fixture without changing production credential resolution.
 
+### T16.5. Windows named pipe admits any writing client as `LocalOwner`
+
+`local_pipe` inserted `Caller::LocalOwner` for every named-pipe request. The default DACL also lets Administrators and SYSTEM write, which is weaker than the Unix `SO_PEERCRED` uid check and weaker than the module's fail-closed claim. Found by the 2026-10-07 audit.
+
+Fix: when a pipe instance connects, `GetNamedPipeClientProcessId` names the client process and that process's token user SID is compared with the daemon's. `LocalOwner` is granted only when they match and a second read still reports the same process id. A missing pid, an unreadable token, a different account, or a changed process id is refused with `authentication required`. `reject_remote_clients` and the pipe DACL stay as a second fence.
+
+Check: `cargo test -p aulo-server auth` covers the SID comparison, the reused-pid refusal, and a request with no connect info. The Win32 probe and a health check over a real pipe run on the Windows CI runner.
+
 ### T4.9. Scripted-provider test harness
 
 Stage: S4 · Area: agent · Depends on: T4.6 · Blocks: 1 task(s)
