@@ -475,14 +475,21 @@ name = "aulo-providers"
 version = "0.0.0"
 dependencies = [
  "aulo-config",
+ "futures-util",
+ "llm-catalog",
  "llm-http",
  "llm-wire",
  "llm-wire-anthropic",
  "llm-wire-openai",
+ "reqwest 0.13.5",
+ "serde",
+ "serde_json",
  "tempfile",
  "thiserror 2.0.21",
+ "tokio",
  "tracing",
  "url",
+ "wiremock",
 ]
 
 [[package]]
@@ -506,14 +513,17 @@ dependencies = [
 name = "aulo-server"
 version = "0.0.0"
 dependencies = [
+ "async-trait",
  "aulo-config",
  "aulo-proto",
+ "aulo-providers",
  "aulo-store",
  "aulo-telemetry",
  "aulo-types",
  "getrandom 0.4.3",
  "hyper-util",
  "keyring",
+ "llm-wire",
  "rcgen",
  "rustix",
  "rustls",
@@ -2529,6 +2539,19 @@ name = "litemap"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "47d9d19d1d6efa0109d2f65ff4c85cddd50bd572e5a00127ab10987290bcefae"
+
+[[package]]
+name = "llm-catalog"
+version = "0.1.0"
+source = "git+https://github.com/pyrlyn/crates?rev=f0deed54f6f8166b31404c2129b59355c45cf044#f0deed54f6f8166b31404c2129b59355c45cf044"
+dependencies = [
+ "figment",
+ "llm-wire",
+ "schemars 1.2.2",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+]
 
 [[package]]
 name = "llm-http"
