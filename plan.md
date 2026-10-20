@@ -32,7 +32,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T4.1 | todo | P0 | 3 | 0% | |
 | T4.2 | done | P0 | 2 | 100% | |
 | T4.3 | todo | P1 | 2 | 0% | |
-| T4.4 | todo | P0 | 3 | 0% | |
+| T4.4 | done | P0 | 3 | 100% | |
 | T4.5 | todo | P1 | 3 | 0% | |
 | T4.6 | todo | P0 | 4 | 0% | |
 | T4.7 | todo | P0 | 2 | 0% | |
@@ -458,6 +458,8 @@ ConfigService lists providers and models (catalog plus served overlay). A chat s
 Done when:
 
 - test switches model between turns and the next request uses it
+
+Outcome: `ConfigService.ListModels` returns the built-in `llm-catalog` rows for each configured endpoint, plus models a tier names, plus a served overlay from `GET {base}/v1/models`. A chat stores `provider/model`; `Store::set_chat_model` replaces it, and `prepare_turn` builds the next provider request with the model id after the slash. The Converse stream that carries `SwitchModel` stays T4.8. Kind detection (runa versus Ollama versus LM Studio's native list) stays T4.3; this probe is the OpenAI-compatible list, local endpoints only, fail open.
 
 ### T4.5. Tiers and job routing
 
