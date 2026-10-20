@@ -309,9 +309,12 @@ impl SttEngine for DeepgramStt {
 
     fn finish(&mut self) -> Result<(), SpeechError> {
         match std::mem::replace(&mut self.state, State::Idle) {
-            State::Recording(live) if live.sent == 0 => {
-                // Nothing was said: the contract still wants one final, and an
-                // empty stream is something Deepgram answers with an error.
+            // Nothing was said, and the socket is still open: the contract
+            // wants one final, and an empty stream is something Deepgram
+            // answers with an error. A socket that already died is not
+            // silence. Its failure is waiting on `live.events`, and dropping
+            // that receiver used to report an empty transcript instead.
+            State::Recording(live) if live.sent == 0 && !live.audio.is_closed() => {
                 let (sender, receiver) = mpsc::channel(1);
                 let _ = sender.try_send(Event::Final(String::new()));
                 self.state =
