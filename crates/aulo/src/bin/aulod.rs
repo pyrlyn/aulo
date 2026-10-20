@@ -23,6 +23,12 @@ struct Cli {
     /// Home directory for this run; the Windows service passes it instead of AULO_HOME
     #[arg(long, hide = true, value_name = "DIR")]
     home: Option<PathBuf>,
+    /// Answer Converse from a scripted provider. For tests; tool calls are not run.
+    #[arg(long, hide = true)]
+    scripted: bool,
+    /// Scenario TOML for --scripted. Defaults to the built-in fixture.
+    #[arg(long, hide = true, value_name = "FILE")]
+    scripted_scenario: Option<PathBuf>,
     #[command(subcommand)]
     command: Option<Command>,
 }
@@ -52,16 +58,24 @@ fn start(cli: Cli) -> Result<ExitCode> {
     match cli.command {
         // Naming `run` or not means the same.
         Some(Command::Run) | None => {
+            if cli.scripted_scenario.is_some() && !cli.scripted {
+                bail!("--scripted-scenario requires --scripted");
+            }
             daemon::run(daemon::Options {
                 home: cli.home,
                 config_dir: cli.config,
                 listen: cli.listen,
+                scripted: cli.scripted,
+                scenario: cli.scripted_scenario,
             })?;
             Ok(ExitCode::SUCCESS)
         }
         Some(Command::Service { action }) => {
             // The unit runs plain `aulod run`; dropping a flag silently would
             // leave the user believing it was installed.
+            if cli.scripted || cli.scripted_scenario.is_some() {
+                bail!("--scripted does not apply to `service`");
+            }
             if cli.config.is_some() || cli.listen.is_some() || cli.home.is_some() {
                 bail!(
                     "--config, --listen and --home do not apply to `service`; use AULO_HOME and config.toml"

@@ -22,6 +22,15 @@ pub fn local_socket_path(aulo_home: &Path) -> PathBuf {
     aulo_home.join("run").join("aulod.sock")
 }
 
+/// The per-user pipe `aulod` serves on Windows. The name does not include the
+/// home directory: a named pipe has no path, and the daemon rejects a second
+/// instance for the same user.
+#[cfg(windows)]
+pub fn local_pipe_name() -> String {
+    let user = std::env::var("USERNAME").unwrap_or_default();
+    format!(r"\\.\pipe\aulod-{user}")
+}
+
 /// An endpoint to bind.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Listen {

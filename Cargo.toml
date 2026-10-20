@@ -144,6 +144,8 @@ keyring = "4.2.0"
 keychain-secret = { git = "https://github.com/pyrlyn/crates", rev = "552263d2481295f19452fc961e7ec81b87203723" }
 # daemon euid for the local-socket peer check, without hand-written unsafe
 rustix = { version = "1.1.5", features = ["process"] }
+# line editor for the interactive `aulo chat` REPL (T3.7)
+rustyline = "15.0.0"
 # constant-time comparison of the API token
 subtle = "2.6.1"
 # service_fn connector for the gRPC client over a Unix socket in tests

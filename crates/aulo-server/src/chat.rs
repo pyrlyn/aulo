@@ -12,7 +12,7 @@ mod tests;
 
 use std::sync::{Arc, Mutex, PoisonError};
 
-use aulo_proto::aulo::v1::chat_service_server::ChatService;
+use aulo_proto::aulo::v1::chat_service_server::{ChatService, ChatServiceServer};
 use aulo_proto::aulo::v1::{
     CreateChatRequest, CreateChatResponse, DeleteChatRequest, DeleteChatResponse, GetChatRequest,
     GetChatResponse, ListChatsRequest, ListChatsResponse, ListMessagesRequest,
@@ -34,6 +34,12 @@ impl ChatApi {
     #[must_use]
     pub fn new(store: Arc<Mutex<Store>>) -> Self {
         Self { store }
+    }
+
+    /// The tonic service, so `aulod` can mount chats without naming the generated type.
+    #[must_use]
+    pub fn into_server(self) -> ChatServiceServer<Self> {
+        ChatServiceServer::new(self)
     }
 
     async fn with_store<T, F>(&self, op: &'static str, f: F) -> Result<T, Status>

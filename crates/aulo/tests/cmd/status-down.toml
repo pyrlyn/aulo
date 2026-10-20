@@ -1,0 +1,11 @@
+bin.name = "aulo"
+args = ["status"]
+fs.cwd = "empty.in"
+fs.sandbox = true
+env.add.AULO_HOME = "."
+env.add.AULO_KEYCHAIN = "off"
+status.code = 1
+stdout = ""
+stderr = """
+Error: aulod is not running
+"""

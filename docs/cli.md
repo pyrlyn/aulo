@@ -1,7 +1,7 @@
 # The `aulo` and `aulod` command lines
 
-aulo is in early development, so the CLI covers configuration, provider keys and the speech
-benchmark; chats go through the desktop apps. The commands marked *run* below were executed on a
+aulo is in early development, so the CLI covers configuration, provider keys, text chat
+with a running daemon, and the speech benchmark. The commands marked *run* below were executed on a
 build of `main` (`cargo build -p aulo`, binaries `target/debug/aulo` and `aulod`) with
 `AULO_HOME` pointing at an empty scratch directory; the ones marked *help only* were checked
 against `--help` and not started.
@@ -59,6 +59,28 @@ aulo auth rm openai
 
 On a fresh home, `aulo auth ls` prints `no providers configured`. Values are never printed.
 Set `AULO_KEYCHAIN=off` to disable the keychain.
+
+## Status and chats *(run against `aulod --scripted`)*
+
+`aulo status` prints `serving` when the daemon for this `AULO_HOME` is up, and exits with
+`aulod is not running` when the local socket is absent. `aulo chats ls` prints
+`id`, `title` and `model` separated by tabs, or `no chats`. `aulo chats rm <id>` deletes one
+chat. `aulo chat` is a line-oriented client of `SessionService.Converse`: one line is one
+turn, `/exit` or EOF leaves, and Ctrl-C during a turn sends Interrupt (a second Ctrl-C
+leaves). Streamed text and tool calls are printed as plain text; terminal and bidi controls
+are stripped.
+
+```bash
+aulod --scripted &                 # test double; it does not run tool calls
+aulo status
+aulo chat                          # new chat; `aulo chat --chat <id>` continues one
+aulo chats ls
+aulo chats rm <id>
+```
+
+A daemon without a conversation service (today's `aulod` unless `--scripted` is set) accepts
+`status` and the chat list, and `aulo chat` reports that it has no conversation service.
+The real agent session is a later task.
 
 ## The daemon *(help only)*
 

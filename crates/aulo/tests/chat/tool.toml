@@ -1,0 +1,8 @@
+bin.name = "aulo"
+args = ["chat"]
+stdin = "tool\n"
+stdout = """
+running a tool
+tool shell {"cmd":"ls"}
+"""
+stderr = ""

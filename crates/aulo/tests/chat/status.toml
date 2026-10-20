@@ -1,0 +1,6 @@
+bin.name = "aulo"
+args = ["status"]
+stdout = """
+serving
+"""
+stderr = ""

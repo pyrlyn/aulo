@@ -2,14 +2,23 @@
 
 use std::io;
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use anyhow::{Context, Result};
 use aulo_config::{Config, system_store};
 use aulo_server::auth::TokenStore;
-use aulo_server::{ApiServer, CancellationToken, ConfigApi, Limits, Listen, TcpListen, bind};
+use aulo_server::{
+    ApiServer, CancellationToken, ChatApi, ConfigApi, Limits, Listen, ScriptedProvider,
+    ScriptedSession, TcpListen, bind,
+};
+use aulo_store::Store;
 
-pub async fn serve(config: &Config, home: &Path) -> Result<()> {
+pub async fn serve(
+    config: &Config,
+    home: &Path,
+    scripted: bool,
+    scenario: Option<&Path>,
+) -> Result<()> {
     // Before binding, so a signal during startup still takes the clean path.
     let shutdown = CancellationToken::new();
     cancel_on_signal(&shutdown).context("cannot install the signal handlers")?;
@@ -54,9 +63,37 @@ pub async fn serve(config: &Config, home: &Path) -> Result<()> {
     // keychain unless AULO_KEYCHAIN is off; constructing it does not prompt.
     server =
         server.add_service(ConfigApi::new(config.clone(), Arc::from(system_store())).service());
+    let store = Arc::new(Mutex::new(open_store(home)?));
+    server = server.add_service(ChatApi::new(Arc::clone(&store)).into_server());
+    if scripted {
+        let text = scenario_text(scenario)?;
+        let provider = ScriptedProvider::parse(&text)?;
+        server = server.add_service(ScriptedSession::new(store, provider).into_server());
+        tracing::info!("scripted provider mounted");
+    }
     server.serve(listeners, shutdown).await?;
     tracing::info!("aulod stopped");
     Ok(())
+}
+
+fn open_store(home: &Path) -> Result<Store> {
+    let path = home.join("aulo.db");
+    let text = path.to_str().context("the aulo home is not valid UTF-8")?;
+    Store::open(text).with_context(|| format!("cannot open {text}"))
+}
+
+/// `--scripted-scenario` wins, then `AULO_SCRIPTED_SCENARIO`, then the built-in fixture.
+fn scenario_text(path: Option<&Path>) -> Result<String> {
+    if let Some(path) = path {
+        return std::fs::read_to_string(path)
+            .with_context(|| format!("cannot read {}", path.display()));
+    }
+    if let Some(env) = std::env::var_os("AULO_SCRIPTED_SCENARIO") {
+        let path = std::path::PathBuf::from(env);
+        return std::fs::read_to_string(&path)
+            .with_context(|| format!("cannot read {}", path.display()));
+    }
+    Ok(aulo_server::DEFAULT_SCENARIO.to_owned())
 }
 
 #[cfg(unix)]
@@ -66,8 +103,7 @@ fn local_listen(home: &Path) -> Listen {
 
 #[cfg(windows)]
 fn local_listen(_home: &Path) -> Listen {
-    let user = std::env::var("USERNAME").unwrap_or_default();
-    Listen::NamedPipe(format!(r"\\.\pipe\aulod-{user}"))
+    Listen::NamedPipe(aulo_server::local_pipe_name())
 }
 
 #[cfg(unix)]

@@ -16,7 +16,13 @@ aulo-config = { path = "../aulo-config" }
 aulo-proto = { path = "../aulo-proto" }
 aulo-store = { path = "../aulo-store" }
 aulo-types = { path = "../aulo-types" }
+# `Provider` on the scripted test double (T3.7). Production turns stay a later task.
+async-trait.workspace = true
 getrandom.workspace = true
+# Unix-socket (and Windows pipe) connector for the local gRPC client.
+hyper-util = { workspace = true, features = ["tokio"] }
+# Scenario parser for `aulod --scripted`. The feature is the test double, not a live model.
+llm-wire = { workspace = true, features = ["test-util"] }
 rcgen.workspace = true
 keyring.workspace = true
 rustls.workspace = true
@@ -29,6 +35,7 @@ tokio-util.workspace = true
 tonic = { workspace = true, features = ["tls-aws-lc"] }
 tonic-health.workspace = true
 tonic-reflection.workspace = true
+tower = { workspace = true, features = ["util"] }
 tracing.workspace = true
 
 [target.'cfg(unix)'.dependencies]
@@ -46,8 +53,6 @@ windows = { workspace = true, features = [
 
 [dev-dependencies]
 aulo-telemetry = { path = "../aulo-telemetry" }
-hyper-util = { workspace = true, features = ["tokio"] }
 tempfile.workspace = true
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tokio-rustls.workspace = true
-tower = { workspace = true, features = ["util"] }

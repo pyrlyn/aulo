@@ -20,6 +20,10 @@ pub struct Options {
     pub home: Option<PathBuf>,
     pub config_dir: Option<PathBuf>,
     pub listen: Option<SocketAddr>,
+    /// Mount the scripted provider instead of a live model (tests).
+    pub scripted: bool,
+    /// Scenario file for [`Options::scripted`]. `None` uses the built-in fixture.
+    pub scenario: Option<PathBuf>,
 }
 
 pub fn run(options: Options) -> Result<()> {
@@ -50,5 +54,10 @@ pub fn run(options: Options) -> Result<()> {
         .enable_all()
         .build()
         .context("cannot start the async runtime")?;
-    runtime.block_on(serve::serve(&loaded.config, &home))
+    runtime.block_on(serve::serve(
+        &loaded.config,
+        &home,
+        options.scripted,
+        options.scenario.as_deref(),
+    ))
 }

@@ -3,7 +3,11 @@
 
 mod auth_cmd;
 mod bench_cmd;
+mod chat_cmd;
+mod chats_cmd;
 mod config_cmd;
+mod runtime;
+mod status_cmd;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
@@ -27,6 +31,17 @@ enum Command {
     /// Store, remove or list provider API keys. Values are never printed.
     #[command(subcommand)]
     Auth(auth_cmd::AuthCommand),
+    /// Show whether the local daemon is up.
+    Status,
+    /// List or delete chats.
+    #[command(subcommand)]
+    Chats(chats_cmd::ChatsCommand),
+    /// Talk to the daemon in this terminal.
+    Chat {
+        /// Existing chat to continue. Omit to start a new one.
+        #[arg(long, value_name = "ID")]
+        chat: Option<String>,
+    },
 }
 
 fn main() -> Result<()> {
@@ -35,5 +50,8 @@ fn main() -> Result<()> {
         Command::Bench(command) => bench_cmd::run(command, &mut stdout),
         Command::Config(command) => config_cmd::run(command, &mut stdout),
         Command::Auth(command) => auth_cmd::run(command, &mut stdout),
+        Command::Status => status_cmd::run(&mut stdout),
+        Command::Chats(command) => chats_cmd::run(command, &mut stdout),
+        Command::Chat { chat } => chat_cmd::run(chat, &mut stdout),
     }
 }

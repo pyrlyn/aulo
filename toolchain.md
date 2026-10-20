@@ -27,7 +27,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | Package | Where | Source | Why here |
 | --- | --- | --- | --- |
 | anyhow | local | https://github.com/dtolnay/anyhow | Error context in the `aulo` and `aulod` binaries only (surface crates) |
-| async-trait | local (dev) | https://github.com/dtolnay/async-trait | Implements `llm-wire`'s `Provider` on the fake providers in the `llm-router` route tests |
+| async-trait | local | https://github.com/dtolnay/async-trait | Implements `llm-wire`'s `Provider` on the scripted double in `aulo-server` and on the fake providers in the `llm-router` route tests |
 | base64 | local | https://github.com/marshallpierce/rust-base64 | Decodes the base64 audio inside the ElevenLabs WebSocket messages in `aulo-speech-cloud`; encodes and decodes the audio of the OpenAI realtime sockets in `aulo-realtime` |
 | block2 | local (macOS) | https://github.com/madsmtm/objc2 | Objective-C block for the `AVSpeechSynthesizer` buffer callback (`aulo-speech-system`) |
 | clap | local | https://github.com/clap-rs/clap | Command-line parsing for `aulo` (`aulo config`, `aulo auth`, `aulo bench`) and `aulod` |
@@ -38,13 +38,13 @@ Only what the project uses today. Crates are added by the task that wires each o
 | futures-util | local | https://github.com/rust-lang/futures-rs | Splits the ElevenLabs and Deepgram WebSockets into read and write halves (`StreamExt`, `SinkExt`) in `aulo-speech-cloud`, so a slow audio consumer never stalls the text sent and results are read while audio is written; the same for the OpenAI realtime socket in `aulo-realtime` |
 | getrandom | local | https://github.com/rust-random/getrandom | OS randomness for the 256-bit `aulod` API token (`aulo-server`) |
 | hound | local | https://github.com/ruuda/hound | Encodes the buffered utterance as 16-bit PCM WAV for the upload in `aulo-speech-cloud`; decodes the WAV streams of `espeak-ng --stdout` and WinRT `SpeechSynthesizer` in `aulo-speech-system`; reads fixture WAVs in the `aulo-speech-sherpa` and `aulo-speech-system` tests; decodes the embedded fixture clips in `aulo-speech-bench` |
-| hyper-util | local (dev) | https://github.com/hyperium/hyper-util | `TokioIo` adapter for the gRPC client over a Unix socket in `aulo-server` tests |
+| hyper-util | local | https://github.com/hyperium/hyper-util | `TokioIo` adapter for the local gRPC client in `aulo-server` (the `aulo` CLI dials the Unix socket or the Windows named pipe) and for the same connector in tests |
 | insta | local (dev) | https://github.com/mitsuhiko/insta | Snapshot tests of the speakable-text normalizer (`aulo-voice`) |
-| keychain-secret | local (git, not published yet) | https://github.com/pyrlyn/crates | Provider API keys from an environment variable or the OS keychain, never a config file (`aulo-config`, T4.2). Same git revision as `speech-capture` | 
+| keychain-secret | local (git, not published yet) | https://github.com/pyrlyn/crates | Provider API keys from an environment variable or the OS keychain, never a config file (`aulo-config`, T4.2). Pinned to pyrlyn/crates `552263d` |
 | keyring | local | https://github.com/open-source-cooperative/keyring-rs | OS keychain that holds the `aulod` API token (`aulo-server`); also the store inside `keychain-secret` |
 | libsqlite3-sys | local | https://github.com/rusqlite/rusqlite | Bundled SQLite for Diesel |
 | llm-http | local (git, not published yet) | https://github.com/pyrlyn/crates | `Transport` (base URL, timeout, retries) that the provider wires' constructors take, in `aulo-providers`. Pinned to a crates commit |
-| llm-wire | local (git, not published yet) | https://github.com/pyrlyn/crates | Provider trait and neutral request types. `aulo-providers` builds them; `llm-router` routes a job to the provider registered for its tier. Pinned to a crates commit |
+| llm-wire | local (git, not published yet) | https://github.com/pyrlyn/crates | Provider trait and neutral request types. `aulo-providers` builds them; `llm-router` routes a job to the provider registered for its tier; `aulo-server` uses the `test-util` scenario parser for `aulod --scripted`. Pinned to a crates commit |
 | llm-wire-anthropic | local (git, not published yet) | https://github.com/pyrlyn/crates | Anthropic Messages client built for an `anthropic` endpoint, in `aulo-providers`. Pinned to a crates commit |
 | llm-wire-openai | local (git, not published yet) | https://github.com/pyrlyn/crates | OpenAI Responses client for `openai`, and the Chat Completions client for every OpenAI-compatible endpoint, in `aulo-providers`. Pinned to a crates commit |
 | objc2 | local (macOS) | https://github.com/madsmtm/objc2 | Objective-C runtime (`Retained`, downcasts) for the macOS system voices (`aulo-speech-system`) |
@@ -64,17 +64,18 @@ Only what the project uses today. Crates are added by the task that wires each o
 | ringbuf | local | https://github.com/agerasev/ringbuf | Fixed-size lock-free ring from the TTS producer (the macOS main-queue callback, the espeak-ng and Windows worker threads) to `poll` (`aulo-speech-system`) from the microphone callback to the frame consumer and from the playback writer to the speaker callback (`aulo-audio`); spec §5.3 |
 | rustix | local | https://github.com/bytecodealliance/rustix | Daemon euid for the local-socket peer check in `aulo-server`, without hand-written `unsafe` |
 | rustls | local | https://github.com/rustls/rustls | Certificate and key checks for the `aulo-server` TCP listener; the pinned-fingerprint client verifier for `aulo connect --pin` (aws-lc-rs, the provider reqwest already builds) |
+| rustyline | local | https://github.com/kkawakam/rustyline | Line editor for the interactive `aulo chat` prompt (T3.7). A pipe reads stdin directly, so the trycmd fixtures do not need a terminal |
 | schemars | local | https://github.com/GREsau/schemars | JSON Schema generated from the config types |
 | semver | local | https://github.com/dtolnay/semver | Plugin manifest versions (`aulo-plugin`) |
 | serde | local | https://github.com/serde-rs/serde | Serialization of ids, events and config; reply parsing in `aulo-speech-cloud` |
 | serde_json | local | https://github.com/serde-rs/json | Config schema output and overrides; round-trip tests; `cargo metadata` parsing in the dependency-graph test; reply and SSE event parsing and speech request bodies in `aulo-speech-cloud`; realtime server events and client messages in `aulo-realtime`; Kokoro per-text `lang` option in `aulo-speech-sherpa`; `aulo bench speech --json` output in `aulo-speech-bench` |
 | sha2 | local | https://github.com/RustCrypto/hashes | SHA-256 of model files, hashed while they download; the API token is held only as its SHA-256 |
 | sherpa-onnx | local | https://github.com/k2-fsa/sherpa-onnx | Local speech engines, only in `aulo-speech-sherpa` (Parakeet TDT v3 STT, Kokoro TTS); exact pin `=1.13.8` because `sherpa-onnx-sys` downloads the native lib of its own release |
-| speech-capture | local (path, optional) | https://github.com/pyrlyn/crates-packages | Whisper `Transcriber` (whisper.cpp through `whisper-rs`, shared with cox and runa) for the `whisper-cpp` STT engine in `aulo-speech-whisper`, compiled only with the `whisper` feature. A path dependency (`../crates-t1-13/speech-capture`) until the crate is published, then the crates.io version |
+| speech-capture | local (git, optional) | https://github.com/pyrlyn/crates | Whisper `Transcriber` (whisper.cpp through `whisper-rs`, shared with cox and runa) for the `whisper-cpp` STT engine in `aulo-speech-whisper`, compiled only with the `whisper` feature. Same pyrlyn/crates revision as `llm-wire` |
 | sse-core | local | https://github.com/PizzasBear/sse-rs | Zero-I/O server-sent-events parser for streaming transcription replies in `aulo-speech-cloud` (`eventsource-stream` has had no release since 2022) |
 | subtle | local | https://github.com/dalek-cryptography/subtle | Constant-time comparison of the API token digest (`aulo-server`) |
 | tempfile | local (dev) | https://github.com/Stebalien/tempfile | Temporary databases and directories in tests |
-| speech-capture | local (path, not published yet) | https://github.com/pyrlyn/crates | Opens the microphone and the speaker, by name or the default device: streams mono samples to the capture ring and plays the playback ring in `aulo-audio`; it owns `cpal` (CoreAudio, WASAPI, ALSA; Linux needs `libasound2-dev`, already in CI). Default features off: no file decode |
+| speech-capture | local (git, not published yet) | https://github.com/pyrlyn/crates | Opens the microphone and the speaker, by name or the default device: streams mono samples to the capture ring and plays the playback ring in `aulo-audio`; it owns `cpal` (CoreAudio, WASAPI, ALSA; Linux needs `libasound2-dev`, already in CI). Default features off: no file decode. Same pyrlyn/crates revision as `llm-wire` |
 | thiserror | local | https://github.com/dtolnay/thiserror | Typed errors in library crates |
 | tokio | local | https://github.com/tokio-rs/tokio | Async runtime; Unix socket, named pipe and TCP listeners in `aulo-server`; SIGINT/SIGTERM shutdown in `aulod`; one-worker runtime that runs the cloud engines under `aulo bench speech` (`aulo-speech-bench`) |
 | tokio-rustls | local (dev) | https://github.com/rustls/tokio-rustls | TLS stream under the pinned gRPC client in the `aulo-server` tests |
@@ -87,7 +88,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | tonic-prost | local | https://github.com/hyperium/tonic | Prost codec for tonic |
 | tonic-prost-build | local (build) | https://github.com/hyperium/tonic | Generates server and client code from the protos |
 | tonic-reflection | local | https://github.com/hyperium/tonic | gRPC server reflection for grpcurl and buf curl, only in `aulo-server` |
-| tower | local (dev) | https://github.com/tower-rs/tower | `service_fn` connector for the gRPC client over a Unix socket in `aulo-server` tests |
+| tower | local | https://github.com/tower-rs/tower | `service_fn` connector for the local gRPC client in `aulo-server` and for the same connector in tests |
 | tracing | local | https://github.com/tokio-rs/tracing | Structured logs and spans; a skipped provider section is a `warn` in `aulo-providers` |
 | tracing-appender | local | https://github.com/tokio-rs/tracing | Daily-rotating, non-blocking log files with a bounded file count |
 | tracing-opentelemetry | local | https://github.com/tokio-rs/tracing-opentelemetry | Bridges tracing spans to OTel, `otlp` feature only |

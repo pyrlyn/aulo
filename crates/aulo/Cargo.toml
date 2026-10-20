@@ -23,12 +23,14 @@ anyhow.workspace = true
 aulo-config = { path = "../aulo-config" }
 aulo-server = { path = "../aulo-server" }
 aulo-speech-bench = { path = "../aulo-speech-bench" }
+aulo-store = { path = "../aulo-store" }
 aulo-telemetry = { path = "../aulo-telemetry" }
 clap.workspace = true
+rustyline.workspace = true
 # Builds the `--listen` override for the config loader and parses `cargo metadata` in the
 # dependency-graph test.
 serde_json.workspace = true
-tokio = { workspace = true, features = ["rt-multi-thread", "signal"] }
+tokio = { workspace = true, features = ["rt-multi-thread", "signal", "sync"] }
 tracing.workspace = true
 
 [features]
