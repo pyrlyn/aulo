@@ -58,6 +58,7 @@ const ROLES: &[(&str, Role)] = &[
     ("aulo-desktop-ax", Role::Adapter),
     ("aulo-screen", Role::Adapter),
     ("aulo-plugin", Role::Adapter),
+    ("aulo-skills", Role::Adapter),
     ("aulo-server", Role::Assembly),
     ("aulo", Role::Surface),
     ("aulo-app", Role::Domain),
