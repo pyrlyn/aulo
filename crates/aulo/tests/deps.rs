@@ -100,10 +100,11 @@ const OWNERS: &[(&[&str], &[&str])] = &[
     ),
     (&["prost", "prost-build", "tonic-prost"], &["aulo-proto"]),
     // The transport is needed wherever a server or client is built: aulo-server
-    // serves, aulo-app is the desktop client. Messages still come from aulo-proto.
+    // serves, aulo-app is the desktop client, aulo-testkit dials the test
+    // daemon. Messages still come from aulo-proto.
     (
         &["tonic", "tonic-build"],
-        &["aulo-proto", "aulo-server", "aulo-app"],
+        &["aulo-proto", "aulo-server", "aulo-app", "aulo-testkit"],
     ),
     (&["tonic-health", "tonic-reflection"], &["aulo-server"]),
     (
@@ -113,6 +114,15 @@ const OWNERS: &[(&[&str], &[&str])] = &[
     (&["whisper-rs", "whisper-rs-sys"], &["aulo-speech-whisper"]),
     // libopus is a C build, so one crate owns it; the server uses it through aulo-audio.
     (&["opus", "opusic-sys"], &["aulo-audio"]),
+    // WebRTC AEC3 is a C++ build (and pulls abseil). One crate owns it.
+    (
+        &[
+            "webrtc-audio-processing",
+            "webrtc-audio-processing-sys",
+            "webrtc-audio-processing-config",
+        ],
+        &["aulo-audio"],
+    ),
     (&["wasmtime", "extism"], &["aulo-plugin"]),
     (&["chromiumoxide"], &["aulo-browser"]),
     (&["uniffi", "uniffi_bindgen", "uniffi_build"], &["aulo-ffi"]),
