@@ -1,0 +1,12 @@
+data: {"id":"chatcmpl-a1","object":"chat.completion.chunk","created":1792576800,"model":"qwen3-coder","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-a1","object":"chat.completion.chunk","created":1792576800,"model":"qwen3-coder","choices":[{"index":0,"delta":{"content":"The daemon "},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-a1","object":"chat.completion.chunk","created":1792576800,"model":"qwen3-coder","choices":[{"index":0,"delta":{"content":"is aulod."},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-a1","object":"chat.completion.chunk","created":1792576800,"model":"qwen3-coder","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}
+
+data: {"id":"chatcmpl-a1","object":"chat.completion.chunk","created":1792576800,"model":"qwen3-coder","choices":[],"usage":{"prompt_tokens":21,"completion_tokens":6,"total_tokens":27}}
+
+data: [DONE]
+

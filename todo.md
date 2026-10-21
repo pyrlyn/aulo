@@ -1,10 +1,6 @@
 # aulo — todo
 
 - T1.1. Extract llm-wire: provider contract and neutral types
-- T1.2. Extract llm-http: credentials, retries, SSE framing
-- T1.3. Extract llm-openai: Chat and Responses wires
-- T1.4. Extract llm-anthropic: Messages wire
-- T1.5. Extract llm-catalog: model catalog and prices
 - T1.6. Switch cox to the extracted llm crates
 - T1.8. Extract perm-rules: permission rule engine
 - T1.9. Extract proc-sandbox: Seatbelt, bwrap, Landlock+seccomp
@@ -22,7 +18,6 @@
 - T2.3. CI workflows
 - T3.7. aulo CLI: text chat client
 - T4.1. aulo-providers: build providers from config
-- T4.3. Local server presets and auto-detection
 - T4.4. Model catalog and per-chat model switching
 - T4.5. Tiers and job routing
 - T4.6. aulo-agent: session on agent-loop
@@ -48,7 +43,6 @@
 - T6.2. aulo-audio: playback
 - T6.3. Device list, selection and hot-plug
 - T6.4. Echo cancellation on macOS (Voice Processing I/O)
-- T6.5. Echo cancellation elsewhere (webrtc-audio-processing)
 - T6.6. Microphone permission handling
 - T6.7. Opus for remote audio streams
 - T7.5. STT: whisper.cpp via whisper-rs
