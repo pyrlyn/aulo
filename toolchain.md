@@ -81,7 +81,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | tokio-rustls | local (dev) | https://github.com/rustls/tokio-rustls | TLS stream under the pinned gRPC client in the `aulo-server` tests |
 | tokio-stream | local | https://github.com/tokio-rs/tokio | Listener streams for tonic `serve_with_incoming` in `aulo-server` |
 | tokio-tungstenite | local | https://github.com/snapview/tokio-tungstenite | WebSocket client (rustls, platform trust roots) for the ElevenLabs `stream-input` speech API and the Deepgram live transcription API in `aulo-speech-cloud` and the OpenAI Realtime and GPT-Live voice APIs in `aulo-realtime`; also the local WebSocket fixture server in its tests (spec D4) |
-| tokio-util | local | https://github.com/tokio-rs/tokio | `CancellationToken` that shuts every `aulo-server` listener down together; `AbortOnDropHandle` that cancels an abandoned transcription or speech request in `aulo-speech-cloud` and an abandoned realtime session in `aulo-realtime` |
+| tokio-util | local | https://github.com/tokio-rs/tokio | `CancellationToken` that shuts every `aulo-server` listener down together; `AbortOnDropHandle` that cancels an abandoned transcription or speech request in `aulo-speech-cloud` and an abandoned realtime session in `aulo-realtime`; the token the `aulo-providers` wire tests pass to `Provider::stream` |
 | toml | local | https://github.com/toml-rs/toml | Parses `aulo-plugin.toml` in `aulo-plugin` (the manifest module owns that file); renders and parses the config in `aulo-config` (default file tests, `aulo config show`) |
 | tonic | local | https://github.com/hyperium/tonic | gRPC server and client runtime in `aulo-proto` (generated code) and `aulo-server` (transport; rustls TLS on the TCP listener via `tls-aws-lc`) |
 | tonic-health | local | https://github.com/hyperium/tonic | `grpc.health.v1` service, only in `aulo-server` |
@@ -98,7 +98,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | url | local | https://github.com/servo/rust-url | Host of a URL for the speakable-text normalizer (`aulo-voice`); the endpoint check (`checked_endpoint`: TLS, or plain only to this machine) that `aulo-speech-cloud` and `aulo-realtime` share, in `aulo-types`; provider `base_url` checks (http(s), host, no embedded credentials) in `aulo-providers` |
 | windows | local (Windows) | https://github.com/microsoft/windows-rs | WinRT `SpeechSynthesizer` and `DataReader` bindings for the Windows system voices (`aulo-speech-system`); only the `Media_SpeechSynthesis` family of features |
 | windows-registry | local (Windows) | https://github.com/microsoft/windows-rs | Safe, read-only access to the microphone consent values of the capability access manager (`aulo-audio`); MIT OR Apache-2.0 |
-| wiremock | local (dev) | https://github.com/LukeMathWalker/wiremock-rs | Local HTTP fixture server for the `aulo-models` downloader and `aulo-speech-cloud` transcription and speech tests and the `aulo-realtime` client secret tests |
+| wiremock | local (dev) | https://github.com/LukeMathWalker/wiremock-rs | Local HTTP fixture server for the `aulo-models` downloader and `aulo-speech-cloud` transcription and speech tests and the `aulo-realtime` client secret tests, and the recorded SSE replies of the `aulo-providers` wire tests |
 
 ## Linkers
 
