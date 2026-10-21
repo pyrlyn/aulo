@@ -12,6 +12,20 @@ Done when:
 
 Outcome: `crates/llm-router` (contract, no I/O) maps `Job` onto `Tier` (`cheap < voice < main < sentinel`) and returns the `llm_wire::Provider` registered for that tier. `route` fails closed with `RouteError::NoProvider` when the tier is empty. Titles and summaries default to `cheap`; a builder override can move one job. The route test registers a local provider on `voice` and an OpenAI provider on `main`, streams one request through each, and checks the call landed on that provider. Decisions: the crate lives in this workspace because these pull requests target pyrlyn/aulo, and it depends on `llm-wire` from pyrlyn/crates at `f0deed54` rather than copying the trait. The tiers are aulo's four (spec §10), not `llm_wire::Tier` (`cheap`/`code`/`think`); changing that enum would break cox. Cox adoption waits until the crate is published, the same gate as the other extracted crates. A router may omit a tier; asking for it fails closed, so the two-provider test does not have to invent sentinel and cheap backends. Pulling `llm-wire` turns on `serde_json`'s `preserve_order` for the whole workspace. Bench JSON and the three committed JSON Schemas sort object keys before printing so that feature does not change fixtures. Main already records those schemas in full key order, so this merge keeps that printer.
 
+### T1.5. Extract llm-catalog: model catalog and prices
+
+Stage: S1 · Area: shared · Depends on: T1.1 · Blocks: 2 task(s)
+
+Execution plan: in a packages/crates worktree branched from t1-1-llm-wire, create llm-catalog (publish = false, dual licence, rust-version 1.98) from cox-models: built-in rows, config overlay, prices.toml, overlay of served models, with Catalog::load, get and effort_for tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption (T1.6) waits for publication.
+
+Move cox-models (built-in rows, config overlay, prices.toml, overlay of served models) into packages/crates/llm-catalog.
+
+Done when:
+
+- Catalog::load, get and effort_for tests pass
+
+Outcome: `llm-catalog` lives in pyrlyn/crates (`rust/llm-catalog`) and aulo pins it at `f0deed54`, the same revision as `llm-wire`; `aulo-providers` already reads it for `ConfigService.ListModels` (T4.4). The crate merges four layers by model id: the embedded `models.toml` and `prices.toml`, fill-only plugin `[[models]]` rows (a plugin can never change a built-in price), the host's `ProviderModel`s, then a user `prices.toml`; `Catalog::overlay_served` puts a local server's loaded context window and tool flag on top. It does no I/O. At that revision `cargo test` runs 22 `llm-catalog` tests, covering `Catalog::load`, `Catalog::get`, each layer's precedence and the price schemas, plus the `llm-wire` `effort_for` caps-table test. All pass. Decisions: the effort rule stays in `llm-wire` (`llm_wire::effort_for` reads the row's capabilities), so its test lives there rather than in the catalog. No catalog code was copied into aulo. Cox adoption remains T1.6.
+
 ### T0.1. Decide the licence and how cox code is reused
 
 Stage: S0 · Area: decision · Depends on: none · Blocks: 8 task(s)
