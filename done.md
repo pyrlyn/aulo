@@ -26,6 +26,18 @@ Done when:
 
 Outcome: `llm-catalog` lives in pyrlyn/crates (`rust/llm-catalog`) and aulo pins it at `f0deed54`, the same revision as `llm-wire`; `aulo-providers` already reads it for `ConfigService.ListModels` (T4.4). The crate merges four layers by model id: the embedded `models.toml` and `prices.toml`, fill-only plugin `[[models]]` rows (a plugin can never change a built-in price), the host's `ProviderModel`s, then a user `prices.toml`; `Catalog::overlay_served` puts a local server's loaded context window and tool flag on top. It does no I/O. At that revision `cargo test` runs 22 `llm-catalog` tests, covering `Catalog::load`, `Catalog::get`, each layer's precedence and the price schemas, plus the `llm-wire` `effort_for` caps-table test. All pass. Decisions: the effort rule stays in `llm-wire` (`llm_wire::effort_for` reads the row's capabilities), so its test lives there rather than in the catalog. No catalog code was copied into aulo. Cox adoption remains T1.6.
 
+### T1.2. Extract llm-http: credentials, retries, SSE framing
+
+Stage: S1 · Area: shared · Depends on: T1.1 · Blocks: 2 task(s)
+
+Move resolve_key (env var, then keyring), retry policy and SSE framing from cox-provider-http into packages/crates/llm-http.
+
+Done when:
+
+- llm-http tests cover env-first, keyring fallback and retry backoff
+
+Outcome: `llm-http` lives in pyrlyn/crates (`rust/llm-http`) and aulo already depends on it at the workspace pin `f0deed54`; `aulo-providers` builds its wires from `llm_http::Transport`. At that revision `http::resolve_key` reads the env var first (a blank value counts as unset), then the platform keyring entry, and a switch variable (`off`, `0`, `false`) keeps the keyring untouched. `retry::stream_with_retry` retries rate limits, overloads, network errors and timeouts with `base × 2ⁿ ± 25 %` backoff (or `retry-after`, capped at a minute), never after the first delivered event, and stops on cancel. `sse` frames Server-Sent Events. Its 21 unit tests pass, including `resolve_key_prefers_the_env_var_over_the_keyring`, `resolve_key_falls_back_to_the_keyring_when_the_env_var_is_unset` and `retry_delay_doubles_and_honours_retry_after`. Decisions: no aulo code changes. aulo already uses the crate and has no copy of the credential, retry or LLM SSE logic. `aulo-speech-cloud` parses transcription SSE with `sse-core` over its own reqwest 0.13 client, not provider events, so it stays as is. Cox adoption is T1.6.
+
 ### T0.1. Decide the licence and how cox code is reused
 
 Stage: S0 · Area: decision · Depends on: none · Blocks: 8 task(s)
