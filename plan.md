@@ -8,7 +8,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 
 | # | Status | Priority | Complexity | Readiness | Agent |
 | --- | --- | --- | --- | --- | --- |
-| T1.1 | in progress | P0 | 4 | 60% | Claude Code / claude-sonnet-5-5 |
+| T1.1 | in progress | P0 | 4 | 80% | Claude Code / claude-opus-5-5 |
 | T1.2 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.3 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.4 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
@@ -175,6 +175,8 @@ Done when:
 
 - llm-wire builds and its tests pass in packages/crates
 - cox-protocol re-exports the moved types (no API break for cox)
+
+Status: the first criterion holds. `llm-wire` lives at `rust/llm-wire` in pyrlyn/crates; aulo pins it at `f0deed54` (`Cargo.toml` `[workspace.dependencies]`) and `aulo-providers`, `aulo-server` and `llm-router` build on it. At that rev `cargo test --locked --all-features --manifest-path <checkout>/rust/llm-wire/Cargo.toml` passes 24 of 24 tests, `test-util` included. No aulo crate redefines a moved type (`aulo_store::models::Usage` is a database row, not the wire `Usage`). The cox re-export is the remaining criterion. It is work in the cox repository and waits until `llm-wire` is published, because a path dependency breaks cox CI. Nothing is left in this repository.
 
 ### T1.2. Extract llm-http: credentials, retries, SSE framing
 
