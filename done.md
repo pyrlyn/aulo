@@ -621,6 +621,18 @@ Done when:
 - test switches model between turns and the next request uses it
 
 Outcome: `llm-catalog` (same `pyrlyn/crates` pin as `llm-wire`) supplies the built-in rows. `ModelCatalog::list` puts each row under a configured endpoint by id prefix (`claude-*` Anthropic, `gpt-*` OpenAI, a slash id on both OpenRouter and xAI), adds models a tier names, then overlays ids from `probe_served`. That probe is `GET {base}/v1/models` on local kinds (and on `openai-compatible` only when the base is loopback); hosted kinds are not probed. Bodies are capped at 256 KiB, ids at 128 bytes, redirects are not followed, and a failed probe is an empty list. `Store::set_chat_model` writes `provider/model`. `prepare_turn` splits on the first slash and builds the `llm-wire` request the next call sends (tier Code, job Main, 4096 output tokens until T4.6). `ConfigApi` probes local models before it accepts connections. The acceptance test stores `openai/gpt-5.5`, records the request, switches to `anthropic/claude-sonnet-5`, and checks the second request. The Converse bidi stream remains T4.8; server-kind detection remains T4.3.
+
+### T4.3. Local server presets and auto-detection
+
+Stage: S4 · Area: providers · Depends on: T4.1 · Blocks: 0 task(s)
+
+Presets for runa (127.0.0.1:8080/v1), Ollama (11434), LM Studio (1234, native model list). Probe /v1/models at start and list what is served.
+
+Done when:
+
+- wiremock tests detect each server kind
+
+Outcome: `detect_local` probes the loopback presets (runa and llama.cpp share `127.0.0.1:8080/v1`, Ollama is `11434`, LM Studio is `1234`). `GET /v1/models` names runa (`owned_by` `"runa"`), llama.cpp (`"llamacpp"`) and older Ollama (`"ollama"`). Current Ollama copies the model namespace into `owned_by`, so it is recognized from `GET /api/version` plus that list. LM Studio is recognized from the native lists `GET /api/v0/models` and `GET /api/v1/models`, and those rows (with load state) are what is reported. A server that is down or not one of these kinds is skipped. Bodies are capped at 256 KiB, ids at 256 bytes and 256 models; control characters are dropped; redirects are not followed; no API key is sent. The daemon does not call it yet, because nothing on the serve path builds providers. Check: `cargo test -p aulo-providers` — 24 passed; `cargo clippy -p aulo-providers --all-targets -- -D warnings` clean.
 ### T16.6. Unwired store/grants surface
 
 `aulod` never opened `~/.aulo/aulo.db`, so chat, grant and audit methods ran only under test.
