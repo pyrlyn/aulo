@@ -219,6 +219,7 @@ Crate roles follow rust.md: contracts, domain, adapters, assembly, surfaces, tes
 | `aulo-desktop-ax` | adapter | AX (macOS), UIA (Windows), AT-SPI (Linux), screenshots, input |
 | `aulo-mcp` | adapter | MCP client (mcp-host) and aulo's MCP server (rmcp) |
 | `aulo-plugin` | adapter | Manifest, discovery, grants, process and WASM hosts |
+| `aulo-skills` | adapter | `SKILL.md` discovery through `agent-ext`: an index line in the prompt, the body only on request (T11.8) |
 | `aulo-plugin-sdk` | contract | Plugin-side SDK (gRPC plugin services, manifest types) |
 | `aulo-server` | assembly | gRPC services, auth, TLS |
 | `aulo` | surface | CLI binary (`aulo`) and daemon binary (`aulod`) |
