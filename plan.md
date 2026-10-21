@@ -10,7 +10,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | --- | --- | --- | --- | --- | --- |
 | T1.1 | in progress | P0 | 4 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.2 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
-| T1.3 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.4 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.5 | in progress | P0 | 2 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.6 | todo | P0 | 3 | 0% | |
@@ -187,18 +186,6 @@ Move resolve_key (env var, then keyring), retry policy and SSE framing from cox-
 Done when:
 
 - llm-http tests cover env-first, keyring fallback and retry backoff
-
-### T1.3. Extract llm-openai: Chat and Responses wires
-
-Stage: S1 · Area: shared · Depends on: T1.2 · Blocks: 2 task(s)
-
-Execution plan: in a packages/crates worktree branched from t1-2, create llm-openai (publish = false, dual licence, rust-version 1.98) from cox-provider-openai: Chat and Responses wires over llm-wire and llm-http, with recorded-fixture streaming text and tool-call tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption (T1.6) waits for publication.
-
-Move the OpenAI Chat and Responses wires from cox-provider-openai into packages/crates/llm-openai. They also serve every OpenAI-compatible endpoint (Ollama, LM Studio, vLLM, OpenRouter, DeepSeek, Gemini compat, xAI, runa).
-
-Done when:
-
-- streaming text and tool-call tests pass against recorded fixtures
 
 ### T1.4. Extract llm-anthropic: Messages wire
 

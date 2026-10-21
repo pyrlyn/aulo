@@ -600,3 +600,15 @@ Outcome: `llm-catalog` (same `pyrlyn/crates` pin as `llm-wire`) supplies the bui
 `aulod` never opened `~/.aulo/aulo.db`, so chat, grant and audit methods ran only under test.
 
 Outcome: the daemon opens `{home}/aulo.db` and mounts `ChatService` and `ApprovalService` list/revoke on one connection. `crates/aulo/tests/persist.rs` starts `aulod`, reads one grant from that file, creates and lists a chat, and revokes the grant over the local socket. `Decide` answers not-found and does not insert a row. Message, tool-call, usage and audit writes stay on the store for T4.8 and T5.9; `create_bot` stays for T14.1.
+
+### T1.3. Extract llm-openai: Chat and Responses wires
+
+Stage: S1 · Area: shared · Depends on: T1.2 · Blocks: 2 task(s)
+
+Move the OpenAI Chat and Responses wires from cox-provider-openai into packages/crates/llm-openai. They also serve every OpenAI-compatible endpoint (Ollama, LM Studio, vLLM, OpenRouter, DeepSeek, Gemini compat, xAI, runa).
+
+Done when:
+
+- streaming text and tool-call tests pass against recorded fixtures
+
+Outcome: the wires live in pyrlyn/crates as `rust/llm-wire-openai` (the `llm-wire-*` spelling the workspace already pins), over `llm-wire` and `llm-http`. That crate carries cox's recorded SSE fixtures and the 13 insta snapshots, among them text-only, one tool call and parallel tool calls for both wires. Its `done.md` records T1.3 and the T1.3.1 follow-up. Aulo builds both wires in `aulo-providers` from the `f0deed54` pin. `crates/aulo-providers/tests/wires.rs` replays four recorded replies from a local `wiremock` server through the providers `build_providers` makes from config: Chat text (`ollama`), Chat tool call (`openai-compatible`), Responses text and Responses tool call (`openai`). Each test checks the joined text, the tool name and joined input, the stop and the usage. It also checks that the route comes from the base URL, that the body carries the model `prepare_turn` chose, and that a keyless client sends no `Authorization` header. Cox adoption remains T1.6.
