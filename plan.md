@@ -9,7 +9,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | # | Status | Priority | Complexity | Readiness | Agent |
 | --- | --- | --- | --- | --- | --- |
 | T1.1 | in progress | P0 | 4 | 80% | Claude Code / claude-opus-5-5 |
-| T1.4 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.6 | todo | P0 | 3 | 0% | |
 | T1.8 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.9 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
@@ -175,17 +174,6 @@ Done when:
 
 Status: the first criterion holds. `llm-wire` lives at `rust/llm-wire` in pyrlyn/crates; aulo pins it at `f0deed54` (`Cargo.toml` `[workspace.dependencies]`) and `aulo-providers`, `aulo-server` and `llm-router` build on it. At that rev `cargo test --locked --all-features --manifest-path <checkout>/rust/llm-wire/Cargo.toml` passes 24 of 24 tests, `test-util` included. No aulo crate redefines a moved type (`aulo_store::models::Usage` is a database row, not the wire `Usage`). The cox re-export is the remaining criterion. It is work in the cox repository and waits until `llm-wire` is published, because a path dependency breaks cox CI. Nothing is left in this repository.
 
-### T1.4. Extract llm-anthropic: Messages wire
-
-Stage: S1 · Area: shared · Depends on: T1.2 · Blocks: 1 task(s)
-
-Execution plan: in a packages/crates worktree branched from t1-2, create llm-anthropic (publish = false, dual licence, rust-version 1.98) from cox-provider-anthropic: Messages wire with typify-generated types, cache breakpoints, thinking and effort, over llm-wire and llm-http, with recorded-fixture tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption (T1.6) waits for publication.
-
-Move the Anthropic Messages wire (typify-generated types, cache breakpoints, thinking, effort) into packages/crates/llm-anthropic.
-
-Done when:
-
-- recorded-fixture tests pass
 
 ### T1.6. Switch cox to the extracted llm crates
 
