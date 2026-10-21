@@ -83,7 +83,7 @@ pub(super) fn search_query(raw: &str) -> Result<String, Status> {
 }
 
 /// Page size 0 means the default; anything above the cap is clamped.
-pub(super) fn page_size(requested: u32) -> usize {
+pub(crate) fn page_size(requested: u32) -> usize {
     match usize::try_from(requested).unwrap_or(MAX_PAGE_SIZE) {
         0 => DEFAULT_PAGE_SIZE,
         n => n.min(MAX_PAGE_SIZE),
@@ -91,12 +91,12 @@ pub(super) fn page_size(requested: u32) -> usize {
 }
 
 /// Rows to fetch: one more than the page, to learn whether a next page exists.
-pub(super) fn fetch_limit(size: usize) -> i64 {
+pub(crate) fn fetch_limit(size: usize) -> i64 {
     i64::try_from(size.saturating_add(1)).unwrap_or(i64::MAX)
 }
 
 /// Drops the probe row and returns the last kept row, whose cursor starts the next page.
-pub(super) fn trim_page<T>(rows: &mut Vec<T>, size: usize) -> Option<&T> {
+pub(crate) fn trim_page<T>(rows: &mut Vec<T>, size: usize) -> Option<&T> {
     if rows.len() <= size {
         return None;
     }

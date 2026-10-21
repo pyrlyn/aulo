@@ -383,13 +383,18 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "aulo-config",
+ "aulo-proto",
  "aulo-server",
  "aulo-speech-bench",
+ "aulo-store",
  "aulo-telemetry",
  "clap",
+ "hyper-util",
  "serde_json",
  "tempfile",
  "tokio",
+ "tonic",
+ "tower",
  "tracing",
  "trycmd",
 ]
@@ -407,6 +412,7 @@ dependencies = [
  "ringbuf",
  "speech-capture",
  "thiserror 2.0.21",
+ "webrtc-audio-processing",
  "windows-registry",
 ]
 
@@ -455,6 +461,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "aulo-policy"
+version = "0.0.0"
+dependencies = [
+ "perm-rules",
+ "shell-classify",
+]
+
+[[package]]
 name = "aulo-proto"
 version = "0.0.0"
 dependencies = [
@@ -470,14 +484,22 @@ name = "aulo-providers"
 version = "0.0.0"
 dependencies = [
  "aulo-config",
+ "futures-util",
+ "llm-catalog",
  "llm-http",
  "llm-wire",
  "llm-wire-anthropic",
  "llm-wire-openai",
+ "reqwest 0.13.5",
+ "serde",
+ "serde_json",
  "tempfile",
  "thiserror 2.0.21",
+ "tokio",
+ "tokio-util",
  "tracing",
  "url",
+ "wiremock",
 ]
 
 [[package]]
@@ -508,14 +530,17 @@ dependencies = [
 name = "aulo-server"
 version = "0.0.0"
 dependencies = [
+ "async-trait",
  "aulo-config",
  "aulo-proto",
+ "aulo-providers",
  "aulo-store",
  "aulo-telemetry",
  "aulo-types",
  "getrandom 0.4.3",
  "hyper-util",
  "keyring",
+ "llm-wire",
  "rcgen",
  "rustix",
  "rustls",
@@ -532,6 +557,8 @@ dependencies = [
  "tonic-reflection",
  "tower",
  "tracing",
+ "ulid",
+ "windows",
 ]
 
 [[package]]
@@ -662,6 +689,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "aulo-testkit"
+version = "0.0.0"
+dependencies = [
+ "async-trait",
+ "aulo-config",
+ "aulo-proto",
+ "aulo-server",
+ "aulo-store",
+ "hyper-util",
+ "llm-wire",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.21",
+ "tokio",
+ "tokio-stream",
+ "tokio-util",
+ "tonic",
+ "tower",
+]
+
+[[package]]
 name = "aulo-types"
 version = "0.0.0"
 dependencies = [
@@ -689,6 +737,15 @@ name = "autocfg"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
+
+[[package]]
+name = "autotools"
+version = "0.2.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef941527c41b0fc0dd48511a8154cd5fc7e29200a0ff8b7203c5d777dbc795cf"
+dependencies = [
+ "cc",
+]
 
 [[package]]
 name = "aws-lc-rs"
@@ -1656,7 +1713,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1935,6 +1992,19 @@ name = "glob"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e4eba85ea1d0a966a983acd07deee566e67395d2d96b6fb39e62b5a833f1eb0b"
+
+[[package]]
+name = "globset"
+version = "0.4.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "07c34a9410465b45bd9787443bc7370f37735bad04b0f0cd57ff1a3186c98988"
+dependencies = [
+ "aho-corasick",
+ "bstr",
+ "log",
+ "regex-automata",
+ "regex-syntax",
+]
 
 [[package]]
 name = "h2"
@@ -2524,6 +2594,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "47d9d19d1d6efa0109d2f65ff4c85cddd50bd572e5a00127ab10987290bcefae"
 
 [[package]]
+name = "llm-catalog"
+version = "0.1.0"
+source = "git+https://github.com/pyrlyn/crates?rev=f0deed54f6f8166b31404c2129b59355c45cf044#f0deed54f6f8166b31404c2129b59355c45cf044"
+dependencies = [
+ "figment",
+ "llm-wire",
+ "schemars 1.2.2",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "llm-http"
 version = "0.1.0"
 source = "git+https://github.com/pyrlyn/crates?rev=f0deed54f6f8166b31404c2129b59355c45cf044#f0deed54f6f8166b31404c2129b59355c45cf044"
@@ -2559,10 +2642,12 @@ version = "0.1.0"
 source = "git+https://github.com/pyrlyn/crates?rev=f0deed54f6f8166b31404c2129b59355c45cf044#f0deed54f6f8166b31404c2129b59355c45cf044"
 dependencies = [
  "async-trait",
+ "figment",
  "getrandom 0.4.3",
  "schemars 1.2.2",
  "serde",
  "serde_json",
+ "sha2",
  "thiserror 2.0.21",
  "tokio",
  "tokio-util",
@@ -3162,7 +3247,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d8fae84b431384b68627d0f9b3b1245fcf9f46f6c0e3dc902e9dce64edd1967"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3242,6 +3327,15 @@ name = "percent-encoding"
 version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
+
+[[package]]
+name = "perm-rules"
+version = "0.1.0"
+source = "git+https://github.com/pyrlyn/crates?rev=319d363cfe499358203b446ae3d8d20528277e54#319d363cfe499358203b446ae3d8d20528277e54"
+dependencies = [
+ "globset",
+ "thiserror 2.0.21",
+]
 
 [[package]]
 name = "petgraph"
@@ -3527,7 +3621,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3900,7 +3994,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3959,7 +4053,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4279,6 +4373,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "shell-classify"
+version = "0.1.0"
+source = "git+https://github.com/pyrlyn/crates?rev=319d363cfe499358203b446ae3d8d20528277e54#319d363cfe499358203b446ae3d8d20528277e54"
+dependencies = [
+ "tree-sitter",
+ "tree-sitter-bash",
+]
+
+[[package]]
 name = "sherpa-onnx"
 version = "1.13.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4416,6 +4519,7 @@ dependencies = [
 [[package]]
 name = "speech-capture"
 version = "0.1.0"
+source = "git+https://github.com/pyrlyn/crates?rev=552263d2481295f19452fc961e7ec81b87203723#552263d2481295f19452fc961e7ec81b87203723"
 dependencies = [
  "cpal",
  "ringbuf",
@@ -4453,6 +4557,12 @@ name = "stable_deref_trait"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596"
+
+[[package]]
+name = "streaming-iterator"
+version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b2231b7c3057d5e4ad0156fb3dc807d900806020c5ffa3ee6ff2c8c76fb8520"
 
 [[package]]
 name = "strength_reduce"
@@ -4549,10 +4659,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5118,6 +5228,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "tree-sitter"
+version = "0.27.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a5129de2ccc97808c4583d48f1fb44576d015cf241e432800572bda11ef30c3b"
+dependencies = [
+ "cc",
+ "regex",
+ "serde_json",
+ "streaming-iterator",
+ "tree-sitter-language",
+]
+
+[[package]]
+name = "tree-sitter-bash"
+version = "0.25.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e5ec769279cc91b561d3df0d8a5deb26b0ad40d183127f409494d6d8fc53062"
+dependencies = [
+ "cc",
+ "tree-sitter-language",
+]
+
+[[package]]
+name = "tree-sitter-language"
+version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d0af592be68c579aa78a16846bd19422978c3c52e438523d45ff5d1bff1f9d4a"
+
+[[package]]
 name = "try-lock"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5506,6 +5645,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "webrtc-audio-processing"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "190c57ced88d6307ba91778c245265a99f99d900a9239c87a1b15142330c9f7e"
+dependencies = [
+ "webrtc-audio-processing-config",
+ "webrtc-audio-processing-sys",
+]
+
+[[package]]
+name = "webrtc-audio-processing-config"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "142cbc598e3dcf1a71e90109b6169ca9ce28ec1910bf74eef30f3c420ce850a4"
+
+[[package]]
+name = "webrtc-audio-processing-sys"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f8f6c2b4b20a03b165378172f0dbe23c49b2630b70091026589afbe04e79cd3e"
+dependencies = [
+ "anyhow",
+ "autotools",
+ "bindgen",
+ "cc",
+ "fs_extra",
+ "pkg-config",
+ "regex",
+]
+
+[[package]]
 name = "whisper-rs"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5534,7 +5704,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

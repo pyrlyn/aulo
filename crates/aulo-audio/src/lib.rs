@@ -22,7 +22,13 @@
 //! Feature `opus` adds [`OpusEncoder`] and [`OpusDecoder`] for remote clients
 //! that need less bandwidth than PCM16 (T6.7). It builds libopus, so it is off
 //! by default.
+//!
+//! Feature `aec3` adds [`EchoCanceller`] (T6.5): WebRTC AEC3 with the playback
+//! stream as the far-end reference. It is off by default and the C++ library
+//! is built on Linux only.
 
+#[cfg(feature = "aec3")]
+mod aec;
 mod capture;
 mod cpal_input;
 mod cpal_output;
@@ -37,6 +43,8 @@ mod source;
 #[cfg(any(test, feature = "testkit"))]
 pub mod testkit;
 
+#[cfg(feature = "aec3")]
+pub use aec::{ECHO_FRAME_SAMPLES, ECHO_SAMPLE_RATE_HZ, EchoCanceller};
 pub use capture::{
     Capture, DEFAULT_RING_FRAMES, DeviceSelector, InputBackend, InputDevice, StreamGuard,
 };

@@ -84,6 +84,67 @@ fn only_the_daemon_uid_is_the_owner() {
     assert!(!is_owner(None, owner));
 }
 
+#[test]
+fn account_sids_match_only_when_every_byte_matches() {
+    let user = AccountSid::from_bytes(&[1, 2, 3, 4]).unwrap();
+    let copy = AccountSid::from_bytes(&[1, 2, 3, 4]).unwrap();
+    let other = AccountSid::from_bytes(&[1, 2, 3, 5]).unwrap();
+    assert!(same_account(&user, &copy));
+    assert!(!same_account(&user, &other));
+    assert!(AccountSid::from_bytes(&[]).is_none());
+    assert!(AccountSid::from_bytes(&[0xAA; 69]).is_none());
+    assert!(AccountSid::from_bytes(&[0x11; 68]).is_some());
+}
+
+#[test]
+fn a_pipe_client_is_the_owner_only_for_the_same_unchanged_account() {
+    let user = AccountSid::from_bytes(&[1, 1, 1, 1]).unwrap();
+    let other = AccountSid::from_bytes(&[9, 9, 9, 9]).unwrap();
+    assert_eq!(
+        classify_pipe_client(Some(&user), Some(&user), true),
+        PipeClient::Owner
+    );
+    assert_eq!(
+        classify_pipe_client(Some(&other), Some(&user), true),
+        PipeClient::Other
+    );
+    assert_eq!(
+        classify_pipe_client(Some(&user), Some(&user), false),
+        PipeClient::Unknown
+    );
+    assert_eq!(
+        classify_pipe_client(None, Some(&user), true),
+        PipeClient::Unknown
+    );
+    assert_eq!(
+        classify_pipe_client(Some(&user), None, true),
+        PipeClient::Unknown
+    );
+}
+
+#[test]
+fn a_named_pipe_request_is_admitted_only_with_owner_proof() {
+    assert_refused(authorize_pipe(Request::new(())));
+    let mut other = Request::new(());
+    other.extensions_mut().insert(PipeConnectInfo {
+        client: PipeClient::Other,
+    });
+    assert_refused(authorize_pipe(other));
+    let mut unknown = with_authorization(&["Bearer secret"]);
+    unknown.extensions_mut().insert(PipeConnectInfo {
+        client: PipeClient::Unknown,
+    });
+    assert_refused(authorize_pipe(unknown));
+
+    let mut owner = with_authorization(&["Bearer secret"]);
+    owner.extensions_mut().insert(PipeConnectInfo {
+        client: PipeClient::Owner,
+    });
+    let admitted = authorize_pipe(owner).unwrap();
+    assert_eq!(caller(&admitted).unwrap(), Caller::LocalOwner);
+    assert!(admitted.metadata().get(AUTHORIZATION).is_none());
+}
+
 #[cfg(unix)]
 #[test]
 fn a_local_peer_without_credentials_is_refused() {

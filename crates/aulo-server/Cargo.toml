@@ -14,6 +14,7 @@ workspace = true
 [dependencies]
 aulo-config = { path = "../aulo-config" }
 aulo-proto = { path = "../aulo-proto" }
+aulo-providers = { path = "../aulo-providers" }
 aulo-store = { path = "../aulo-store" }
 aulo-types = { path = "../aulo-types" }
 getrandom.workspace = true
@@ -30,14 +31,27 @@ tonic = { workspace = true, features = ["tls-aws-lc"] }
 tonic-health.workspace = true
 tonic-reflection.workspace = true
 tracing.workspace = true
+ulid.workspace = true
 
 [target.'cfg(unix)'.dependencies]
 rustix.workspace = true
 
+[target.'cfg(windows)'.dependencies]
+# Named-pipe client process id and process-token SID, so LocalOwner is the
+# daemon's user and not every writer the default DACL allows.
+windows = { workspace = true, features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_System_Pipes",
+    "Win32_System_Threading",
+] }
+
 [dev-dependencies]
 aulo-telemetry = { path = "../aulo-telemetry" }
+async-trait.workspace = true
 hyper-util = { workspace = true, features = ["tokio"] }
+llm-wire.workspace = true
 tempfile.workspace = true
-tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "sync"] }
 tokio-rustls.workspace = true
 tower = { workspace = true, features = ["util"] }

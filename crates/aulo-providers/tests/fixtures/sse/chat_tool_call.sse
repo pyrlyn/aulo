@@ -1,0 +1,16 @@
+data: {"id":"chatcmpl-a2","object":"chat.completion.chunk","created":1792576800,"model":"qwen3-coder","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-a2","object":"chat.completion.chunk","created":1792576800,"model":"qwen3-coder","choices":[{"index":0,"delta":{"content":"Opening it."},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-a2","object":"chat.completion.chunk","created":1792576800,"model":"qwen3-coder","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"id":"call_open1","type":"function","function":{"name":"open_app","arguments":""}}]},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-a2","object":"chat.completion.chunk","created":1792576800,"model":"qwen3-coder","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"{\"app\":"}}]},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-a2","object":"chat.completion.chunk","created":1792576800,"model":"qwen3-coder","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"\"Notes\"}"}}]},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-a2","object":"chat.completion.chunk","created":1792576800,"model":"qwen3-coder","choices":[{"index":0,"delta":{},"finish_reason":"tool_calls"}]}
+
+data: {"id":"chatcmpl-a2","object":"chat.completion.chunk","created":1792576800,"model":"qwen3-coder","choices":[],"usage":{"prompt_tokens":40,"completion_tokens":17,"total_tokens":57}}
+
+data: [DONE]
+

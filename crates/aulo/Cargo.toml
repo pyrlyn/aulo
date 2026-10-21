@@ -36,7 +36,14 @@ tracing.workspace = true
 whisper = ["aulo-speech-bench/whisper"]
 
 [dev-dependencies]
+aulo-proto = { path = "../aulo-proto" }
+aulo-server = { path = "../aulo-server" }
+aulo-store = { path = "../aulo-store" }
+hyper-util = { workspace = true, features = ["tokio"] }
 tempfile.workspace = true
+tokio = { workspace = true, features = ["macros", "net", "rt-multi-thread", "time"] }
+tonic.workspace = true
+tower = { workspace = true, features = ["util"] }
 trycmd.workspace = true
 
 [lints]

@@ -1,0 +1,31 @@
+[package]
+name = "aulo-testkit"
+description = "Scripted provider, temporary-home test daemon and Converse client helpers"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+aulo-config = { path = "../aulo-config" }
+aulo-proto = { path = "../aulo-proto" }
+aulo-server = { path = "../aulo-server" }
+aulo-store = { path = "../aulo-store" }
+async-trait.workspace = true
+hyper-util = { workspace = true, features = ["tokio"] }
+llm-wire = { workspace = true, features = ["test-util"] }
+serde_json.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["macros", "net", "rt-multi-thread", "sync", "time"] }
+tokio-stream = { workspace = true, features = ["net", "sync"] }
+tokio-util.workspace = true
+tonic.workspace = true
+tower = { workspace = true, features = ["util"] }
+
+[target.'cfg(unix)'.dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true
