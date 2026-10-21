@@ -43,7 +43,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T5.4 | todo | P0 | 3 | 0% | |
 | T5.5 | todo | P0 | 2 | 0% | |
 | T5.6 | todo | P0 | 2 | 0% | |
-| T5.7 | todo | P1 | 2 | 0% | |
+| T5.7 | done | P1 | 2 | 100% | |
 | T5.8 | todo | P1 | 3 | 0% | |
 | T5.9 | todo | P1 | 3 | 0% | |
 | T5.10 | todo | P1 | 4 | 0% | |
@@ -569,6 +569,8 @@ When no client is attached or the run is a routine, write/exec/input tools are d
 Done when:
 
 - test: routine run cannot write a file
+
+Outcome: `aulo-unattended` denies write, exec and input when no client is attached or the run is a routine. Reads stay allowed. `write_file` in a routine returns denied and does not create the file; the same bytes write when a client is attached to an interactive run, and a routine can read them back. An oversized payload is refused without writing. Approval queueing for those denials stays T5.3.
 
 ### T5.8. Sentinel reviewer for consequential actions
 

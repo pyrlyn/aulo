@@ -721,6 +721,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "aulo-unattended"
+version = "0.0.0"
+dependencies = [
+ "tempfile",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "aulo-voice"
 version = "0.0.0"
 dependencies = [
