@@ -8,10 +8,8 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 
 | # | Status | Priority | Complexity | Readiness | Agent |
 | --- | --- | --- | --- | --- | --- |
-| T1.1 | in progress | P0 | 4 | 60% | Claude Code / claude-sonnet-5-5 |
-| T1.3 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
+| T1.1 | in progress | P0 | 4 | 80% | Claude Code / claude-opus-5-5 |
 | T1.4 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
-| T1.5 | in progress | P0 | 2 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.6 | todo | P0 | 3 | 0% | |
 | T1.8 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.9 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
@@ -175,17 +173,7 @@ Done when:
 - llm-wire builds and its tests pass in packages/crates
 - cox-protocol re-exports the moved types (no API break for cox)
 
-### T1.3. Extract llm-openai: Chat and Responses wires
-
-Stage: S1 · Area: shared · Depends on: T1.2 · Blocks: 2 task(s)
-
-Execution plan: in a packages/crates worktree branched from t1-2, create llm-openai (publish = false, dual licence, rust-version 1.98) from cox-provider-openai: Chat and Responses wires over llm-wire and llm-http, with recorded-fixture streaming text and tool-call tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption (T1.6) waits for publication.
-
-Move the OpenAI Chat and Responses wires from cox-provider-openai into packages/crates/llm-openai. They also serve every OpenAI-compatible endpoint (Ollama, LM Studio, vLLM, OpenRouter, DeepSeek, Gemini compat, xAI, runa).
-
-Done when:
-
-- streaming text and tool-call tests pass against recorded fixtures
+Status: the first criterion holds. `llm-wire` lives at `rust/llm-wire` in pyrlyn/crates; aulo pins it at `f0deed54` (`Cargo.toml` `[workspace.dependencies]`) and `aulo-providers`, `aulo-server` and `llm-router` build on it. At that rev `cargo test --locked --all-features --manifest-path <checkout>/rust/llm-wire/Cargo.toml` passes 24 of 24 tests, `test-util` included. No aulo crate redefines a moved type (`aulo_store::models::Usage` is a database row, not the wire `Usage`). The cox re-export is the remaining criterion. It is work in the cox repository and waits until `llm-wire` is published, because a path dependency breaks cox CI. Nothing is left in this repository.
 
 ### T1.4. Extract llm-anthropic: Messages wire
 
@@ -198,18 +186,6 @@ Move the Anthropic Messages wire (typify-generated types, cache breakpoints, thi
 Done when:
 
 - recorded-fixture tests pass
-
-### T1.5. Extract llm-catalog: model catalog and prices
-
-Stage: S1 · Area: shared · Depends on: T1.1 · Blocks: 2 task(s)
-
-Execution plan: in a packages/crates worktree branched from t1-1-llm-wire, create llm-catalog (publish = false, dual licence, rust-version 1.98) from cox-models: built-in rows, config overlay, prices.toml, overlay of served models, with Catalog::load, get and effort_for tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption (T1.6) waits for publication.
-
-Move cox-models (built-in rows, config overlay, prices.toml, overlay of served models) into packages/crates/llm-catalog.
-
-Done when:
-
-- Catalog::load, get and effort_for tests pass
 
 ### T1.6. Switch cox to the extracted llm crates
 
