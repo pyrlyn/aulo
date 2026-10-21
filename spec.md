@@ -217,6 +217,7 @@ Crate roles follow rust.md: contracts, domain, adapters, assembly, surfaces, tes
 | `aulo-apps` | adapter | App launch, focus and listing per OS |
 | `aulo-browser` | adapter (chromiumoxide owner) | Managed Chromium over CDP |
 | `aulo-desktop-ax` | adapter | AX (macOS), UIA (Windows), AT-SPI (Linux), screenshots, input |
+| `aulo-screen` | adapter | Screenshot frames downscaled for the model, with 0–999 coordinates across resolution and Retina scale (T9.15) |
 | `aulo-mcp` | adapter | MCP client (mcp-host) and aulo's MCP server (rmcp) |
 | `aulo-plugin` | adapter | Manifest, discovery, grants, process and WASM hosts |
 | `aulo-plugin-sdk` | contract | Plugin-side SDK (gRPC plugin services, manifest types) |
