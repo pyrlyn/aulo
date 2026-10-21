@@ -645,6 +645,18 @@ Done when:
 - wiremock tests detect each server kind
 
 Outcome: `detect_local` probes the loopback presets (runa and llama.cpp share `127.0.0.1:8080/v1`, Ollama is `11434`, LM Studio is `1234`). `GET /v1/models` names runa (`owned_by` `"runa"`), llama.cpp (`"llamacpp"`) and older Ollama (`"ollama"`). Current Ollama copies the model namespace into `owned_by`, so it is recognized from `GET /api/version` plus that list. LM Studio is recognized from the native lists `GET /api/v0/models` and `GET /api/v1/models`, and those rows (with load state) are what is reported. A server that is down or not one of these kinds is skipped. Bodies are capped at 256 KiB, ids at 256 bytes and 256 models; control characters are dropped; redirects are not followed; no API key is sent. The daemon does not call it yet, because nothing on the serve path builds providers. Check: `cargo test -p aulo-providers` — 24 passed; `cargo clippy -p aulo-providers --all-targets -- -D warnings` clean.
+
+### T6.5. Echo cancellation elsewhere (webrtc-audio-processing)
+
+Stage: S6 · Area: audio · Depends on: T6.2, T0.6 · Blocks: 0 task(s)
+
+AEC3, noise suppression and AGC for Windows and Linux, with the playback stream as the far-end reference. Feature-gated.
+
+Done when:
+
+- fixture test: far-end tone is attenuated by the target dB
+
+Outcome: `EchoCanceller` in `aulo-audio` (feature `aec3`, off by default) runs WebRTC AEC3 at 16 kHz in 10 ms frames, with the high-pass filter, noise suppression and AGC2 (no analog input-volume control). `render` takes the playback stream and does not modify it; `capture` removes the echo in place. Callers pass a known playback delay or leave it for AEC3 to estimate. The C++ library (`webrtc-audio-processing` 2.1.0, BSD-3-Clause, bundled abseil Apache-2.0) is built on Linux only: the MSVC bundled build still fails, and macOS uses Voice Processing I/O. On other targets `new` returns an error. A 100 ms delayed 440 Hz tone is attenuated by 42.7 dB either way; the fixture requires 20 dB. Linux CI installs meson and ninja because `--all-features` builds it. Not called from an audio callback, and not wired into `Playback` yet.
 ### T16.6. Unwired store/grants surface
 
 `aulod` never opened `~/.aulo/aulo.db`, so chat, grant and audit methods ran only under test.

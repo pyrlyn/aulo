@@ -54,7 +54,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T6.2 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T6.3 | todo | P1 | 2 | 0% | |
 | T6.4 | todo | P1 | 4 | 0% | |
-| T6.5 | todo | P1 | 3 | 0% | |
+| T6.5 | done | P1 | 3 | 100% | |
 | T6.6 | in progress | P1 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T6.7 | in progress | P2 | 3 | 90% | Claude Code / claude-sonnet-5-5 |
 | T7.5 | in progress | P1 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
@@ -687,6 +687,8 @@ AEC3, noise suppression and AGC for Windows and Linux, with the playback stream 
 Done when:
 
 - fixture test: far-end tone is attenuated by the target dB
+
+Outcome: `EchoCanceller` in `aulo-audio` (feature `aec3`, off by default) runs WebRTC AEC3 at 16 kHz in 10 ms frames, with the high-pass filter, noise suppression and AGC2 (no analog input-volume control). `render` takes the playback stream and does not modify it; `capture` removes the echo in place. Callers pass a known playback delay or leave it for AEC3 to estimate. The C++ library (`webrtc-audio-processing` 2.1.0, BSD-3-Clause, bundled abseil Apache-2.0) is built on Linux only: the MSVC bundled build still fails, and macOS uses Voice Processing I/O. On other targets `new` returns an error. A 100 ms delayed 440 Hz tone is attenuated by 42.7 dB either way; the fixture requires 20 dB. Linux CI installs meson and ninja because `--all-features` builds it. Not called from an audio callback, and not wired into `Playback` yet.
 
 ### T6.6. Microphone permission handling
 
