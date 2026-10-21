@@ -43,7 +43,6 @@
 - T6.2. aulo-audio: playback
 - T6.3. Device list, selection and hot-plug
 - T6.4. Echo cancellation on macOS (Voice Processing I/O)
-- T6.5. Echo cancellation elsewhere (webrtc-audio-processing)
 - T6.6. Microphone permission handling
 - T6.7. Opus for remote audio streams
 - T7.5. STT: whisper.cpp via whisper-rs

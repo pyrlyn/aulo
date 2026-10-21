@@ -1,6 +1,6 @@
 [package]
 name = "aulo-audio"
-description = "aulo audio I/O: microphone capture as 16 kHz mono frames in a lock-free ring, streaming playback with volume and immediate stop, optional Opus codec"
+description = "aulo audio I/O: microphone capture as 16 kHz mono frames in a lock-free ring, streaming playback with volume and immediate stop, optional Opus codec and Linux echo cancellation"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -19,6 +19,11 @@ ringbuf = { workspace = true }
 speech-capture = { workspace = true }
 thiserror = { workspace = true }
 
+# AEC3 is Linux-only. The bundled C++ build needs meson, ninja and a C++ compiler, and the
+# MSVC build of this crate does not work yet, so Windows and macOS never link it.
+[target.'cfg(target_os = "linux")'.dependencies]
+webrtc-audio-processing = { workspace = true, optional = true, features = ["bundled"] }
+
 [target.'cfg(target_os = "macos")'.dependencies]
 # TCC state of the microphone via AVAudioApplication.recordPermission
 objc2-avf-audio = { workspace = true, features = ["std", "AVAudioApplication"] }
@@ -30,6 +35,8 @@ windows-registry = { workspace = true }
 [features]
 # Opus encoding and decoding of 20 ms frames for low-bandwidth remote clients (T6.7); PCM16 stays the default.
 opus = ["dep:opus"]
+# AEC3, noise suppression and digital AGC (T6.5). Off by default. The C++ library is built on Linux only.
+aec3 = ["dep:webrtc-audio-processing"]
 # A scriptable fake input device for tests in this and other crates; never on in a release build.
 testkit = []
 

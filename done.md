@@ -657,6 +657,18 @@ Done when:
 - used by T4.6 and T4.8 tests
 
 Outcome: `aulo-testkit` exports `Scripted` (an `llm-wire` `Provider` over `test-util` scenarios), `TestDaemon` (config, SQLite chat store and the local socket under a temporary home) and `ConverseSession` / `drive` (`Attach`, `UserTurn`, `SwitchModel`, `Interrupt`). T4.6 and T4.8 are not in the tree yet, so the crate's own test is the caller: it mounts a stand-in `SessionService` on the daemon and checks that a user turn comes back as the scripted text. A `title` job does not consume an unpinned turn. The testkit depends on `aulo-server`, not on the `aulo` surface binary.
+
+### T6.5. Echo cancellation elsewhere (webrtc-audio-processing)
+
+Stage: S6 · Area: audio · Depends on: T6.2, T0.6 · Blocks: 0 task(s)
+
+AEC3, noise suppression and AGC for Windows and Linux, with the playback stream as the far-end reference. Feature-gated.
+
+Done when:
+
+- fixture test: far-end tone is attenuated by the target dB
+
+Outcome: `EchoCanceller` in `aulo-audio` (feature `aec3`, off by default) runs WebRTC AEC3 at 16 kHz in 10 ms frames, with the high-pass filter, noise suppression and AGC2 (no analog input-volume control). `render` takes the playback stream and does not modify it; `capture` removes the echo in place. Callers pass a known playback delay or leave it for AEC3 to estimate. The C++ library (`webrtc-audio-processing` 2.1.0, BSD-3-Clause, bundled abseil Apache-2.0) is built on Linux only: the MSVC bundled build still fails, and macOS uses Voice Processing I/O. On other targets `new` returns an error. A 100 ms delayed 440 Hz tone is attenuated by 42.7 dB either way; the fixture requires 20 dB. Linux CI installs meson and ninja because `--all-features` builds it. Not called from an audio callback, and not wired into `Playback` yet.
 ### T16.6. Unwired store/grants surface
 
 `aulod` never opened `~/.aulo/aulo.db`, so chat, grant and audit methods ran only under test.
