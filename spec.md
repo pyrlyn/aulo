@@ -213,6 +213,7 @@ Crate roles follow rust.md: contracts, domain, adapters, assembly, surfaces, tes
 | `aulo-providers` | assembly | LLM providers from config (llm-* crates), tiers, local presets |
 | `aulo-agent` | domain | Sessions on agent-loop, tool registry, persona, compaction |
 | `aulo-policy` | domain | perm-rules subjects, grants, blocklist, sentinel, audit, vault, takeover |
+| `aulo-untrusted` | domain | Wraps, sanitizes and caps untrusted web, tool, screenshot and plugin text; an injection forces Ask (T5.12) |
 | `aulo-tools` | adapter | Shell, PTY, files, clipboard |
 | `aulo-apps` | adapter | App launch, focus and listing per OS |
 | `aulo-browser` | adapter (chromiumoxide owner) | Managed Chromium over CDP |
