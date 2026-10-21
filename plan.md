@@ -38,7 +38,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T4.11 | todo | P1 | 2 | 0% | |
 | T4.12 | todo | P2 | 2 | 0% | |
 | T5.1 | todo | P0 | 3 | 0% | |
-| T5.2 | todo | P0 | 2 | 0% | |
+| T5.2 | done | P0 | 2 | 100% | |
 | T5.3 | todo | P0 | 3 | 0% | |
 | T5.4 | todo | P0 | 3 | 0% | |
 | T5.5 | todo | P0 | 2 | 0% | |
@@ -517,6 +517,8 @@ shell-classify sets the risk of shell commands (ReadOnly, Write, Exec, Destructi
 Done when:
 
 - fixtures: rm -rf is Destructive and asks; ls is ReadOnly
+
+Outcome: `aulo-policy` rates a shell line with `shell-classify` and hands that risk to `perm-rules`. With no matching rule the decision is the risk fallback (`Default` mode, `OnRequest`, workspace-write sandbox): `ls` is ReadOnly and runs, `rm -rf` is Destructive and asks. A `Shell(ls)` deny rule still refuses `ls`, and a `Bash(rm -rf /tmp/build)` allow rule still permits that destructive line. A command longer than 64 KiB is not parsed, drops its text, and asks. Both crates are pinned at `319d363` of pyrlyn/crates (the `llm-wire` pin predates them). App, site, file, MCP and input subjects stay T5.1.
 
 ### T5.3. Approval flow and grants
 

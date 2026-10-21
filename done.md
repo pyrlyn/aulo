@@ -1,5 +1,17 @@
 # aulo — done
 
+### T5.2. Shell risk classification
+
+Stage: S5 · Area: safety · Depends on: T5.1, T1.10 · Blocks: 1 task(s)
+
+shell-classify sets the risk of shell commands (ReadOnly, Write, Exec, Destructive); risk feeds the default decision when no rule matches.
+
+Done when:
+
+- fixtures: rm -rf is Destructive and asks; ls is ReadOnly
+
+Outcome: `crates/aulo-policy` builds a `perm-rules` call from `shell-classify`. `decide_shell` compiles the configured rule lists and, when none match, uses the engine's risk fallback. Fixtures: `rm -rf` is Destructive and asks; `ls` is ReadOnly and allowed; `Shell(ls)` deny still refuses; `Bash(rm -rf /tmp/build)` allow still permits. Commands over 64 KiB are not parsed. The subject grammar for the other tools is T5.1.
+
 ### T1.7. llm-router: one provider per tier
 
 Stage: S1 · Area: shared · Depends on: T1.6 · Blocks: 1 task(s)
