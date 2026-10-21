@@ -12,6 +12,18 @@ Done when:
 
 Outcome: `crates/llm-router` (contract, no I/O) maps `Job` onto `Tier` (`cheap < voice < main < sentinel`) and returns the `llm_wire::Provider` registered for that tier. `route` fails closed with `RouteError::NoProvider` when the tier is empty. Titles and summaries default to `cheap`; a builder override can move one job. The route test registers a local provider on `voice` and an OpenAI provider on `main`, streams one request through each, and checks the call landed on that provider. Decisions: the crate lives in this workspace because these pull requests target pyrlyn/aulo, and it depends on `llm-wire` from pyrlyn/crates at `f0deed54` rather than copying the trait. The tiers are aulo's four (spec §10), not `llm_wire::Tier` (`cheap`/`code`/`think`); changing that enum would break cox. Cox adoption waits until the crate is published, the same gate as the other extracted crates. A router may omit a tier; asking for it fails closed, so the two-provider test does not have to invent sentinel and cheap backends. Pulling `llm-wire` turns on `serde_json`'s `preserve_order` for the whole workspace. Bench JSON and the three committed JSON Schemas sort object keys before printing so that feature does not change fixtures. Main already records those schemas in full key order, so this merge keeps that printer.
 
+### T1.2. Extract llm-http: credentials, retries, SSE framing
+
+Stage: S1 · Area: shared · Depends on: T1.1 · Blocks: 2 task(s)
+
+Move resolve_key (env var, then keyring), retry policy and SSE framing from cox-provider-http into packages/crates/llm-http.
+
+Done when:
+
+- llm-http tests cover env-first, keyring fallback and retry backoff
+
+Outcome: `llm-http` lives in pyrlyn/crates (`rust/llm-http`) and aulo already depends on it at the workspace pin `f0deed54`; `aulo-providers` builds its wires from `llm_http::Transport`. At that revision `http::resolve_key` reads the env var first (a blank value counts as unset), then the platform keyring entry, and a switch variable (`off`, `0`, `false`) keeps the keyring untouched. `retry::stream_with_retry` retries rate limits, overloads, network errors and timeouts with `base × 2ⁿ ± 25 %` backoff (or `retry-after`, capped at a minute), never after the first delivered event, and stops on cancel. `sse` frames Server-Sent Events. Its 21 unit tests pass, including `resolve_key_prefers_the_env_var_over_the_keyring`, `resolve_key_falls_back_to_the_keyring_when_the_env_var_is_unset` and `retry_delay_doubles_and_honours_retry_after`. Decisions: no aulo code changes. aulo already uses the crate and has no copy of the credential, retry or LLM SSE logic. `aulo-speech-cloud` parses transcription SSE with `sse-core` over its own reqwest 0.13 client, not provider events, so it stays as is. Cox adoption is T1.6.
+
 ### T0.1. Decide the licence and how cox code is reused
 
 Stage: S0 · Area: decision · Depends on: none · Blocks: 8 task(s)

@@ -9,7 +9,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | # | Status | Priority | Complexity | Readiness | Agent |
 | --- | --- | --- | --- | --- | --- |
 | T1.1 | in progress | P0 | 4 | 60% | Claude Code / claude-sonnet-5-5 |
-| T1.2 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.3 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.4 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.5 | in progress | P0 | 2 | 60% | Claude Code / claude-sonnet-5-5 |
@@ -175,18 +174,6 @@ Done when:
 
 - llm-wire builds and its tests pass in packages/crates
 - cox-protocol re-exports the moved types (no API break for cox)
-
-### T1.2. Extract llm-http: credentials, retries, SSE framing
-
-Stage: S1 · Area: shared · Depends on: T1.1 · Blocks: 2 task(s)
-
-Execution plan: in a packages/crates worktree branched from t1-1-llm-wire, create llm-http (publish = false, dual licence, rust-version 1.98) from cox-provider-http: resolve_key (env first, then keyring), retry policy, SSE framing, with tests for env-first, keyring fallback and retry backoff; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption waits for publication.
-
-Move resolve_key (env var, then keyring), retry policy and SSE framing from cox-provider-http into packages/crates/llm-http.
-
-Done when:
-
-- llm-http tests cover env-first, keyring fallback and retry backoff
 
 ### T1.3. Extract llm-openai: Chat and Responses wires
 
