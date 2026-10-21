@@ -182,6 +182,13 @@ fn build_one(name: &str, section: &ProviderConfig) -> Result<EndpointProvider, S
     })
 }
 
+/// Base URL the endpoint will be called at, or `None` when the section is
+/// not buildable (missing custom URL, bad URL, embedded credentials).
+#[must_use]
+pub fn resolved_base_url(kind: ProviderKind, configured: Option<&str>) -> Option<String> {
+    resolve_base(kind, configured).ok()
+}
+
 fn resolve_base(kind: ProviderKind, configured: Option<&str>) -> Result<String, SkipReason> {
     let Some(raw) = configured.map(str::trim).filter(|s| !s.is_empty()) else {
         return preset::default_base_url(kind)

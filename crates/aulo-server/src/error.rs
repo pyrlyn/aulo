@@ -55,6 +55,14 @@ pub enum ServerError {
     Transport(#[from] tonic::transport::Error),
     #[error("listener task failed: {0}")]
     Task(#[from] tokio::task::JoinError),
+    #[error("database path {0} is not valid Unicode")]
+    DatabasePath(PathBuf),
+    #[error("cannot open the database at {path}: {source}")]
+    Database {
+        path: PathBuf,
+        #[source]
+        source: aulo_store::StoreError,
+    },
 }
 
 impl ServerError {
