@@ -1,5 +1,16 @@
 # aulo — done
 
+### T9.15. Screenshots with normalized coordinates
+
+Stage: S9 · Area: control · Depends on: T5.1 · Blocks: 4 task(s)
+
+xcap screenshots per screen or window, downscaled for the model, coordinates normalized to 0-999 so they do not depend on resolution or Retina scale.
+
+Done when:
+
+- coordinate round-trip tests
+
+Outcome: `crates/aulo-screen` turns RGBA capture bytes into a model frame (long edge 1280) and 0–999 coordinates. A 1× point and the same point on a 2× capture normalize equally, and the pixel round-trip stays inside one bucket. xcap is not linked; its Linux backend pulls PipeWire and an unpinned git dependency.
 ### T5.2. Shell risk classification
 
 Stage: S5 · Area: safety · Depends on: T5.1, T1.10 · Blocks: 1 task(s)
