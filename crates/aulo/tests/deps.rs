@@ -100,10 +100,11 @@ const OWNERS: &[(&[&str], &[&str])] = &[
     ),
     (&["prost", "prost-build", "tonic-prost"], &["aulo-proto"]),
     // The transport is needed wherever a server or client is built: aulo-server
-    // serves, aulo-app is the desktop client. Messages still come from aulo-proto.
+    // serves, aulo-app is the desktop client, aulo-testkit dials the test
+    // daemon. Messages still come from aulo-proto.
     (
         &["tonic", "tonic-build"],
-        &["aulo-proto", "aulo-server", "aulo-app"],
+        &["aulo-proto", "aulo-server", "aulo-app", "aulo-testkit"],
     ),
     (&["tonic-health", "tonic-reflection"], &["aulo-server"]),
     (

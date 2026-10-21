@@ -674,6 +674,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "aulo-testkit"
+version = "0.0.0"
+dependencies = [
+ "async-trait",
+ "aulo-config",
+ "aulo-proto",
+ "aulo-server",
+ "aulo-store",
+ "hyper-util",
+ "llm-wire",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.21",
+ "tokio",
+ "tokio-stream",
+ "tokio-util",
+ "tonic",
+ "tower",
+]
+
+[[package]]
 name = "aulo-types"
 version = "0.0.0"
 dependencies = [
@@ -2593,10 +2614,12 @@ version = "0.1.0"
 source = "git+https://github.com/pyrlyn/crates?rev=f0deed54f6f8166b31404c2129b59355c45cf044#f0deed54f6f8166b31404c2129b59355c45cf044"
 dependencies = [
  "async-trait",
+ "figment",
  "getrandom 0.4.3",
  "schemars 1.2.2",
  "serde",
  "serde_json",
+ "sha2",
  "thiserror 2.0.21",
  "tokio",
  "tokio-util",

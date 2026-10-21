@@ -33,7 +33,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T4.6 | todo | P0 | 4 | 0% | |
 | T4.7 | todo | P0 | 2 | 0% | |
 | T4.8 | todo | P0 | 3 | 0% | |
-| T4.9 | todo | P0 | 2 | 0% | |
+| T4.9 | done | P0 | 2 | 100% | |
 | T4.10 | todo | P1 | 3 | 0% | |
 | T4.11 | todo | P1 | 2 | 0% | |
 | T4.12 | todo | P2 | 2 | 0% | |
@@ -463,6 +463,8 @@ aulo-testkit: scripted provider (from llm-wire test-util), test daemon on a temp
 Done when:
 
 - used by T4.6 and T4.8 tests
+
+Outcome: `aulo-testkit` is the harness those tests import. `Scripted` replays an `llm-wire` `test-util` scenario (pinned turns for `when_contains`, `when_system_contains` and `job`, and a `title` request does not consume an unpinned turn). `TestDaemon` serves `ConfigService` and `ChatService` on `run/aulod.sock` under a temporary home; `start_with` mounts the extra service under test. `ConverseSession` and `drive` send `Attach`, `UserTurn`, `SwitchModel` and `Interrupt` and read events. The crate's own test mounts a stand-in `SessionService` that answers from `Scripted`, which is the seam T4.8 replaces. The testkit does not depend on the `aulo` binary: a testkit must not depend on a surface crate.
 
 ### T4.10. Context compaction and chat titles
 
