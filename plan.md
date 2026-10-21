@@ -11,7 +11,6 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T1.1 | in progress | P0 | 4 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.2 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.3 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
-| T1.4 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.5 | in progress | P0 | 2 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.6 | todo | P0 | 3 | 0% | |
 | T1.8 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
@@ -199,18 +198,6 @@ Move the OpenAI Chat and Responses wires from cox-provider-openai into packages/
 Done when:
 
 - streaming text and tool-call tests pass against recorded fixtures
-
-### T1.4. Extract llm-anthropic: Messages wire
-
-Stage: S1 · Area: shared · Depends on: T1.2 · Blocks: 1 task(s)
-
-Execution plan: in a packages/crates worktree branched from t1-2, create llm-anthropic (publish = false, dual licence, rust-version 1.98) from cox-provider-anthropic: Messages wire with typify-generated types, cache breakpoints, thinking and effort, over llm-wire and llm-http, with recorded-fixture tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption (T1.6) waits for publication.
-
-Move the Anthropic Messages wire (typify-generated types, cache breakpoints, thinking, effort) into packages/crates/llm-anthropic.
-
-Done when:
-
-- recorded-fixture tests pass
 
 ### T1.5. Extract llm-catalog: model catalog and prices
 

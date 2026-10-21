@@ -3,7 +3,6 @@
 - T1.1. Extract llm-wire: provider contract and neutral types
 - T1.2. Extract llm-http: credentials, retries, SSE framing
 - T1.3. Extract llm-openai: Chat and Responses wires
-- T1.4. Extract llm-anthropic: Messages wire
 - T1.5. Extract llm-catalog: model catalog and prices
 - T1.6. Switch cox to the extracted llm crates
 - T1.8. Extract perm-rules: permission rule engine
