@@ -15,6 +15,9 @@
 //! (T4.2 attaches the keychain and env-var lookup). A missing key is not a
 //! broken section.
 //!
+//! [`detect_local`] probes the loopback presets at startup and lists the
+//! models each running server is serving (T4.3).
+//!
 //! [`ModelCatalog`] lists the built-in catalog for each configured endpoint,
 //! with a served overlay from [`probe_served`]. [`prepare_turn`] builds the
 //! provider request for the chat's stored model, so a switch is what the
@@ -22,16 +25,21 @@
 
 mod build;
 mod catalog;
+mod detect;
 mod preset;
 mod served;
 mod turn;
 
 pub use build::{ProviderSet, ProviderWarning, SkipReason, build_providers, resolved_base_url};
 pub use catalog::{ListedModel, ModelCatalog};
+pub use detect::{
+    DetectedServer, LoadState, MAX_BODY_BYTES, MAX_ID_BYTES, MAX_MODELS, ProbeError, ServerKind,
+    detect_local, probe_client, probe_origin, probe_origins,
+};
 pub use llm_wire::{Provider, ProviderId};
 pub use preset::{
     ANTHROPIC_CONTEXT_TOKENS, DEFAULT_CONTEXT_TOKENS, DEFAULT_MAX_RETRIES, DEFAULT_TIMEOUT_SECS,
-    Wire, default_base_url, wire_for,
+    LOCAL_PROBE_ORIGINS, Wire, default_base_url, wire_for,
 };
 pub use served::{ServedModels, probe_served};
 pub use turn::{Turn, TurnError, prepare_turn, stored_model};
