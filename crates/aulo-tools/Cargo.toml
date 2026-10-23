@@ -1,0 +1,22 @@
+[package]
+name = "aulo-tools"
+description = "Shell, PTY, files and clipboard tools the agent calls"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+aulo-policy = { path = "../aulo-policy" }
+proc-sandbox.workspace = true
+thiserror.workspace = true
+# kill a timed-out command's whole process tree (process_group + killpg) without hand-written unsafe
+rustix = { workspace = true, features = ["process"] }
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true

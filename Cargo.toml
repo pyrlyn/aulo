@@ -88,6 +88,9 @@ llm-wire-anthropic = { git = "https://github.com/pyrlyn/crates", rev = "f0deed54
 shell-classify = { git = "https://github.com/pyrlyn/crates", rev = "319d363cfe499358203b446ae3d8d20528277e54" }
 # Rule engine the shell risk feeds when no rule matches. Same pin as shell-classify.
 perm-rules = { git = "https://github.com/pyrlyn/crates", rev = "319d363cfe499358203b446ae3d8d20528277e54" }
+# Seatbelt/bwrap/Landlock confinement for the shell and PTY tools in aulo-tools (T9.1). Unpublished.
+# Same pin as shell-classify so the workspace has one checkout of pyrlyn/crates.
+proc-sandbox = { git = "https://github.com/pyrlyn/crates", rev = "319d363cfe499358203b446ae3d8d20528277e54" }
 # Built-in model catalog (context, display name, capabilities, price). Same pin as llm-wire.
 llm-catalog = { git = "https://github.com/pyrlyn/crates", rev = "f0deed54f6f8166b31404c2129b59355c45cf044" }
 # async_trait so tests can implement llm-wire's Provider (the trait is defined with it)

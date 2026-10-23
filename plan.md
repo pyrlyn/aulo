@@ -76,7 +76,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T8.15 | todo | P2 | 3 | 0% | |
 | T8.16 | todo | P0 | 3 | 0% | |
 | T8.17 | todo | P1 | 2 | 0% | |
-| T9.1 | todo | P0 | 3 | 0% | |
+| T9.1 | done | P0 | 3 | 100% | WorkBuddy (wb/control) |
 | T9.2 | todo | P1 | 3 | 0% | |
 | T9.3 | todo | P0 | 3 | 0% | |
 | T9.4 | todo | P2 | 3 | 0% | |
@@ -937,6 +937,8 @@ Run a command in the sandbox with timeout, output cap, streamed output events, c
 Done when:
 
 - tests: timeout kills the process tree; truncated output is recoverable
+
+Outcome: `aulo-tools` (adapter) holds the `shell` module. A command runs as `<shell> -c <line>` wrapped by `proc-sandbox` (`sandbox::command`), with stdin null, both pipes piped, its own process group (`process_group(0)`, safe std) and a confined cwd (`proc_sandbox::path::confine`, canonicalized first so a symlinked root is not an escape). The timeout kills the whole tree with `rustix::process::kill_process_group` on Unix (`taskkill /T /F` on Windows, which has no process groups); because grandchildren inherit the stdout pipe, the group kill is what lets the run finish at all. Output streams as `OutputEvent::Chunk`/`Exit` on an mpsc channel from two reader threads; each stream keeps a 32 KiB head view for the model and appends everything to a lossless archive under the archive root (256 MiB per stream, flagged when cut), named by a validated `ArchiveId` — the cox `expand` pattern, with `OutputArchive::read(id, start, len)` for recovery and an id regex that refuses traversal. The environment is cleared and rebuilt from an injectable allowlist (`DEFAULT_ENV_ALLOWLIST`: PATH, HOME, LANG, TERM, TMPDIR, …) plus host-vetted per-run extras; the command line is capped at `aulo_policy::SHELL_COMMAND_MAX_BYTES`. Policy wiring (T5.4 not merged): `policy_call(command)` is `aulo_policy::shell_call`; the host decides with `decide_shell` and only runs an `Allow`, mapping the outcome onto the `SandboxPolicy` (read-only / workspace-write / danger-full-access) it passes in — the sandbox profiles stay T5.4's to own. Tests: 13 integration tests — exit codes, the timeout tree kill (two sleeps holding the pipe prove the group died), truncation plus archive tail recovery, cwd confinement (inside and `/etc` refused), the env allowlist hiding a secret while extras pass, the policy subject (`rm -rf` asks), streaming event order, empty/oversized refusal, archive-id traversal refusal, no-output runs archiving nothing, and the sandbox argv composition. The live confinement test (write inside the roots runs, outside fails) is gated on a backend existing and a trivial run succeeding: this agent session is itself inside a macOS sandbox, so a nested restrictive Seatbelt profile is refused with `sandbox_apply: Operation not permitted`; on a normal host (aulod runs unsandboxed) it runs for real, and the skip prints its reason.
 
 ### T9.2. Interactive PTY sessions
 
