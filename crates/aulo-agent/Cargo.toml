@@ -1,0 +1,26 @@
+[package]
+name = "aulo-agent"
+description = "Chat sessions on the neutral agent loop: submissions in, events out, cancellation and max steps"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+aulo-types = { path = "../aulo-types" }
+agent-loop.workspace = true
+async-trait.workspace = true
+llm-wire.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["sync"] }
+tokio-util.workspace = true
+
+[dev-dependencies]
+aulo-testkit = { path = "../aulo-testkit" }
+serde_json.workspace = true
+tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
+
+[lints]
+workspace = true

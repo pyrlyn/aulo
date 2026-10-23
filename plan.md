@@ -30,7 +30,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T4.3 | done | P1 | 2 | 100% | |
 | T4.4 | done | P0 | 3 | 100% | |
 | T4.5 | todo | P1 | 3 | 0% | |
-| T4.6 | todo | P0 | 4 | 0% | |
+| T4.6 | done | P0 | 4 | 100% | WorkBuddy (wb/core) |
 | T4.7 | todo | P0 | 2 | 0% | |
 | T4.8 | todo | P0 | 3 | 0% | |
 | T4.9 | done | P0 | 2 | 100% | |
@@ -433,6 +433,8 @@ Session per chat on agent-loop: submissions in, events out, cancellation, max st
 Done when:
 
 - scripted-provider tests: text turn, tool turn, interrupt
+
+Outcome: `crates/aulo-agent` (domain). `agent-loop` is a git dependency pinned to the same `pyrlyn/crates` rev as `llm-wire` (`f0deed54`), so its path dependency on `llm-wire` resolves to the one `llm-wire` in the graph and no second provider contract exists. `Session` wraps one `agent_loop::Agent` per chat: `Submission::{UserTurn, Approve, Interrupt}` in, `SessionEvent`s out on a caller-owned bounded channel (256), sync `interrupt()`, `max_steps`/`parallel_tools`/`approval_timeout`/`tool_output_cap` in `SessionConfig`, and `with_history` for a resumed chat. `SessionSink` maps loop events onto `SessionEvent` — `AuloEvent` pass-throughs for approval prompts (needs_click on Destructive risk) and notices, plus the agent-loop block the `aulo.v1.Event` proto mirrors (turn started, text delta, tool call started/output/finished, approval resolved, usage, turn finished) — re-keying loop ids onto aulo-types ids and capping every untrusted text field at the proto's per-event limits; item and thinking bookkeeping stays inside the session. `TurnContext` is the default request assembly with a `ToolSpecSource` seam for the T4.7 registry. Approvals stay behind the loop's `Approvals` trait, which the daemon wires to `aulo-policy` (T5.1). Tests (15): scripted text turn, tool turn with the result fed back, interrupt under a running exclusive tool (measured under 200 ms), the step limit, an approval answer, plus mapping unit tests. Remaining: the daemon-side session registry and Converse wiring (T4.8), the policy gate (T5.1/T5.3) and persona prompts (T4.11).
 
 ### T4.7. Tool registry and deferred tools
 
