@@ -91,7 +91,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T9.13 | todo | P2 | 4 | 0% | |
 | T9.14 | todo | P2 | 4 | 0% | |
 | T9.15 | done | P1 | 2 | 100% | |
-| T9.16 | todo | P1 | 3 | 0% | |
+| T9.16 | done | P1 | 3 | 100% | WorkBuddy (wb/control) |
 | T9.17 | todo | P1 | 2 | 0% | |
 | T9.18 | todo | P1 | 2 | 0% | |
 | T9.19 | todo | P2 | 1 | 0% | |
@@ -1089,6 +1089,8 @@ enigo click, type, key, scroll, drag with normalized coordinates; batched action
 Done when:
 
 - unit tests for coordinate mapping; manual check
+
+Outcome: `aulo-desktop-ax` (adapter, spec §4.2) holds the `input` module: `InputAction` (click/type/key/scroll/drag) runs through an `InputBackend` trait, with `EnigoBackend` over enigo 0.6.1 on macOS (Accessibility permission is required and is what T9.17 will surface; enigo's Linux backend links libxkbcommon, which CI does not install, so other platforms keep a refusing stub). Coordinates are `aulo-screen` 0–999, mapped per the screen size the caller passes (the capture the model is looking at), so a click lands where the screenshot shows it; drag is press–move–release at the two named points. Key specs (`cmd+shift+z`, `enter`, `f5`, single chars) are parsed against a fixed vocabulary and capped at 64 bytes, text at 64 KiB, wheel clicks at 100 per axis — all untrusted model input. Batches stop at the first failure and report how many actions ran (spec §6.2). Policy integration point: `InputAction::policy_call()` builds the `perm-rules` call `Call::new("input", kind, risk)` — the `Input(kind)` subject of spec §6.1, defined here on `perm-rules` directly until T5.1 lands in `aulo-policy`; typing is `Write`, pointer and key actions `Exec`, so all ask by default under `ApprovalPolicy::OnRequest` (a test pins this against the engine). Tests: 14 unit tests over a recording fake backend — coordinate mapping (same point on 1× and 2× screens), drag move/press/release order, caps refusing before the backend sees anything, key-spec parsing and rejections, batch stop-on-first-failure, and the subject. Manual check left (documented, not run): with Accessibility granted to the daemon, `input click 500 500` moves the real pointer and clicks; enigo's absolute origin is the top-left of the main display, the same origin as captures.
 
 ### T9.17. macOS permission onboarding
 

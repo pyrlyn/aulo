@@ -169,6 +169,15 @@ tracing-appender = "0.2.5"
 tracing-opentelemetry = "0.34.0"
 # EnvFilter, JSON and human formatters for the log subscriber
 tracing-subscriber = "0.3.23"
+# synthetic mouse and keyboard events for input_* tools in aulo-desktop-ax; approved in spec D4 (T0.4).
+# macOS-only in this workspace: the Linux backend links libxkbcommon, which CI does not install.
+enigo = { version = "0.6.1", default-features = false }
+# pseudo-terminal sessions for pty_* tools in aulo-tools; approved in spec D4 (T0.4)
+portable-pty = "0.9.0"
+# OS clipboard for clipboard_* tools in aulo-tools; approved in spec D4 (T0.4)
+arboard = "3.7.0"
+# managed Chromium over CDP for browser_* tools in aulo-browser; approved in spec D4 (T0.4)
+chromiumoxide = "0.9.1"
 # full CLI command-output fixtures
 trycmd = "1.2.1"
 # host of a URL, so the normalizer speaks the site and not the whole address

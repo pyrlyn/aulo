@@ -1,0 +1,22 @@
+[package]
+name = "aulo-desktop-ax"
+description = "Desktop control adapters: synthetic input and the accessibility tree per OS"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+aulo-screen = { path = "../aulo-screen" }
+perm-rules.workspace = true
+thiserror.workspace = true
+# Synthetic input events. macOS-only here: enigo's Linux backend links
+# libxkbcommon, which the CI runners do not install. Windows and Linux keep
+# the stub backend and compile for their unit tests only.
+[target.'cfg(target_os = "macos")'.dependencies]
+enigo.workspace = true
+
+[lints]
+workspace = true
