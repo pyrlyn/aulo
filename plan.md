@@ -37,7 +37,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T4.10 | todo | P1 | 3 | 0% | |
 | T4.11 | todo | P1 | 2 | 0% | |
 | T4.12 | todo | P2 | 2 | 0% | |
-| T5.1 | todo | P0 | 3 | 0% | |
+| T5.1 | done | P0 | 3 | 100% | WorkBuddy (wb/core) |
 | T5.2 | done | P0 | 2 | 100% | |
 | T5.3 | todo | P0 | 3 | 0% | |
 | T5.4 | todo | P0 | 3 | 0% | |
@@ -511,6 +511,8 @@ Every tool call passes perm-rules before running. Subjects: Shell(cmd), App(bund
 Done when:
 
 - table tests for rule grammar per subject
+
+Outcome: `crates/aulo-policy` grows from the T5.2 shell-only wrapper into the engine every tool call passes. `subjects.rs` is the subject table: one canonical tool name per kind (`bash`/`shell`, `app`, `site`, `input`, `clipboard`, the perm-rules file tools, `mcp__server__tool`, `plugin__id__tool`) with every tool spelling aliased onto it, and `app` as a path tool so a bundle family is one glob (`App(com.apple.*)`). One constructor per subject (`app_call`, `site_call`, `file_call`, `mcp_call`, `plugin_call`, `input_call`, `clipboard_call`) sets the risk the fallback uses: app, MCP, plugin and input calls ask; file reads and site reads run; file writes ask. `Policy` compiles the configured rule lists once (a malformed rule is a config error, never a skipped guard) and decides as a pure function of call, `Settings` (mode, approval policy, sandbox) and the active grants; `decide_shell` keeps the T5.2 entry point. `PolicyGate` implements the agent loop's `Approvals` over a `Policy`: standing grants come through a `Grants` trait the daemon implements over `aulo-store` (T5.3), session grants live in the gate, and the verdict maps onto the loop's `Verdict` with the matching `Why`. Decisions, deny reasons and decided-by carry through unchanged. 35 tests: the T5.2 fixtures, 18 table rows covering allow/deny/ask, prefix, domain, glob and segment matching per subject, the decision order (deny, mode, allow, ask, grant, policy, risk) and the grant's scope, plus gate unit tests. Note: perm-rules checks an ask rule before a session grant by design, so a grant answers the risk fallback, not a rule the user wrote; T5.3's grant tests use that path.
 
 ### T5.2. Shell risk classification
 
