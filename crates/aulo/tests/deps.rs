@@ -51,10 +51,14 @@ const ROLES: &[(&str, Role)] = &[
     ("aulo-providers", Role::Assembly),
     ("aulo-agent", Role::Domain),
     ("aulo-policy", Role::Domain),
+    // Read-only policy for unattended and routine runs.
+    ("aulo-unattended", Role::Domain),
     ("aulo-tools", Role::Adapter),
     ("aulo-apps", Role::Adapter),
     ("aulo-browser", Role::Adapter),
     ("aulo-desktop-ax", Role::Adapter),
+    // Screenshot capture and downscaling for the model.
+    ("aulo-screen", Role::Adapter),
     ("aulo-plugin", Role::Adapter),
     ("aulo-server", Role::Assembly),
     ("aulo", Role::Surface),
