@@ -1,5 +1,16 @@
 # aulo — done
 
+### T5.12. Untrusted-content guards
+
+Stage: S5 · Area: safety · Depends on: T5.1, T1.11 · Blocks: 0 task(s)
+
+Web pages, tool output, screenshot text and plugin output are wrapped as untrusted data, sanitized with text-sanitize, and instruction-like content in them forces Ask for the next consequential action.
+
+Done when:
+
+- fixture: an injected "ignore previous instructions" page forces Ask
+
+Outcome: `crates/aulo-untrusted` wraps the four sources after `text-sanitize`, and `Latch` turns an injected page into Ask for the next consequential action while still allowing a read. A tag, a zero-width character, or a terminal colour sequence does not hide the phrase. Text past the 256 KiB scan cap is not read and still asks.
 ### T9.20. Isolated agent session (separate OS user or VM)
 
 Stage: S9 · Area: control · Depends on: T9.18 · Blocks: 0 task(s)

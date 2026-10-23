@@ -48,7 +48,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T5.9 | todo | P1 | 3 | 0% | |
 | T5.10 | todo | P1 | 4 | 0% | |
 | T5.11 | todo | P1 | 2 | 0% | |
-| T5.12 | todo | P1 | 3 | 0% | |
+| T5.12 | done | P1 | 3 | 100% | |
 | T5.13 | done | P1 | 2 | 100% | |
 | T6.1 | in progress | P0 | 3 | 90% | Claude Code / claude-sonnet-5-5 |
 | T6.2 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
@@ -621,6 +621,8 @@ Web pages, tool output, screenshot text and plugin output are wrapped as untrust
 Done when:
 
 - fixture: an injected "ignore previous instructions" page forces Ask
+
+Outcome: `aulo-untrusted` sanitizes web pages, tool output, screenshot text and plugin output with `text-sanitize`, caps the scan at 256 KiB and the kept body at 64 KiB, and wraps the result so a closing marker inside the text cannot end the wrapper. A phrase such as "ignore previous instructions" (also with a tag or a zero-width character in the middle) arms a latch: the next consequential action asks, and a read does not. A body longer than the scan cap asks too, without reading the unread tail. `text-sanitize` is pinned at `319d363` of pyrlyn/crates.
 
 ### T5.13. Threat model
 

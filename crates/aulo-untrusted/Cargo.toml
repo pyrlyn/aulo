@@ -1,0 +1,15 @@
+[package]
+name = "aulo-untrusted"
+description = "Wrap untrusted web, tool, screenshot and plugin text, and force Ask after an injection"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+text-sanitize.workspace = true
+
+[lints]
+workspace = true
