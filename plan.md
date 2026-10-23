@@ -77,7 +77,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T8.16 | todo | P0 | 3 | 0% | |
 | T8.17 | todo | P1 | 2 | 0% | |
 | T9.1 | done | P0 | 3 | 100% | WorkBuddy (wb/control) |
-| T9.2 | todo | P1 | 3 | 0% | |
+| T9.2 | done | P1 | 3 | 100% | WorkBuddy (wb/control) |
 | T9.3 | todo | P0 | 3 | 0% | |
 | T9.4 | todo | P2 | 3 | 0% | |
 | T9.5 | todo | P2 | 3 | 0% | |
@@ -949,6 +949,8 @@ portable-pty sessions for interactive programs: open, send, read, close; buffers
 Done when:
 
 - test drives python -i or a shell through a PTY
+
+Outcome: `PtySession` in `aulo-tools` (`pty` module) opens an interactive program on a pseudo-terminal through `portable-pty` 0.9: `open` (program argv wrapped by `proc-sandbox`'s `sandbox::argv`, its documented PTY use — Landlock refuses an argv wrap and is reported as an error), `send` (capped at 64 KiB per write), `read` (drains a fixed 256 KiB ring, dropping the oldest output and counting it), `resize` (TIOCSWINSZ through the pty), `poll_exit`/`wait_exit`, and `close`/`Drop` that kill the program — the whole tree on Unix, through the pty's process-group leader — and send EOF by dropping the writer. A reader thread owns the master side, so the host never blocks on a slow program; `buffered`, `dropped` and `at_eof` expose the backpressure. Policy integration point: a session is the `Shell(cmd)` subject of spec §6.1, decided with `aulo_policy::decide_shell` before opening, exactly like the one-shot shell tool. Tests: 10 integration tests — `python3 -i` answers `print(6*7)` through the pty, a shell session runs a command and reports `exit 3`, a 600 KB output keeps the buffer at its cap with drops counted (the pty's own backpressure means the program cannot outrun the ring), `read` never returns more than asked, oversized input is refused, `close` and `Drop` both kill the program (proven with a `kill -0` probe), `resize` reaches the program (`shutil.get_terminal_size()` reports the new columns), the cwd and extra env arrive, and an empty argv is refused. Note: on macOS `/bin/sh` on a pty is bash and goes interactive (a tty stdin with no arguments), which is why the buffer test ends its line with `exit 0`.
 
 ### T9.3. App control on macOS
 

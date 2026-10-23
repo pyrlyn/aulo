@@ -3,6 +3,8 @@
 //! [`shell`] runs a command inside the proc-sandbox confinement with a
 //! timeout, an output cap and a lossless archive of the full output, so the
 //! model sees a truncated view with an id it can expand (the cox `expand`
-//! pattern).
+//! pattern). [`pty`] drives interactive programs on a pseudo-terminal with
+//! capped buffers.
 
+pub mod pty;
 pub mod shell;

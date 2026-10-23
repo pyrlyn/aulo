@@ -14,6 +14,10 @@ proc-sandbox.workspace = true
 thiserror.workspace = true
 # kill a timed-out command's whole process tree (process_group + killpg) without hand-written unsafe
 rustix = { workspace = true, features = ["process"] }
+# pseudo-terminal sessions for pty_* tools (T9.2); approved in spec D4 (T0.4)
+portable-pty.workspace = true
+# fixed-size ring between the pty reader thread and the host's reads
+ringbuf.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true
