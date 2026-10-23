@@ -675,16 +675,10 @@ dependencies = [
 name = "aulo-telemetry"
 version = "0.0.0"
 dependencies = [
- "opentelemetry",
- "opentelemetry-otlp",
- "opentelemetry_sdk",
- "regex",
  "serde_json",
+ "telemetry-setup",
  "tempfile",
- "thiserror 2.0.21",
  "tracing",
- "tracing-appender",
- "tracing-opentelemetry",
  "tracing-subscriber",
 ]
 
@@ -4658,6 +4652,24 @@ dependencies = [
  "filetime",
  "libc",
  "xattr",
+]
+
+[[package]]
+name = "telemetry-setup"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "478e9871b730553b65d52601c8b8133a97f675a88337874f1b5f703e97a3c5b4"
+dependencies = [
+ "opentelemetry",
+ "opentelemetry-otlp",
+ "opentelemetry_sdk",
+ "regex",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tracing",
+ "tracing-appender",
+ "tracing-opentelemetry",
+ "tracing-subscriber",
 ]
 
 [[package]]
