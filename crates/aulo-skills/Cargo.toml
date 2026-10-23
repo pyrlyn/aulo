@@ -1,0 +1,19 @@
+[package]
+name = "aulo-skills"
+description = "SKILL.md discovery: an index line in the prompt, the body only when the skill tool is called"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+agent-ext.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true

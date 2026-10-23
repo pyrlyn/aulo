@@ -1,5 +1,16 @@
 # aulo — done
 
+### T11.8. Skills
+
+Stage: S11 · Area: plugins · Depends on: T1.17, T4.7 · Blocks: 1 task(s)
+
+SKILL.md discovery (AgentSkills layout) from agent-ext; only an index line enters the prompt; the skill tool returns the body.
+
+Done when:
+
+- fixture skill is loaded on demand
+
+Outcome: `crates/aulo-skills` discovers skills under the aulo home and a project's `.aulo/skills`. The index omits the body; `load_body` returns it. A malformed file warns and is skipped. The tool spec is deferred.
 ### T9.20. Isolated agent session (separate OS user or VM)
 
 Stage: S9 · Area: control · Depends on: T9.18 · Blocks: 0 task(s)
