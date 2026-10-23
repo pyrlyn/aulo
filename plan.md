@@ -31,7 +31,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T4.4 | done | P0 | 3 | 100% | |
 | T4.5 | todo | P1 | 3 | 0% | |
 | T4.6 | done | P0 | 4 | 100% | WorkBuddy (wb/core) |
-| T4.7 | todo | P0 | 2 | 0% | |
+| T4.7 | done | P0 | 2 | 100% | WorkBuddy (wb/core) |
 | T4.8 | todo | P0 | 3 | 0% | |
 | T4.9 | done | P0 | 2 | 100% | |
 | T4.10 | todo | P1 | 3 | 0% | |
@@ -445,6 +445,8 @@ Registry with naming (builtin, mcp__server__tool, plugin__id__tool), risk levels
 Done when:
 
 - test: deferred tool appears only after tool_search
+
+Outcome: `crates/aulo-agent` gains `registry.rs` and `executor.rs`. `ToolRegistry` holds one `RegisteredTool` (its `llm-wire` `ToolSpec` plus a `SubjectKind`) per name; `valid_name` accepts a built-in (`[a-z][a-z0-9_]*`), `mcp__server__tool` and `plugin__id__tool`, caps names at 128 bytes and segments at 64, refuses control characters and duplicates. `SubjectKind` (Command, Path, Host, Bundle, Tool, None) pulls the approval subject out of the model-chosen input; a missing field or a non-host URL yields an empty subject, which only a no-subject rule can match. `tool_search` is a built-in read-only tool every request offers; `RegistryTools` runs it, matching deferred tools by name or description (query capped at 256 bytes, control characters dropped, at most 8 results) and marking them in the per-session `Discovery` (capped at 32). `ToolRegistry::specs` therefore offers `tool_search`, every non-deferred tool and only the discovered deferred ones, recomputed per request through `ToolSpecSource`. `RegistryTools` implements `agent_loop::Tools`: unknown tools are never rated (the loop answers them without running), an approved call reaches the `ToolExecutor` seam the daemon wires to the real backends. Tests (30): naming table, duplicates, hidden-until-discovered, search caps, discovery cap, subject extraction, and an end-to-end session turn where the first provider request offers `tool_search` without the deferred tool and the second offers both.
 
 ### T4.8. Converse RPC and chat persistence
 

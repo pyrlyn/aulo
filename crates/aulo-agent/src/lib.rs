@@ -11,6 +11,8 @@
 
 mod context;
 mod events;
+mod executor;
+mod registry;
 mod session;
 mod sink;
 
@@ -18,6 +20,11 @@ pub use context::{ToolSpecSource, TurnContext};
 pub use events::{
     ARGUMENTS_MAX_BYTES, ApprovalBy, NOTICE_MAX_BYTES, SessionEvent, SessionState,
     TEXT_DELTA_MAX_BYTES, TOOL_NAME_MAX_BYTES, TOOL_OUTPUT_MAX_BYTES, TurnStop, approval_summary,
+};
+pub use executor::{RegistryTools, ToolExecutor};
+pub use registry::{
+    Discovery, MAX_DISCOVERED, MAX_NAME_BYTES, MAX_QUERY_BYTES, MAX_SEARCH_RESULTS, RegisteredTool,
+    RegistryError, SubjectKind, TOOL_SEARCH, ToolRegistry, search_result, valid_name,
 };
 pub use session::{
     ApprovalChoice, EVENT_CHANNEL, MAX_USER_TEXT_BYTES, Session, SessionConfig, SessionError,
