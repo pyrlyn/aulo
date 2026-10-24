@@ -4,7 +4,7 @@ uv = "0.12.23" # installs the pipx: ptools tool
 "pipx:git+https://github.com/pyrlyn/tools.git" = "d6eb6452cbb7ec4b350de87194548915c2648c27" # `mise run sweep`, `just cache`, `just swarfr` (ptools, Python; pyrlyn/tools#8, repin to a tag once merged)
 "cargo:cargo-sweep" = "0.8.0" # `mise run sweep`: drops build artifacts unused for 1 day (ptools sweep)
 mold = { version = "2.42.1", os = ["linux"] } # linker, Linux only; mise [env] below turns it on where it is installed
-rust = { version = "1.99.0", components = "rustfmt,clippy" }
+rust = { version = "1.99.1", components = "rustfmt,clippy" }
 just = "1.58.0"
 "github:jdx/jactionlint" = "2.0.2" # the pre-push hook and local `mise x -- jactionlint`
 hk = "2.5.0" # runs jactionlint as a pre-push hook (hk.pkl); `mise x -- hk install --mise`
