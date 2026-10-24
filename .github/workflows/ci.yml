@@ -5,12 +5,19 @@
 # Shared workflows: https://github.com/pyrlyn/ci/blob/main/docs/reusable-workflows.md
 name: CI
 
+# Called by pipeline.yml (`workflow_call`), as in rtok: push to main, non-draft pull requests
+# and the weekly schedule run it next to pyrlyn/ci's scans; the protect-main required check
+# is `pipeline / gate`.
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_call:
+    inputs:
+      docs-only:
+        description: >-
+          The change is documentation only (pipeline.yml's `changes` job, `docs-only` in
+          .github/infra.yml). Accepted for parity with rtok; every job still runs.
+        type: boolean
+        required: false
+        default: false
   workflow_dispatch:
 
 concurrency:
