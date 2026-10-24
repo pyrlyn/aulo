@@ -9,6 +9,8 @@ just = "1.58.0"
 "github:jdx/jactionlint" = "2.0.2" # the pre-push hook and local `mise x -- jactionlint`
 hk = "2.5.0" # runs jactionlint as a pre-push hook (hk.pkl); `mise x -- hk install --mise`
 shellcheck = "0.11.0" # used by jactionlint for run: scripts; CI uses the runner image's copy
+node = "24.22.0" # Active LTS; runtime for the npm: tools below
+"npm:agent-device" = "0.21.31" # lets agents launch and check the aulo desktop app end to end
 
 [env]
 # mold as the Linux linker only where mise has installed it (clang is the driver): without mold
