@@ -5,19 +5,29 @@
 // The shared helper sits outside `#[test]` functions, where clippy still denies `unwrap`.
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
+#[cfg(target_os = "linux")]
 use std::f32::consts::TAU;
 
-use aulo_audio::{ECHO_FRAME_SAMPLES, ECHO_SAMPLE_RATE_HZ, EchoCanceller};
+use aulo_audio::EchoCanceller;
+#[cfg(target_os = "linux")]
+use aulo_audio::{ECHO_FRAME_SAMPLES, ECHO_SAMPLE_RATE_HZ};
 
+#[cfg(target_os = "linux")]
 /// Playback-to-microphone delay of the fixture. AEC3 is told the same number.
 const DELAY_MS: u16 = 100;
+#[cfg(target_os = "linux")]
 const DELAY_FRAMES: usize = DELAY_MS as usize / 10;
+#[cfg(target_os = "linux")]
 /// Let the filter and the delay estimate settle before measuring.
 const WARMUP_FRAMES: usize = 200;
+#[cfg(target_os = "linux")]
 /// One second of steady state.
 const MEASURE_FRAMES: usize = 100;
+#[cfg(target_os = "linux")]
 const TONE_HZ: f32 = 440.0;
+#[cfg(target_os = "linux")]
 const TONE_AMPLITUDE: f32 = 0.4;
+#[cfg(target_os = "linux")]
 const ECHO_GAIN: f32 = 0.5;
 
 #[cfg(target_os = "linux")]

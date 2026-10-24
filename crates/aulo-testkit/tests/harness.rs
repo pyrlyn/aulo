@@ -1,6 +1,8 @@
 //! The harness T4.6 and T4.8 call: a temp-home daemon, a scripted provider,
 //! and a Converse client. The session here is a stand-in that streams the
 //! scripted reply; the real session replaces it without changing the client.
+// TestDaemon serves on an owner-only Unix socket; other platforms only have a placeholder.
+#![cfg(unix)]
 #![allow(clippy::unwrap_used)]
 
 use std::sync::Arc;
