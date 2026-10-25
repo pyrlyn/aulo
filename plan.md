@@ -8,11 +8,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 
 | # | Status | Priority | Complexity | Readiness | Agent |
 | --- | --- | --- | --- | --- | --- |
-| T1.1 | in progress | P0 | 4 | 60% | Claude Code / claude-sonnet-5-5 |
-| T1.2 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
-| T1.3 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
-| T1.4 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
-| T1.5 | in progress | P0 | 2 | 60% | Claude Code / claude-sonnet-5-5 |
+| T1.1 | in progress | P0 | 4 | 80% | Claude Code / claude-opus-5-5 |
 | T1.6 | todo | P0 | 3 | 0% | |
 | T1.8 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
 | T1.9 | in progress | P0 | 3 | 60% | Claude Code / claude-sonnet-5-5 |
@@ -31,18 +27,18 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T3.7 | todo | P0 | 3 | 0% | |
 | T4.1 | todo | P0 | 3 | 0% | |
 | T4.2 | done | P0 | 2 | 100% | |
-| T4.3 | todo | P1 | 2 | 0% | |
-| T4.4 | todo | P0 | 3 | 0% | |
+| T4.3 | done | P1 | 2 | 100% | |
+| T4.4 | done | P0 | 3 | 100% | |
 | T4.5 | todo | P1 | 3 | 0% | |
 | T4.6 | todo | P0 | 4 | 0% | |
 | T4.7 | todo | P0 | 2 | 0% | |
 | T4.8 | todo | P0 | 3 | 0% | |
-| T4.9 | todo | P0 | 2 | 0% | |
+| T4.9 | done | P0 | 2 | 100% | |
 | T4.10 | todo | P1 | 3 | 0% | |
 | T4.11 | todo | P1 | 2 | 0% | |
 | T4.12 | todo | P2 | 2 | 0% | |
 | T5.1 | todo | P0 | 3 | 0% | |
-| T5.2 | todo | P0 | 2 | 0% | |
+| T5.2 | done | P0 | 2 | 100% | |
 | T5.3 | todo | P0 | 3 | 0% | |
 | T5.4 | todo | P0 | 3 | 0% | |
 | T5.5 | todo | P0 | 2 | 0% | |
@@ -53,12 +49,12 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T5.10 | todo | P1 | 4 | 0% | |
 | T5.11 | todo | P1 | 2 | 0% | |
 | T5.12 | todo | P1 | 3 | 0% | |
-| T5.13 | todo | P1 | 2 | 0% | |
+| T5.13 | done | P1 | 2 | 100% | |
 | T6.1 | in progress | P0 | 3 | 90% | Claude Code / claude-sonnet-5-5 |
 | T6.2 | in progress | P0 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T6.3 | todo | P1 | 2 | 0% | |
 | T6.4 | todo | P1 | 4 | 0% | |
-| T6.5 | todo | P1 | 3 | 0% | |
+| T6.5 | done | P1 | 3 | 100% | |
 | T6.6 | in progress | P1 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T6.7 | in progress | P2 | 3 | 90% | Claude Code / claude-sonnet-5-5 |
 | T7.5 | in progress | P1 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
@@ -94,12 +90,12 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T9.12 | todo | P1 | 3 | 0% | |
 | T9.13 | todo | P2 | 4 | 0% | |
 | T9.14 | todo | P2 | 4 | 0% | |
-| T9.15 | todo | P1 | 2 | 0% | |
+| T9.15 | done | P1 | 2 | 100% | |
 | T9.16 | todo | P1 | 3 | 0% | |
 | T9.17 | todo | P1 | 2 | 0% | |
 | T9.18 | todo | P1 | 2 | 0% | |
 | T9.19 | todo | P2 | 1 | 0% | |
-| T9.20 | todo | P3 | 5 | 0% | |
+| T9.20 | done | P3 | 5 | 100% | |
 | T10.1 | todo | P0 | 3 | 0% | |
 | T10.2 | todo | P1 | 2 | 0% | |
 | T10.3 | todo | P2 | 3 | 0% | |
@@ -156,8 +152,8 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T15.3 | todo | P2 | 3 | 0% | |
 | T15.4 | todo | P1 | 2 | 0% | |
 | T15.5 | in progress | P1 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
-| T16.5 | todo | P2 | 3 | 0% | |
-| T16.6 | todo | P3 | 2 | 0% | |
+| T16.5 | done | P2 | 3 | 100% | |
+| T16.6 | done | P3 | 2 | 100% | |
 
 ## S0. Decisions and spikes
 
@@ -176,53 +172,8 @@ Done when:
 - llm-wire builds and its tests pass in packages/crates
 - cox-protocol re-exports the moved types (no API break for cox)
 
-### T1.2. Extract llm-http: credentials, retries, SSE framing
+Status: the first criterion holds. `llm-wire` lives at `rust/llm-wire` in pyrlyn/crates; aulo pins it at `f0deed54` (`Cargo.toml` `[workspace.dependencies]`) and `aulo-providers`, `aulo-server` and `llm-router` build on it. At that rev `cargo test --locked --all-features --manifest-path <checkout>/rust/llm-wire/Cargo.toml` passes 24 of 24 tests, `test-util` included. No aulo crate redefines a moved type (`aulo_store::models::Usage` is a database row, not the wire `Usage`). The cox re-export is the remaining criterion. It is work in the cox repository and waits until `llm-wire` is published, because a path dependency breaks cox CI. Nothing is left in this repository.
 
-Stage: S1 · Area: shared · Depends on: T1.1 · Blocks: 2 task(s)
-
-Execution plan: in a packages/crates worktree branched from t1-1-llm-wire, create llm-http (publish = false, dual licence, rust-version 1.98) from cox-provider-http: resolve_key (env first, then keyring), retry policy, SSE framing, with tests for env-first, keyring fallback and retry backoff; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption waits for publication.
-
-Move resolve_key (env var, then keyring), retry policy and SSE framing from cox-provider-http into packages/crates/llm-http.
-
-Done when:
-
-- llm-http tests cover env-first, keyring fallback and retry backoff
-
-### T1.3. Extract llm-openai: Chat and Responses wires
-
-Stage: S1 · Area: shared · Depends on: T1.2 · Blocks: 2 task(s)
-
-Execution plan: in a packages/crates worktree branched from t1-2, create llm-openai (publish = false, dual licence, rust-version 1.98) from cox-provider-openai: Chat and Responses wires over llm-wire and llm-http, with recorded-fixture streaming text and tool-call tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption (T1.6) waits for publication.
-
-Move the OpenAI Chat and Responses wires from cox-provider-openai into packages/crates/llm-openai. They also serve every OpenAI-compatible endpoint (Ollama, LM Studio, vLLM, OpenRouter, DeepSeek, Gemini compat, xAI, runa).
-
-Done when:
-
-- streaming text and tool-call tests pass against recorded fixtures
-
-### T1.4. Extract llm-anthropic: Messages wire
-
-Stage: S1 · Area: shared · Depends on: T1.2 · Blocks: 1 task(s)
-
-Execution plan: in a packages/crates worktree branched from t1-2, create llm-anthropic (publish = false, dual licence, rust-version 1.98) from cox-provider-anthropic: Messages wire with typify-generated types, cache breakpoints, thinking and effort, over llm-wire and llm-http, with recorded-fixture tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption (T1.6) waits for publication.
-
-Move the Anthropic Messages wire (typify-generated types, cache breakpoints, thinking, effort) into packages/crates/llm-anthropic.
-
-Done when:
-
-- recorded-fixture tests pass
-
-### T1.5. Extract llm-catalog: model catalog and prices
-
-Stage: S1 · Area: shared · Depends on: T1.1 · Blocks: 2 task(s)
-
-Execution plan: in a packages/crates worktree branched from t1-1-llm-wire, create llm-catalog (publish = false, dual licence, rust-version 1.98) from cox-models: built-in rows, config overlay, prices.toml, overlay of served models, with Catalog::load, get and effort_for tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption (T1.6) waits for publication.
-
-Move cox-models (built-in rows, config overlay, prices.toml, overlay of served models) into packages/crates/llm-catalog.
-
-Done when:
-
-- Catalog::load, get and effort_for tests pass
 
 ### T1.6. Switch cox to the extracted llm crates
 
@@ -449,6 +400,8 @@ Done when:
 
 - wiremock tests detect each server kind
 
+Outcome: `detect_local` probes the loopback presets (runa and llama.cpp share `127.0.0.1:8080/v1`, Ollama is `11434`, LM Studio is `1234`). `GET /v1/models` names runa (`owned_by` `"runa"`), llama.cpp (`"llamacpp"`) and older Ollama (`"ollama"`). Current Ollama copies the model namespace into `owned_by`, so it is recognized from `GET /api/version` plus that list. LM Studio is recognized from the native lists `GET /api/v0/models` and `GET /api/v1/models`, and those rows (with load state) are what is reported. A server that is down or not one of these kinds is skipped. Bodies are capped at 256 KiB, ids at 256 bytes and 256 models; control characters are dropped; redirects are not followed; no API key is sent. The daemon does not call it yet, because nothing on the serve path builds providers.
+
 ### T4.4. Model catalog and per-chat model switching
 
 Stage: S4 · Area: providers · Depends on: T4.1, T1.5, T3.5 · Blocks: 3 task(s)
@@ -458,6 +411,8 @@ ConfigService lists providers and models (catalog plus served overlay). A chat s
 Done when:
 
 - test switches model between turns and the next request uses it
+
+Outcome: `ConfigService.ListModels` returns the built-in `llm-catalog` rows for each configured endpoint, plus models a tier names, plus a served overlay from `GET {base}/v1/models`. A chat stores `provider/model`; `Store::set_chat_model` replaces it, and `prepare_turn` builds the next provider request with the model id after the slash. The Converse stream that carries `SwitchModel` stays T4.8. Kind detection (runa versus Ollama versus LM Studio's native list) stays T4.3; this probe is the OpenAI-compatible list, local endpoints only, fail open.
 
 ### T4.5. Tiers and job routing
 
@@ -508,6 +463,8 @@ aulo-testkit: scripted provider (from llm-wire test-util), test daemon on a temp
 Done when:
 
 - used by T4.6 and T4.8 tests
+
+Outcome: `aulo-testkit` is the harness those tests import. `Scripted` replays an `llm-wire` `test-util` scenario (pinned turns for `when_contains`, `when_system_contains` and `job`, and a `title` request does not consume an unpinned turn). `TestDaemon` serves `ConfigService` and `ChatService` on `run/aulod.sock` under a temporary home; `start_with` mounts the extra service under test. `ConverseSession` and `drive` send `Attach`, `UserTurn`, `SwitchModel` and `Interrupt` and read events. The crate's own test mounts a stand-in `SessionService` that answers from `Scripted`, which is the seam T4.8 replaces. The testkit does not depend on the `aulo` binary: a testkit must not depend on a surface crate.
 
 ### T4.10. Context compaction and chat titles
 
@@ -560,6 +517,8 @@ shell-classify sets the risk of shell commands (ReadOnly, Write, Exec, Destructi
 Done when:
 
 - fixtures: rm -rf is Destructive and asks; ls is ReadOnly
+
+Outcome: `aulo-policy` rates a shell line with `shell-classify` and hands that risk to `perm-rules`. With no matching rule the decision is the risk fallback (`Default` mode, `OnRequest`, workspace-write sandbox): `ls` is ReadOnly and runs, `rm -rf` is Destructive and asks. A `Shell(ls)` deny rule still refuses `ls`, and a `Bash(rm -rf /tmp/build)` allow rule still permits that destructive line. A command longer than 64 KiB is not parsed, drops its text, and asks. Both crates are pinned at `319d363` of pyrlyn/crates (the `llm-wire` pin predates them). App, site, file, MCP and input subjects stay T5.1.
 
 ### T5.3. Approval flow and grants
 
@@ -673,6 +632,8 @@ Done when:
 
 - every guard in the doc points to a test or task
 
+Outcome: `docs/threat-model.md` maps spec §7 and the daemon's trust boundaries (remote client, local socket and pipe, model, tools, MCP, plugins, web and screenshots, speech and downloads, config and audit). Every guard cell is `test:` plus a path and function that exists in this tree, or `task:` plus a plan id. T5.1 is cited as the policy gate and is not described as implemented.
+
 ## S6. Audio I/O
 
 ### T6.1. aulo-audio: capture
@@ -732,6 +693,8 @@ AEC3, noise suppression and AGC for Windows and Linux, with the playback stream 
 Done when:
 
 - fixture test: far-end tone is attenuated by the target dB
+
+Outcome: `EchoCanceller` in `aulo-audio` (feature `aec3`, off by default) runs WebRTC AEC3 at 16 kHz in 10 ms frames, with the high-pass filter, noise suppression and AGC2 (no analog input-volume control). `render` takes the playback stream and does not modify it; `capture` removes the echo in place. Callers pass a known playback delay or leave it for AEC3 to estimate. The C++ library (`webrtc-audio-processing` 2.1.0, BSD-3-Clause, bundled abseil Apache-2.0) is built on Linux only: the MSVC bundled build still fails, and macOS uses Voice Processing I/O. On other targets `new` returns an error. A 100 ms delayed 440 Hz tone is attenuated by 42.7 dB either way; the fixture requires 20 dB. Linux CI installs meson and ninja because `--all-features` builds it. Not called from an audio callback, and not wired into `Playback` yet.
 
 ### T6.6. Microphone permission handling
 
@@ -1115,6 +1078,8 @@ Done when:
 
 - coordinate round-trip tests
 
+Outcome: `aulo-screen` maps a capture pixel to 0–999 and back. The same relative point on a 1440×900 capture and a 2× Retina capture is (500, 500), and a grid of points round-trips inside one bucket (`extent / 1000` pixels). Frames downscale so the long edge is 1280, keeping aspect; a smaller capture is left as it is. Empty, short, and oversized buffers are refused. The bytes are the RGBA shape xcap returns. xcap itself is not linked: 0.9.8's Linux backend depends on PipeWire and an unpinned git crate, which would make every CI target build that stack for a geometry test.
+
 ### T9.16. Synthetic input
 
 Stage: S9 · Area: control · Depends on: T9.15 · Blocks: 1 task(s)
@@ -1164,6 +1129,8 @@ Research and prototype running GUI work in a separate OS user session (macOS sec
 Done when:
 
 - docs/spikes/isolation.md with a working prototype or a no-go
+
+Outcome: `docs/spikes/isolation.md` and `scripts/isolation-spike.py`. On this Linux host a temporary user with a mode-0700 home and a private Xvfb cannot be read or connected to by the calling user, and the isolated user can open the display. The probe deletes the user. A VM was not started: QEMU, Docker and Podman are absent, and `/dev/kvm` is not usable by the unprivileged user. macOS and Windows were not probed. The desktop stays the default; the container in T13.5 is the isolation to build.
 
 ## S10. MCP
 
@@ -1748,6 +1715,10 @@ Findings from a code audit on 2026-10-07. Verified-clean areas worth noting: str
 
 `crates/aulo-server/src/auth.rs:161-174` inserts `Caller::LocalOwner` for any pipe client, relying on the default DACL — weaker than the Unix `SO_PEERCRED` uid check (`auth.rs:136-153`) and than the module's "fails closed" claim. Done means: `GetNamedPipeClientProcessId` (or an equivalent owner check) is verified before `LocalOwner` is granted.
 
+Outcome: the accept path reads `GetNamedPipeClientProcessId` and the client process token, and `LocalOwner` is granted only when that account is the daemon's user. A missing identity, a different account, or a process id that changes during the read is refused with the same unauthenticated status as a Unix peer the kernel did not identify. The decision is tested on every host; the Win32 probe and a real pipe health check run on Windows.
+
 ### T16.6. Unwired store/grants surface
 
 `Store::list_chats` (`aulo-store/src/lib.rs:142-149`) plus `create_bot`/`append_message`/`record_tool_call`/`record_usage` and the whole grants/audit surface (`safety.rs:13-107`) have zero non-test callers — the daemon never opens the database (`crates/aulo/src/daemon/serve.rs` mounts no service). Expected before T4/T5 land, but until then this code runs only under test. Done means: an integration test drives the store and one grant through `aulod` (or the surface is explicitly gated).
+
+Outcome: `aulod` opens `{home}/aulo.db` and mounts `ChatService` plus the list/revoke half of `ApprovalService` on that connection. `crates/aulo/tests/persist.rs` starts the binary, lists a grant seeded in that file, creates and lists a chat, and revokes the grant over the local socket. `Decide` returns not-found and does not insert a grant; message, tool, usage and audit writes stay library entry points for T4.8 and T5.9.

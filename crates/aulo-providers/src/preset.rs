@@ -31,6 +31,16 @@ pub const DEFAULT_TIMEOUT_SECS: u32 = 120;
 /// byte. Matches `llm-http`'s `Policy` default.
 pub const DEFAULT_MAX_RETRIES: u32 = 4;
 
+/// Loopback origins probed at startup. runa and llama.cpp both use port 8080,
+/// so that origin is listed once; the model list says which one answered.
+/// Ollama is 11434. LM Studio is 1234, and is recognized from its native model
+/// list rather than from `/v1/models`.
+pub const LOCAL_PROBE_ORIGINS: [&str; 3] = [
+    "http://127.0.0.1:8080",
+    "http://127.0.0.1:11434",
+    "http://127.0.0.1:1234",
+];
+
 /// The wire for `kind`. `openai` is Responses; `anthropic` is Messages;
 /// everything else, including `openai-compatible`, is Chat Completions.
 #[must_use]
@@ -101,6 +111,25 @@ mod tests {
                 "{kind:?}"
             );
         }
+    }
+
+    #[test]
+    fn local_probe_origins_are_the_preset_bases() {
+        let bases = [
+            default_base_url(ProviderKind::Runa),
+            default_base_url(ProviderKind::LlamaCpp),
+            default_base_url(ProviderKind::Ollama),
+            default_base_url(ProviderKind::LmStudio),
+        ];
+        for base in bases {
+            let base = base.unwrap_or("");
+            let origin = base.strip_suffix("/v1").unwrap_or(base);
+            assert!(
+                LOCAL_PROBE_ORIGINS.contains(&origin),
+                "{origin} is not probed"
+            );
+        }
+        assert_eq!(LOCAL_PROBE_ORIGINS.len(), 3);
     }
 
     #[test]

@@ -27,6 +27,22 @@ fn logged(settings: &Settings, emit: impl FnOnce()) -> String {
 }
 
 #[test]
+fn new_uses_the_aulo_defaults() {
+    let dir = tempfile::tempdir().unwrap();
+    let settings = Settings::new("error", dir.path());
+    let from_env = std::env::var("AULO_LOG")
+        .ok()
+        .filter(|value| !value.trim().is_empty());
+    assert_eq!(settings.app, "aulo");
+    assert_eq!(settings.level, "error");
+    assert_eq!(settings.filter_override, from_env);
+    assert!(settings.stderr);
+    assert!(settings.otlp_endpoint.is_none());
+    assert_eq!(settings.max_files, aulo_telemetry::DEFAULT_MAX_FILES);
+    assert_eq!(settings.extra_secret_patterns, [r"\baulo_[0-9a-f]{16,}"]);
+}
+
+#[test]
 fn writes_a_rotating_json_file_named_by_date() {
     let dir = tempfile::tempdir().unwrap();
     let log_dir = dir.path().join("nested").join("logs");
@@ -62,8 +78,15 @@ fn secrets_never_reach_the_file() {
             "got Bearer abcdef0123456789"
         );
         tracing::warn!(note = "key sk-ant-api03-abcdefghijklmnop");
+        tracing::info!("saw aulo_0123456789abcdef0123456789abcdef");
     });
-    for leaked in ["hunter2", "abcdef0123456789", "sk-live", "sk-ant-api03"] {
+    for leaked in [
+        "hunter2",
+        "abcdef0123456789",
+        "sk-live",
+        "sk-ant-api03",
+        "aulo_0123456789abcdef",
+    ] {
         assert!(!text.contains(leaked), "{leaked} leaked: {text}");
     }
     assert!(text.contains("ada"), "{text}");

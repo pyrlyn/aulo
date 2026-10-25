@@ -3,6 +3,10 @@
 //! - The local socket admits only the daemon's own user: the peer's uid comes
 //!   from the kernel (`SO_PEERCRED` / `getpeereid`), so the 0700 directory and
 //!   0600 socket are a second fence, not the only one.
+//! - The named pipe admits only a client whose process token is that same
+//!   user (`GetNamedPipeClientProcessId`, then the process token). A client
+//!   the kernel cannot identify is refused. `reject_remote_clients` and the
+//!   pipe DACL stay as a second fence, not the only one.
 //! - TCP admits only a request carrying `authorization: Bearer <token>`.
 //!
 //! Every admitted request carries a [`Caller`] in its extensions; a service
@@ -10,6 +14,9 @@
 //! mounted without these checks fails closed instead of open.
 
 mod token;
+
+#[cfg(windows)]
+mod pipe_owner;
 
 #[cfg(test)]
 mod tests;
@@ -158,17 +165,119 @@ pub(crate) fn is_owner(peer: Option<u32>, owner: u32) -> bool {
     peer == Some(owner)
 }
 
-/// The interceptor for the named pipe.
+/// What the kernel reported about the process on the other end of a pipe.
+#[cfg(any(windows, test))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum PipeClient {
+    /// Its process token is the daemon's user, and the pid still matches.
+    Owner,
+    /// The kernel named a different account.
+    Other,
+    /// No pid, no token, or the pid changed while it was being read.
+    Unknown,
+}
+
+/// Identity fixed when the pipe instance accepts a client. tonic copies it
+/// into every request on that connection; a client cannot set it.
+#[cfg(any(windows, test))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct PipeConnectInfo {
+    pub(crate) client: PipeClient,
+}
+
+/// `SECURITY_MAX_SID_SIZE`: a SID is at most this many bytes.
+#[cfg(any(windows, test))]
+const SID_CAP: usize = 68;
+
+/// A Windows account SID copied out of a process token.
 ///
-/// No per-client check yet: telling the client's user apart needs
-/// `GetNamedPipeClientProcessId` and token APIs through `unsafe` FFI. Until
-/// then the pipe relies on `reject_remote_clients` and its default DACL, which
-/// gives write access only to the creating user, administrators and SYSTEM,
-/// and a client that cannot write cannot send a request. This is the seam
-/// where that check goes.
+/// Empty values cannot be built, and [`same_account`] still rejects a zero
+/// length, so a failed read cannot look like a match.
+#[cfg(any(windows, test))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct AccountSid {
+    bytes: [u8; SID_CAP],
+    len: u8,
+}
+
+#[cfg(any(windows, test))]
+impl AccountSid {
+    fn from_bytes(bytes: &[u8]) -> Option<Self> {
+        if bytes.is_empty() || bytes.len() > SID_CAP {
+            return None;
+        }
+        let Ok(len) = u8::try_from(bytes.len()) else {
+            return None;
+        };
+        let mut sid = Self {
+            bytes: [0; SID_CAP],
+            len,
+        };
+        sid.bytes[..bytes.len()].copy_from_slice(bytes);
+        Some(sid)
+    }
+}
+
+/// Both SIDs were read and name the same account.
+#[cfg(any(windows, test))]
+fn same_account(client: &AccountSid, owner: &AccountSid) -> bool {
+    let Some(client_bytes) = client.bytes.get(..usize::from(client.len)) else {
+        return false;
+    };
+    let Some(owner_bytes) = owner.bytes.get(..usize::from(owner.len)) else {
+        return false;
+    };
+    !client_bytes.is_empty() && client_bytes == owner_bytes
+}
+
+/// Decides the pipe client from the two account reads and whether the pid
+/// was still the one `GetNamedPipeClientProcessId` returned afterwards.
+///
+/// `pid_unchanged` is false when the process id was reused, or the second
+/// read failed, between the two calls. That client is refused.
+#[cfg(any(windows, test))]
+fn classify_pipe_client(
+    client: Option<&AccountSid>,
+    owner: Option<&AccountSid>,
+    pid_unchanged: bool,
+) -> PipeClient {
+    if !pid_unchanged {
+        return PipeClient::Unknown;
+    }
+    match (client, owner) {
+        (Some(client), Some(owner)) if same_account(client, owner) => PipeClient::Owner,
+        (Some(_), Some(_)) => PipeClient::Other,
+        _ => PipeClient::Unknown,
+    }
+}
+
+/// The client's account, read from the connected server end.
 #[cfg(windows)]
-pub(crate) fn local_pipe(mut request: Request<()>) -> Result<Request<()>, Status> {
+pub(crate) fn pipe_client(server: &tokio::net::windows::named_pipe::NamedPipeServer) -> PipeClient {
+    pipe_owner::probe(server)
+}
+
+/// The interceptor for the named pipe. `LocalOwner` is granted only when the
+/// accept path recorded [`PipeClient::Owner`]. Anything else, including a
+/// request that carries no [`PipeConnectInfo`], is refused.
+#[cfg(any(windows, test))]
+pub(crate) fn authorize_pipe(mut request: Request<()>) -> Result<Request<()>, Status> {
+    let client = request
+        .extensions()
+        .get::<PipeConnectInfo>()
+        .map(|info| info.client)
+        .unwrap_or(PipeClient::Unknown);
+    if client != PipeClient::Owner {
+        tracing::warn!(
+            ?client,
+            "refused a named-pipe client that is not the daemon's user"
+        );
+        return Err(unauthenticated());
+    }
     request.metadata_mut().remove(AUTHORIZATION);
     request.extensions_mut().insert(Caller::LocalOwner);
     Ok(request)
 }
+
+#[cfg(windows)]
+pub(crate) use authorize_pipe as local_pipe;
