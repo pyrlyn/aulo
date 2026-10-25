@@ -170,20 +170,20 @@ Move the provider trait and the neutral types (Request, ProviderEvent, Caps, Too
 Done when:
 
 - llm-wire builds and its tests pass in packages/crates
-- cox-protocol re-exports the moved types (no API break for cox)
+- cox-protocol re-exports the moved types (no API break for the coding agent)
 
-Status: the first criterion holds. `llm-wire` lives at `rust/llm-wire` in pyrlyn/crates; aulo pins it at `f0deed54` (`Cargo.toml` `[workspace.dependencies]`) and `aulo-providers`, `aulo-server` and `llm-router` build on it. At that rev `cargo test --locked --all-features --manifest-path <checkout>/rust/llm-wire/Cargo.toml` passes 24 of 24 tests, `test-util` included. No aulo crate redefines a moved type (`aulo_store::models::Usage` is a database row, not the wire `Usage`). The cox re-export is the remaining criterion. It is work in the cox repository and waits until `llm-wire` is published, because a path dependency breaks cox CI. Nothing is left in this repository.
+Status: the first criterion holds. `llm-wire` lives at `rust/llm-wire` in pyrlyn/crates; aulo pins it at `f0deed54` (`Cargo.toml` `[workspace.dependencies]`) and `aulo-providers`, `aulo-server` and `llm-router` build on it. At that rev `cargo test --locked --all-features --manifest-path <checkout>/rust/llm-wire/Cargo.toml` passes 24 of 24 tests, `test-util` included. No aulo crate redefines a moved type (`aulo_store::models::Usage` is a database row, not the wire `Usage`). The coding agent re-export is the remaining criterion. It is work in the coding agent repository and waits until `llm-wire` is published, because a path dependency breaks the coding agent CI. Nothing is left in this repository.
 
 
-### T1.6. Switch cox to the extracted llm crates
+### T1.6. Switch the coding agent to the extracted llm crates
 
 Stage: S1 · Area: shared · Depends on: T1.3, T1.4, T1.5 · Blocks: 2 task(s)
 
-cox depends on llm-wire, llm-http, llm-openai, llm-anthropic and llm-catalog; the old code is deleted. Update cox tests/deps.rs, cox toolchain.md and rust.md.
+The coding agent depends on llm-wire, llm-http, llm-openai, llm-anthropic and llm-catalog; the old code is deleted. Update the coding agent tests/deps.rs, the coding agent toolchain.md and rust.md.
 
 Done when:
 
-- cox CI green with no duplicated provider code left
+- The coding agent CI green with no duplicated provider code left
 
 ### T1.8. Extract perm-rules: permission rule engine
 
@@ -191,7 +191,7 @@ Stage: S1 · Area: shared · Depends on: T0.1 · Blocks: 1 task(s)
 
 Execution plan: in a packages/crates worktree branched from s1-setup, create perm-rules (publish = false, dual licence) from cox-permission with a neutral, extensible subject type and its rule-grammar and decision-order tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption waits for publication (a path dependency breaks cox CI).
 
-Move cox-permission (rule grammar such as Bash(git commit:*), Edit(src/**), mcp__srv__*, decision order, risk fallback) into packages/crates/perm-rules with neutral subject types so aulo can add App(...) and Site(...) subjects. cox adopts it.
+Move cox-permission (rule grammar such as Bash(git commit:*), Edit(src/**), mcp__srv__*, decision order, risk fallback) into packages/crates/perm-rules with neutral subject types so aulo can add App(...) and Site(...) subjects. The coding agent adopts it.
 
 Done when:
 
@@ -203,7 +203,7 @@ Stage: S1 · Area: shared · Depends on: T0.1 · Blocks: 1 task(s)
 
 Execution plan: in a packages/crates worktree branched from s1-setup, create proc-sandbox (publish = false, dual licence) from cox-sandbox with its tests (macOS and Linux paths cfg-gated); crate-level project files like change-preview; verify cargo clippy/fmt/test on macOS. cox adoption waits for publication.
 
-Move cox-sandbox (SandboxMode, command wrapping, argv for PTYs, path::confine) into packages/crates/proc-sandbox. cox adopts it.
+Move cox-sandbox (SandboxMode, command wrapping, argv for PTYs, path::confine) into packages/crates/proc-sandbox. The coding agent adopts it.
 
 Done when:
 
@@ -219,7 +219,7 @@ Move the tree-sitter bash classifier from cox-tools/src/bash/classify.rs into pa
 
 Done when:
 
-- classifier fixture tests pass; cox adopts it
+- classifier fixture tests pass; the coding agent adopts it
 
 ### T1.11. Extract text-sanitize: terminal and bidi guard
 
@@ -227,7 +227,7 @@ Stage: S1 · Area: shared · Depends on: none · Blocks: 1 task(s)
 
 Execution plan: in a packages/crates worktree branched from s1-setup, create text-sanitize (publish = false, dual licence, rust-version 1.86 so ketch can adopt it) merging cox-sanitize, rtok src/sanitize.rs and ketch changelog::sanitize, with the union of their tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. Adoption by cox, rtok and ketch and the rust.md duplicate note wait for publication and creator permission.
 
-Merge cox-sanitize, rtok src/sanitize.rs and ketch changelog::sanitize (a known duplicate in rust.md) into packages/crates/text-sanitize. All three projects adopt it.
+Merge cox-sanitize, the token-reduction CLI src/sanitize.rs and ketch changelog::sanitize (a known duplicate in rust.md) into packages/crates/text-sanitize. All three projects adopt it.
 
 Done when:
 
@@ -239,11 +239,11 @@ Stage: S1 · Area: shared · Depends on: T0.1 · Blocks: 1 task(s)
 
 Execution plan: in a packages/crates worktree branched from s1-setup, create mcp-host (publish = false, dual licence) from the cox-mcp client parts on rmcp 3.x with the fail-open and discovery tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption waits for publication.
 
-Move cox-mcp client parts (connect_all that turns a failing server into a notice, .mcp.json discovery with ${VAR} expansion, OAuth with injectable store, elicitation mapping, deferred tools) into packages/crates/mcp-host on rmcp 3.x. cox adopts it.
+Move cox-mcp client parts (connect_all that turns a failing server into a notice, .mcp.json discovery with ${VAR} expansion, OAuth with injectable store, elicitation mapping, deferred tools) into packages/crates/mcp-host on rmcp 3.x. The coding agent adopts it.
 
 Done when:
 
-- fail-open and discovery tests pass; cox adopts it
+- fail-open and discovery tests pass; the coding agent adopts it
 
 ### T1.13. Extract speech-capture: microphone capture and resampling
 
@@ -251,11 +251,11 @@ Stage: S1 · Area: shared · Depends on: T0.1 · Blocks: 2 task(s)
 
 Execution plan: in a packages/crates worktree branched from s1-setup, create speech-capture (publish = false, dual licence) merging cox-voice capture (cpal default device, downmix, rubato to 16 kHz) with runa-media decode/resample/energy VAD; whisper behind a feature; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox and runa adoption waits for publication.
 
-Merge cox-voice capture (cpal default device, downmix, rubato to 16 kHz) with runa-media decode/resample/energy VAD into packages/crates/speech-capture. cox and runa adopt it; whisper transcription stays behind a feature.
+Merge cox-voice capture (cpal default device, downmix, rubato to 16 kHz) with runa-media decode/resample/energy VAD into packages/crates/speech-capture. The coding agent and the local model runner adopt it; whisper transcription stays behind a feature.
 
 Done when:
 
-- cox and runa build against it; duplicated rubato/whisper code removed
+- The coding agent and runa build against it; duplicated rubato/whisper code removed
 
 ### T1.14. Extract config-schema: schema-checked config helpers
 
@@ -263,11 +263,11 @@ Stage: S1 · Area: shared · Depends on: none · Blocks: 0 task(s)
 
 Execution plan: in a packages/crates worktree branched from s1-setup, create config-schema (publish = false, dual licence, MSRV low enough for ketch and rtok) from the duplicates in cox-config, rtok config/layers.rs and ketch toml_file.rs: stale-schema test helper, figment layering with per-key provenance, toml_edit editing; union of their tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. Adoption by ketch or rtok waits for publication.
 
-rust.md lists "config with schema and one owner" as a known duplicate (cox-config, rtok config/layers.rs, ketch toml_file.rs). Extract the stale-schema test helper, figment layering with per-key provenance and toml_edit editing into packages/crates/config-schema.
+rust.md lists "config with schema and one owner" as a known duplicate (cox-config, rtok config/layers.rs, the package manager toml_file.rs). Extract the stale-schema test helper, figment layering with per-key provenance and toml_edit editing into packages/crates/config-schema.
 
 Done when:
 
-- ketch or rtok adopts it; helper tests pass
+- The package manager or the token-reduction CLI adopts it; helper tests pass
 
 ### T1.15. Extract agent-loop: neutral turn state machine
 
@@ -275,13 +275,13 @@ Stage: S1 · Area: shared · Depends on: T1.1, T0.7 · Blocks: 2 task(s)
 
 Execution plan: in a packages/crates worktree branched from t1-1-llm-wire, create agent-loop (publish = false, dual licence, rust-version 1.98) from the neutral part of cox-core: Submission/Event, parallel and exclusive tool dispatch, approvals, interrupt via CancellationToken, max steps; tools and approvals behind traits; coding-specific parts stay in cox; tests with a scripted provider for tool calls, approval and interrupt; verify cargo clippy/fmt/test. cox adoption (T1.16) waits for publication.
 
-Per the T0.7 decision, extract the turn state machine (Submission/Event, parallel and exclusive tool dispatch, approvals, interrupt via CancellationToken, max steps) from cox-core into packages/crates/agent-loop. Coding-specific parts stay in cox.
+Per the T0.7 decision, extract the turn state machine (Submission/Event, parallel and exclusive tool dispatch, approvals, interrupt via CancellationToken, max steps) from cox-core into packages/crates/agent-loop. Coding-specific parts stay in the coding agent.
 
 Done when:
 
 - agent-loop tests with a scripted provider cover tool calls, approval and interrupt
 
-### T1.16. Switch cox to agent-loop
+### T1.16. Switch the coding agent to agent-loop
 
 Stage: S1 · Area: shared · Depends on: T1.15 · Blocks: 0 task(s)
 
@@ -289,7 +289,7 @@ cox-core uses agent-loop; duplicated loop code is deleted.
 
 Done when:
 
-- cox CI green
+- The coding agent CI green
 
 ### T1.17. Extract agent-ext: skills and shell hooks
 
@@ -297,7 +297,7 @@ Stage: S1 · Area: shared · Depends on: T0.1 · Blocks: 2 task(s)
 
 Execution plan: in a packages/crates worktree branched from s1-setup, create agent-ext (publish = false, dual licence) from cox-ext: SKILL.md discovery (index line, deferred skill tool) and Claude-Code-style shell hooks (JSON on stdin, exit 2 blocks, HookChain, fail open); crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption waits for publication.
 
-Move SKILL.md discovery (index line in prompt, deferred skill tool) and Claude-Code-style shell hooks (JSON on stdin, exit 2 blocks, HookChain) from cox-ext into packages/crates/agent-ext. cox adopts it.
+Move SKILL.md discovery (index line in prompt, deferred skill tool) and Claude-Code-style shell hooks (JSON on stdin, exit 2 blocks, HookChain) from cox-ext into packages/crates/agent-ext. The coding agent adopts it.
 
 Done when:
 
@@ -313,31 +313,31 @@ Move register_mcp/unregister_mcp, backup and atomic JSON edits from rtok-agent-s
 
 Done when:
 
-- rtok adopts it; round-trip test keeps foreign keys byte-for-byte
+- The token-reduction CLI adopts it; round-trip test keeps foreign keys byte-for-byte
 
-### T1.19. runa: stream tokens as they are generated
+### T1.19. The local model runner: stream tokens as they are generated
 
 Stage: S1 · Area: shared · Depends on: none · Blocks: 1 task(s)
 
-Execution plan: tracked in runa as P16.1 (branch runa-p16-aulo-tasks, done there and waiting for a runa PR to merge); stream GenEvents from the generation task to the SSE body through a bounded channel, keep the non-streaming path, add a timed test. T1.20 is runa P16.2.
+Execution plan: tracked in the local model runner as P16.1 (branch runa-p16-aulo-tasks, done there and waiting for a local model runner PR to merge); stream GenEvents from the generation task to the SSE body through a bounded channel, keep the non-streaming path, add a timed test. T1.20 is the local model runner P16.2.
 
-runa serve builds the whole reply before replaying it as SSE (serve.rs generate_events), so time to first token equals generation time. Change it to stream GenEvents as they arrive. Work happens in the runa repository; aulo only tracks it.
+runa serve builds the whole reply before replaying it as SSE (serve.rs generate_events), so time to first token equals generation time. Change it to stream GenEvents as they arrive. Work happens in the local model runner repository; aulo only tracks it.
 
 Done when:
 
-- runa streams the first token before generation ends (test with a timer)
+- The local model runner streams the first token before generation ends (test with a timer)
 
-### T1.20. runa: library target for in-process local inference
+### T1.20. The local model runner: library target for in-process local inference
 
 Stage: S1 · Area: shared · Depends on: T1.19 · Blocks: 0 task(s)
 
-runa is bin-only (serve, pool and mcp are pub(crate)). Expose a library crate (for example runa-serve) so aulod can embed local inference without a second process.
+The local model runner is bin-only (serve, pool and mcp are pub(crate)). Expose a library crate (for example runa-serve) so aulod can embed local inference without a second process.
 
-Execution plan: tracked in runa as P16.2 (branch p16-2-lib, stacked on P16.1; done there as the runa-pool crate, waiting for a runa PR to merge); expose a narrow library API for the pool and a generation stream, with an integration test outside the runa binary.
+Execution plan: tracked in the local model runner as P16.2 (branch p16-2-lib, stacked on P16.1; done there as the runa-pool crate, waiting for a local model runner PR to merge); expose a narrow library API for the pool and a generation stream, with an integration test outside the local model runner binary.
 
 Done when:
 
-- aulo can call runa's pool from a test
+- aulo can call the local model runner's pool from a test
 
 ## S2. Workspace foundations
 
@@ -347,7 +347,7 @@ Stage: S2 · Area: infra · Depends on: T2.1 · Blocks: 0 task(s)
 
 ci.yml calls pyrlyn/ci ci-rust.yml (Linux x86_64 and aarch64, macOS aarch64, Windows x86_64; no x86_64 macOS), commit-subject lint, pipeline.yml (CodeQL, Semgrep). Linux job installs libasound2-dev.
 
-Execution plan: 1. .github/workflows/ci.yml calling pyrlyn/ci ci-rust.yml at the same pinned SHA style cox uses (targets Linux x86_64/aarch64, macOS aarch64, Windows x86_64; no x86_64 macOS), with protoc and libasound2-dev installed where the reusable workflow allows. 2. Commit-subject lint and pipeline.yml (CodeQL, Semgrep) following cox's workflows. 3. Validate locally with actionlint (and zizmor if rust.md/cox uses it). 4. CI green can only be checked after a push, which needs the creator's permission; until then readiness stays below 100% and the card notes it.
+Execution plan: 1. .github/workflows/ci.yml calling pyrlyn/ci ci-rust.yml at the same pinned SHA style the coding agent uses (targets Linux x86_64/aarch64, macOS aarch64, Windows x86_64; no x86_64 macOS), with protoc and libasound2-dev installed where the reusable workflow allows. 2. Commit-subject lint and pipeline.yml (CodeQL, Semgrep) following the coding agent's workflows. 3. Validate locally with actionlint (and zizmor if rust.md/cox uses it). 4. CI green can only be checked after a push, which needs the creator's permission; until then readiness stays below 100% and the card notes it.
 Status note: ci.yml (pyrlyn/ci ci-rust.yml at f880dee, shared matrix without Intel macOS; setup-command installs libasound2-dev and protoc per OS), a bash Conventional Commits check on pull requests, pipeline.yml and .github/infra.yml (CodeQL actions/python/rust, Semgrep) are on main and pass actionlint. Waiting for a push to see CI green; apt protoc is 3.21 while local is 36.2.
 
 Done when:
@@ -372,7 +372,7 @@ Done when:
 
 Stage: S4 · Area: providers · Depends on: T1.6, T2.5 · Blocks: 4 task(s)
 
-Assembly crate that builds llm-wire providers from [providers.*]: OpenAI (chat/responses), Anthropic, and OpenAI-compatible sections without per-vendor code (Ollama, LM Studio, vLLM, OpenRouter, DeepSeek, Gemini compat, xAI, runa, custom). Fail open: a broken provider becomes a warning.
+Assembly crate that builds llm-wire providers from [providers.*]: OpenAI (chat/responses), Anthropic, and OpenAI-compatible sections without per-vendor code (Ollama, LM Studio, vLLM, OpenRouter, DeepSeek, Gemini compat, xAI, the local model runner, custom). Fail open: a broken provider becomes a warning.
 
 Done when:
 
@@ -382,7 +382,7 @@ Done when:
 
 Stage: S4 · Area: providers · Depends on: T4.1 · Blocks: 2 task(s)
 
-aulo auth set/rm/ls <provider>: keys go to the keychain (keyring), env vars win, inline keys in config are rejected (runa pattern). gRPC ConfigService can set a key but never return it.
+aulo auth set/rm/ls <provider>: keys go to the keychain (keyring), env vars win, inline keys in config are rejected (the local model runner pattern). gRPC ConfigService can set a key but never return it.
 
 Done when:
 
@@ -394,13 +394,13 @@ Outcome: `aulo-config` rejects a secret-named key (`api_key`, `password`, `*_api
 
 Stage: S4 · Area: providers · Depends on: T4.1 · Blocks: 0 task(s)
 
-Presets for runa (127.0.0.1:8080/v1), Ollama (11434), LM Studio (1234, native model list). Probe /v1/models at start and list what is served.
+Presets for the local model runner (127.0.0.1:8080/v1), Ollama (11434), LM Studio (1234, native model list). Probe /v1/models at start and list what is served.
 
 Done when:
 
 - wiremock tests detect each server kind
 
-Outcome: `detect_local` probes the loopback presets (runa and llama.cpp share `127.0.0.1:8080/v1`, Ollama is `11434`, LM Studio is `1234`). `GET /v1/models` names runa (`owned_by` `"runa"`), llama.cpp (`"llamacpp"`) and older Ollama (`"ollama"`). Current Ollama copies the model namespace into `owned_by`, so it is recognized from `GET /api/version` plus that list. LM Studio is recognized from the native lists `GET /api/v0/models` and `GET /api/v1/models`, and those rows (with load state) are what is reported. A server that is down or not one of these kinds is skipped. Bodies are capped at 256 KiB, ids at 256 bytes and 256 models; control characters are dropped; redirects are not followed; no API key is sent. The daemon does not call it yet, because nothing on the serve path builds providers.
+Outcome: `detect_local` probes the loopback presets (the local model runner and llama.cpp share `127.0.0.1:8080/v1`, Ollama is `11434`, LM Studio is `1234`). `GET /v1/models` names the local model runner (`owned_by` `"runa"`), llama.cpp (`"llamacpp"`) and older Ollama (`"ollama"`). Current Ollama copies the model namespace into `owned_by`, so it is recognized from `GET /api/version` plus that list. LM Studio is recognized from the native lists `GET /api/v0/models` and `GET /api/v1/models`, and those rows (with load state) are what is reported. A server that is down or not one of these kinds is skipped. Bodies are capped at 256 KiB, ids at 256 bytes and 256 models; control characters are dropped; redirects are not followed; no API key is sent. The daemon does not call it yet, because nothing on the serve path builds providers.
 
 ### T4.4. Model catalog and per-chat model switching
 
@@ -412,7 +412,7 @@ Done when:
 
 - test switches model between turns and the next request uses it
 
-Outcome: `ConfigService.ListModels` returns the built-in `llm-catalog` rows for each configured endpoint, plus models a tier names, plus a served overlay from `GET {base}/v1/models`. A chat stores `provider/model`; `Store::set_chat_model` replaces it, and `prepare_turn` builds the next provider request with the model id after the slash. The Converse stream that carries `SwitchModel` stays T4.8. Kind detection (runa versus Ollama versus LM Studio's native list) stays T4.3; this probe is the OpenAI-compatible list, local endpoints only, fail open.
+Outcome: `ConfigService.ListModels` returns the built-in `llm-catalog` rows for each configured endpoint, plus models a tier names, plus a served overlay from `GET {base}/v1/models`. A chat stores `provider/model`; `Store::set_chat_model` replaces it, and `prepare_turn` builds the next provider request with the model id after the slash. The Converse stream that carries `SwitchModel` stays T4.8. Kind detection (the local model runner versus Ollama versus LM Studio's native list) stays T4.3; this probe is the OpenAI-compatible list, local endpoints only, fail open.
 
 ### T4.5. Tiers and job routing
 
@@ -1184,7 +1184,7 @@ Done when:
 
 Stage: S10 · Area: mcp · Depends on: T8.1, T5.3 · Blocks: 2 task(s)
 
-aulo mcp serves aulo's abilities to other agents (Claude Code, Cursor, Codex): speak(text, voice), listen(timeout), ask_user(question) by voice, notify, plus computer tools. Every call goes through aulo policy and approvals, the caller cannot bypass them. Built on rmcp, following rtok's MCP server.
+aulo mcp serves aulo's abilities to other agents (Claude Code, Cursor, Codex): speak(text, voice), listen(timeout), ask_user(question) by voice, notify, plus computer tools. Every call goes through aulo policy and approvals, the caller cannot bypass them. Built on rmcp, following the token-reduction CLI's MCP server.
 
 Done when:
 
@@ -1210,15 +1210,15 @@ Done when:
 
 - round-trip test keeps other entries byte-for-byte
 
-### T10.8. cox tools through cox mcp
+### T10.8. The coding agent tools through cox mcp
 
 Stage: S10 · Area: mcp · Depends on: T10.1 · Blocks: 0 task(s)
 
-Optional preset that mounts `cox mcp` (cox's built-in read/edit/grep/glob tools) as an MCP server for file and code work instead of reimplementing them. Process boundary, no linking.
+Optional preset that mounts `cox mcp` (the coding agent's built-in read/edit/grep/glob tools) as an MCP server for file and code work instead of reimplementing them. Process boundary, no linking.
 
 Done when:
 
-- preset documented; fixture test lists cox tools
+- preset documented; fixture test lists the coding agent tools
 
 ## S11. Plugins, skills and hooks
 
@@ -1316,7 +1316,7 @@ Done when:
 
 Stage: S11 · Area: plugins · Depends on: T11.10 · Blocks: 0 task(s)
 
-A plugin index with minisign signatures (ketch trust.rs pattern) for discovery and install by name.
+A plugin index with minisign signatures (the package manager trust.rs pattern) for discovery and install by name.
 
 Done when:
 

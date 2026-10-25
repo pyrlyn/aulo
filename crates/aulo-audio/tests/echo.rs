@@ -4,6 +4,8 @@
 #![cfg(feature = "aec3")]
 // The shared helper sits outside `#[test]` functions, where clippy still denies `unwrap`.
 #![allow(clippy::unwrap_used, clippy::expect_used)]
+// The fixture only runs on Linux; elsewhere its helpers and imports are unused.
+#![cfg_attr(not(target_os = "linux"), allow(unused_imports, dead_code))]
 
 use std::f32::consts::TAU;
 
