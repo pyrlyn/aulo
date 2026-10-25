@@ -76,8 +76,8 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T8.15 | todo | P2 | 3 | 0% | |
 | T8.16 | todo | P0 | 3 | 0% | |
 | T8.17 | todo | P1 | 2 | 0% | |
-| T9.1 | todo | P0 | 3 | 0% | |
-| T9.2 | todo | P1 | 3 | 0% | |
+| T9.1 | done | P0 | 3 | 100% | WorkBuddy (wb/control) |
+| T9.2 | done | P1 | 3 | 100% | WorkBuddy (wb/control) |
 | T9.3 | todo | P0 | 3 | 0% | |
 | T9.4 | todo | P2 | 3 | 0% | |
 | T9.5 | todo | P2 | 3 | 0% | |
@@ -91,7 +91,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T9.13 | todo | P2 | 4 | 0% | |
 | T9.14 | todo | P2 | 4 | 0% | |
 | T9.15 | done | P1 | 2 | 100% | |
-| T9.16 | todo | P1 | 3 | 0% | |
+| T9.16 | done | P1 | 3 | 100% | WorkBuddy (wb/control) |
 | T9.17 | todo | P1 | 2 | 0% | |
 | T9.18 | todo | P1 | 2 | 0% | |
 | T9.19 | todo | P2 | 1 | 0% | |
@@ -938,6 +938,8 @@ Done when:
 
 - tests: timeout kills the process tree; truncated output is recoverable
 
+Outcome: `aulo-tools` (adapter) holds the `shell` module. A command runs as `<shell> -c <line>` wrapped by `proc-sandbox` (`sandbox::command`), with stdin null, both pipes piped, its own process group (`process_group(0)`, safe std) and a confined cwd (`proc_sandbox::path::confine`, canonicalized first so a symlinked root is not an escape). The timeout kills the whole tree with `rustix::process::kill_process_group` on Unix (`taskkill /T /F` on Windows, which has no process groups); because grandchildren inherit the stdout pipe, the group kill is what lets the run finish at all. Output streams as `OutputEvent::Chunk`/`Exit` on an mpsc channel from two reader threads; each stream keeps a 32 KiB head view for the model and appends everything to a lossless archive under the archive root (256 MiB per stream, flagged when cut), named by a validated `ArchiveId` — the cox `expand` pattern, with `OutputArchive::read(id, start, len)` for recovery and an id regex that refuses traversal. The environment is cleared and rebuilt from an injectable allowlist (`DEFAULT_ENV_ALLOWLIST`: PATH, HOME, LANG, TERM, TMPDIR, …) plus host-vetted per-run extras; the command line is capped at `aulo_policy::SHELL_COMMAND_MAX_BYTES`. Policy wiring (T5.4 not merged): `policy_call(command)` is `aulo_policy::shell_call`; the host decides with `decide_shell` and only runs an `Allow`, mapping the outcome onto the `SandboxPolicy` (read-only / workspace-write / danger-full-access) it passes in — the sandbox profiles stay T5.4's to own. Tests: 13 integration tests — exit codes, the timeout tree kill (two sleeps holding the pipe prove the group died), truncation plus archive tail recovery, cwd confinement (inside and `/etc` refused), the env allowlist hiding a secret while extras pass, the policy subject (`rm -rf` asks), streaming event order, empty/oversized refusal, archive-id traversal refusal, no-output runs archiving nothing, and the sandbox argv composition. The live confinement test (write inside the roots runs, outside fails) is gated on a backend existing and a trivial run succeeding: this agent session is itself inside a macOS sandbox, so a nested restrictive Seatbelt profile is refused with `sandbox_apply: Operation not permitted`; on a normal host (aulod runs unsandboxed) it runs for real, and the skip prints its reason.
+
 ### T9.2. Interactive PTY sessions
 
 Stage: S9 · Area: control · Depends on: T9.1 · Blocks: 0 task(s)
@@ -947,6 +949,8 @@ portable-pty sessions for interactive programs: open, send, read, close; buffers
 Done when:
 
 - test drives python -i or a shell through a PTY
+
+Outcome: `PtySession` in `aulo-tools` (`pty` module) opens an interactive program on a pseudo-terminal through `portable-pty` 0.9: `open` (program argv wrapped by `proc-sandbox`'s `sandbox::argv`, its documented PTY use — Landlock refuses an argv wrap and is reported as an error), `send` (capped at 64 KiB per write), `read` (drains a fixed 256 KiB ring, dropping the oldest output and counting it), `resize` (TIOCSWINSZ through the pty), `poll_exit`/`wait_exit`, and `close`/`Drop` that kill the program — the whole tree on Unix, through the pty's process-group leader — and send EOF by dropping the writer. A reader thread owns the master side, so the host never blocks on a slow program; `buffered`, `dropped` and `at_eof` expose the backpressure. Policy integration point: a session is the `Shell(cmd)` subject of spec §6.1, decided with `aulo_policy::decide_shell` before opening, exactly like the one-shot shell tool. Tests: 10 integration tests — `python3 -i` answers `print(6*7)` through the pty, a shell session runs a command and reports `exit 3`, a 600 KB output keeps the buffer at its cap with drops counted (the pty's own backpressure means the program cannot outrun the ring), `read` never returns more than asked, oversized input is refused, `close` and `Drop` both kill the program (proven with a `kill -0` probe), `resize` reaches the program (`shutil.get_terminal_size()` reports the new columns), the cwd and extra env arrive, and an empty argv is refused. Note: on macOS `/bin/sh` on a pty is bash and goes interactive (a tty stdin with no arguments), which is why the buffer test ends its line with `exit 0`.
 
 ### T9.3. App control on macOS
 
@@ -1089,6 +1093,8 @@ enigo click, type, key, scroll, drag with normalized coordinates; batched action
 Done when:
 
 - unit tests for coordinate mapping; manual check
+
+Outcome: `aulo-desktop-ax` (adapter, spec §4.2) holds the `input` module: `InputAction` (click/type/key/scroll/drag) runs through an `InputBackend` trait, with `EnigoBackend` over enigo 0.6.1 on macOS (Accessibility permission is required and is what T9.17 will surface; enigo's Linux backend links libxkbcommon, which CI does not install, so other platforms keep a refusing stub). Coordinates are `aulo-screen` 0–999, mapped per the screen size the caller passes (the capture the model is looking at), so a click lands where the screenshot shows it; drag is press–move–release at the two named points. Key specs (`cmd+shift+z`, `enter`, `f5`, single chars) are parsed against a fixed vocabulary and capped at 64 bytes, text at 64 KiB, wheel clicks at 100 per axis — all untrusted model input. Batches stop at the first failure and report how many actions ran (spec §6.2). Policy integration point: `InputAction::policy_call()` builds the `perm-rules` call `Call::new("input", kind, risk)` — the `Input(kind)` subject of spec §6.1, defined here on `perm-rules` directly until T5.1 lands in `aulo-policy`; typing is `Write`, pointer and key actions `Exec`, so all ask by default under `ApprovalPolicy::OnRequest` (a test pins this against the engine). Tests: 14 unit tests over a recording fake backend — coordinate mapping (same point on 1× and 2× screens), drag move/press/release order, caps refusing before the backend sees anything, key-spec parsing and rejections, batch stop-on-first-failure, and the subject. Manual check left (documented, not run): with Accessibility granted to the daemon, `input click 500 500` moves the real pointer and clicks; enigo's absolute origin is the top-left of the main display, the same origin as captures.
 
 ### T9.17. macOS permission onboarding
 

@@ -47,6 +47,8 @@ const ROLES: &[(&str, Role)] = &[
     ("aulo-speech-cloud", Role::Adapter),
     ("aulo-speech-bench", Role::Adapter),
     ("aulo-realtime", Role::Adapter),
+    // Screenshot geometry for the model (T9.15): pure functions over capture bytes.
+    ("aulo-screen", Role::Adapter),
     ("aulo-voice", Role::Domain),
     ("aulo-providers", Role::Assembly),
     ("aulo-agent", Role::Domain),
@@ -56,7 +58,7 @@ const ROLES: &[(&str, Role)] = &[
     ("aulo-apps", Role::Adapter),
     ("aulo-browser", Role::Adapter),
     ("aulo-desktop-ax", Role::Adapter),
-    ("aulo-screen", Role::Adapter),
+    ("aulo-mcp", Role::Adapter),
     ("aulo-plugin", Role::Adapter),
     ("aulo-server", Role::Assembly),
     ("aulo", Role::Surface),

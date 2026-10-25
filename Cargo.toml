@@ -82,6 +82,9 @@ llm-wire-anthropic = { git = "https://github.com/pyrlyn/crates", rev = "f0deed54
 shell-classify = { git = "https://github.com/pyrlyn/crates", rev = "319d363cfe499358203b446ae3d8d20528277e54" }
 # Rule engine the shell risk feeds when no rule matches. Same pin as shell-classify.
 perm-rules = { git = "https://github.com/pyrlyn/crates", rev = "319d363cfe499358203b446ae3d8d20528277e54" }
+# Seatbelt/bwrap/Landlock confinement for the shell and PTY tools in aulo-tools (T9.1). Unpublished.
+# Same pin as shell-classify so the workspace has one checkout of pyrlyn/crates.
+proc-sandbox = { git = "https://github.com/pyrlyn/crates", rev = "319d363cfe499358203b446ae3d8d20528277e54" }
 # Built-in model catalog (context, display name, capabilities, price). Same pin as llm-wire.
 llm-catalog = { git = "https://github.com/pyrlyn/crates", rev = "f0deed54f6f8166b31404c2129b59355c45cf044" }
 # async_trait so tests can implement llm-wire's Provider (the trait is defined with it)
@@ -161,6 +164,15 @@ telemetry-setup = "0.1.0"
 # Formatters the aulo-telemetry tests use when driving telemetry-setup's scrubbing writer.
 # The subscriber itself comes from telemetry-setup.
 tracing-subscriber = "0.3.23"
+# synthetic mouse and keyboard events for input_* tools in aulo-desktop-ax; approved in spec D4 (T0.4).
+# macOS-only in this workspace: the Linux backend links libxkbcommon, which CI does not install.
+enigo = { version = "0.6.1", default-features = false }
+# pseudo-terminal sessions for pty_* tools in aulo-tools; approved in spec D4 (T0.4)
+portable-pty = "0.9.0"
+# OS clipboard for clipboard_* tools in aulo-tools; approved in spec D4 (T0.4)
+arboard = "3.7.0"
+# managed Chromium over CDP for browser_* tools in aulo-browser; approved in spec D4 (T0.4)
+chromiumoxide = "0.9.1"
 # full CLI command-output fixtures
 trycmd = "1.2.1"
 # host of a URL, so the normalizer speaks the site and not the whole address
