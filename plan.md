@@ -110,7 +110,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T11.5 | todo | P1 | 3 | 0% | |
 | T11.6 | todo | P2 | 2 | 0% | |
 | T11.7 | todo | P2 | 4 | 0% | |
-| T11.8 | todo | P1 | 2 | 0% | |
+| T11.8 | done | P1 | 2 | 100% | |
 | T11.9 | todo | P1 | 3 | 0% | |
 | T11.10 | todo | P1 | 2 | 0% | |
 | T11.11 | todo | P3 | 3 | 0% | |
@@ -1295,6 +1295,8 @@ SKILL.md discovery (AgentSkills layout) from agent-ext; only an index line enter
 Done when:
 
 - fixture skill is loaded on demand
+
+Outcome: `aulo-skills` loads `SKILL.md` through `agent-ext` from `<home>/skills` and `<project>/.aulo/skills`. The prompt index is one line per skill and does not contain the body. `Skills::load_body` returns the body, capped at 64 KiB; an unknown name is an error. A broken file is a notice and is skipped. A project skill replaces a home skill of the same name. `agent-ext` is pinned at `319d363` of pyrlyn/crates. Registering the tool in the agent registry stays T4.7.
 
 ### T11.9. Hooks
 
