@@ -551,7 +551,7 @@ Read from the local checkouts on 2026-10-07 (primary source: the repositories' o
 
 ### 6.1 cox (terminal coding agent, Rust, GPL-3.0-or-later OR LicenseRef-cox-Royalty-Free — `apps/cox/Cargo.toml`)
 
-None of the cox crates is on crates.io; internal deps use `path` + `version = "0.1.2"`. Crate ownership:
+None of the coding agent crates is on crates.io; internal deps use `path` + `version = "0.1.2"`. Crate ownership:
 `apps/cox/AGENTS.md:28-62`.
 
 | What | Where | Notes |
@@ -577,7 +577,7 @@ None of the cox crates is on crates.io; internal deps use `path` + `version = "0
 | Config, store, telemetry | `cox-config` (figment, provenance, schema drift test), `cox-store` (Diesel + SQLite), `cox-telemetry` | Pattern for aulo-config/store/telemetry |
 | Crate-boundary test | `apps/cox/crates/cox/tests/deps.rs` | Pattern for T2.2 |
 
-### 6.2 runa (local-first AI runner, Rust, MIT OR Apache-2.0 — `apps/runa/Cargo.toml`)
+### 6.2 the local model runner (local-first AI runner, Rust, MIT OR Apache-2.0 — `apps/runa/Cargo.toml`)
 
 | What | Where | Notes |
 | --- | --- | --- |
@@ -590,7 +590,7 @@ None of the cox crates is on crates.io; internal deps use `path` + `version = "0
 | MCP client | `apps/runa/crates/runa/src/mcp.rs` | stdio only, `pub(crate)` |
 | Bin-only crate | `apps/runa/crates/runa` | serve/pool/mcp are `pub(crate)` (T1.20) |
 
-### 6.3 rtok, ketch, packages
+### 6.3 the token-reduction CLI, the package manager, packages
 
 | What | Where | Notes |
 | --- | --- | --- |
@@ -613,5 +613,5 @@ None of the cox crates is on crates.io; internal deps use `path` + `version = "0
 ### 6.4 Not found anywhere in the workspace
 
 TTS, wake-word detection, streaming ASR, Silero VAD, gRPC, browser automation, desktop accessibility control, and
-a tray/desktop UI written in Rust (ketch and cox desktops are SwiftUI/WinUI over UniFFI). These are new code in aulo,
+a tray/desktop UI written in Rust (the package manager and the coding agent desktops are SwiftUI/WinUI over UniFFI). These are new code in aulo,
 built on the blocks in Part 4.
