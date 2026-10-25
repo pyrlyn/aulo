@@ -1,8 +1,8 @@
 //! The tiers aulo routes on, and the jobs that land on them.
 //!
 //! These are aulo's tiers (spec §10), not `llm_wire::Tier`. That enum is the
-//! coding-agent scale (`cheap`, `code`, `think`); changing it would break cox.
-//! A cox caller maps its own tier onto one of these before it asks the router.
+//! coding-agent scale (`cheap`, `code`, `think`); changing it would break the coding agent.
+//! A the coding agent caller maps its own tier onto one of these before it asks the router.
 
 use serde::{Deserialize, Serialize};
 
