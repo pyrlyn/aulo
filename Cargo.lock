@@ -31,6 +31,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "agent-loop"
+version = "0.1.0"
+source = "git+https://github.com/pyrlyn/crates?rev=f0deed54f6f8166b31404c2129b59355c45cf044#f0deed54f6f8166b31404c2129b59355c45cf044"
+dependencies = [
+ "async-trait",
+ "llm-wire",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
 name = "aho-corasick"
 version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -400,6 +414,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "aulo-agent"
+version = "0.0.0"
+dependencies = [
+ "agent-loop",
+ "async-trait",
+ "aulo-testkit",
+ "aulo-types",
+ "llm-wire",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
 name = "aulo-audio"
 version = "0.0.0"
 dependencies = [
@@ -464,8 +493,13 @@ dependencies = [
 name = "aulo-policy"
 version = "0.0.0"
 dependencies = [
+ "agent-loop",
+ "async-trait",
+ "llm-wire",
  "perm-rules",
+ "serde_json",
  "shell-classify",
+ "tokio",
 ]
 
 [[package]]

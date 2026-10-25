@@ -30,14 +30,14 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T4.3 | done | P1 | 2 | 100% | |
 | T4.4 | done | P0 | 3 | 100% | |
 | T4.5 | todo | P1 | 3 | 0% | |
-| T4.6 | todo | P0 | 4 | 0% | |
-| T4.7 | todo | P0 | 2 | 0% | |
+| T4.6 | done | P0 | 4 | 100% | WorkBuddy (wb/core) |
+| T4.7 | done | P0 | 2 | 100% | WorkBuddy (wb/core) |
 | T4.8 | todo | P0 | 3 | 0% | |
 | T4.9 | done | P0 | 2 | 100% | |
 | T4.10 | todo | P1 | 3 | 0% | |
 | T4.11 | todo | P1 | 2 | 0% | |
 | T4.12 | todo | P2 | 2 | 0% | |
-| T5.1 | todo | P0 | 3 | 0% | |
+| T5.1 | done | P0 | 3 | 100% | WorkBuddy (wb/core) |
 | T5.2 | done | P0 | 2 | 100% | |
 | T5.3 | todo | P0 | 3 | 0% | |
 | T5.4 | todo | P0 | 3 | 0% | |
@@ -434,6 +434,8 @@ Done when:
 
 - scripted-provider tests: text turn, tool turn, interrupt
 
+Outcome: `crates/aulo-agent` (domain). `agent-loop` is a git dependency pinned to the same `pyrlyn/crates` rev as `llm-wire` (`f0deed54`), so its path dependency on `llm-wire` resolves to the one `llm-wire` in the graph and no second provider contract exists. `Session` wraps one `agent_loop::Agent` per chat: `Submission::{UserTurn, Approve, Interrupt}` in, `SessionEvent`s out on a caller-owned bounded channel (256), sync `interrupt()`, `max_steps`/`parallel_tools`/`approval_timeout`/`tool_output_cap` in `SessionConfig`, and `with_history` for a resumed chat. `SessionSink` maps loop events onto `SessionEvent` — `AuloEvent` pass-throughs for approval prompts (needs_click on Destructive risk) and notices, plus the agent-loop block the `aulo.v1.Event` proto mirrors (turn started, text delta, tool call started/output/finished, approval resolved, usage, turn finished) — re-keying loop ids onto aulo-types ids and capping every untrusted text field at the proto's per-event limits; item and thinking bookkeeping stays inside the session. `TurnContext` is the default request assembly with a `ToolSpecSource` seam for the T4.7 registry. Approvals stay behind the loop's `Approvals` trait, which the daemon wires to `aulo-policy` (T5.1). Tests (15): scripted text turn, tool turn with the result fed back, interrupt under a running exclusive tool (measured under 200 ms), the step limit, an approval answer, plus mapping unit tests. Remaining: the daemon-side session registry and Converse wiring (T4.8), the policy gate (T5.1/T5.3) and persona prompts (T4.11).
+
 ### T4.7. Tool registry and deferred tools
 
 Stage: S4 · Area: agent · Depends on: T4.6 · Blocks: 3 task(s)
@@ -443,6 +445,8 @@ Registry with naming (builtin, mcp__server__tool, plugin__id__tool), risk levels
 Done when:
 
 - test: deferred tool appears only after tool_search
+
+Outcome: `crates/aulo-agent` gains `registry.rs` and `executor.rs`. `ToolRegistry` holds one `RegisteredTool` (its `llm-wire` `ToolSpec` plus a `SubjectKind`) per name; `valid_name` accepts a built-in (`[a-z][a-z0-9_]*`), `mcp__server__tool` and `plugin__id__tool`, caps names at 128 bytes and segments at 64, refuses control characters and duplicates. `SubjectKind` (Command, Path, Host, Bundle, Tool, None) pulls the approval subject out of the model-chosen input; a missing field or a non-host URL yields an empty subject, which only a no-subject rule can match. `tool_search` is a built-in read-only tool every request offers; `RegistryTools` runs it, matching deferred tools by name or description (query capped at 256 bytes, control characters dropped, at most 8 results) and marking them in the per-session `Discovery` (capped at 32). `ToolRegistry::specs` therefore offers `tool_search`, every non-deferred tool and only the discovered deferred ones, recomputed per request through `ToolSpecSource`. `RegistryTools` implements `agent_loop::Tools`: unknown tools are never rated (the loop answers them without running), an approved call reaches the `ToolExecutor` seam the daemon wires to the real backends. Tests (30): naming table, duplicates, hidden-until-discovered, search caps, discovery cap, subject extraction, and an end-to-end session turn where the first provider request offers `tool_search` without the deferred tool and the second offers both.
 
 ### T4.8. Converse RPC and chat persistence
 
@@ -507,6 +511,8 @@ Every tool call passes perm-rules before running. Subjects: Shell(cmd), App(bund
 Done when:
 
 - table tests for rule grammar per subject
+
+Outcome: `crates/aulo-policy` grows from the T5.2 shell-only wrapper into the engine every tool call passes. `subjects.rs` is the subject table: one canonical tool name per kind (`bash`/`shell`, `app`, `site`, `input`, `clipboard`, the perm-rules file tools, `mcp__server__tool`, `plugin__id__tool`) with every tool spelling aliased onto it, and `app` as a path tool so a bundle family is one glob (`App(com.apple.*)`). One constructor per subject (`app_call`, `site_call`, `file_call`, `mcp_call`, `plugin_call`, `input_call`, `clipboard_call`) sets the risk the fallback uses: app, MCP, plugin and input calls ask; file reads and site reads run; file writes ask. `Policy` compiles the configured rule lists once (a malformed rule is a config error, never a skipped guard) and decides as a pure function of call, `Settings` (mode, approval policy, sandbox) and the active grants; `decide_shell` keeps the T5.2 entry point. `PolicyGate` implements the agent loop's `Approvals` over a `Policy`: standing grants come through a `Grants` trait the daemon implements over `aulo-store` (T5.3), session grants live in the gate, and the verdict maps onto the loop's `Verdict` with the matching `Why`. Decisions, deny reasons and decided-by carry through unchanged. 35 tests: the T5.2 fixtures, 18 table rows covering allow/deny/ask, prefix, domain, glob and segment matching per subject, the decision order (deny, mode, allow, ask, grant, policy, risk) and the grant's scope, plus gate unit tests. Note: perm-rules checks an ask rule before a session grant by design, so a grant answers the risk fallback, not a rule the user wrote; T5.3's grant tests use that path.
 
 ### T5.2. Shell risk classification
 
