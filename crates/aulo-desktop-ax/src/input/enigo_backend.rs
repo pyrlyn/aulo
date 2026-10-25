@@ -6,7 +6,9 @@
 //! backend links libxkbcommon, which the CI runners do not install, so the
 //! real backend is macOS-only for now.
 
-use super::{InputBackend, InputError, KeyBase, KeyStroke, MouseButton, NamedKey};
+use super::{InputBackend, InputError, KeyStroke, MouseButton};
+#[cfg(target_os = "macos")]
+use super::{KeyBase, NamedKey};
 use aulo_screen::Pixel;
 
 /// The real backend, on macOS.
