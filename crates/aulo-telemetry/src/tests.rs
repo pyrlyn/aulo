@@ -3,9 +3,9 @@
 
 use std::io::Write;
 
+use telemetry_setup::Scrubbed;
+use telemetry_setup::redact::Redactor;
 use tracing_subscriber::fmt::MakeWriter;
-
-use crate::writer::Scrubbed;
 
 /// A sink that records what reaches it.
 #[derive(Clone, Default)]
@@ -34,10 +34,15 @@ fn output(sink: &Sink) -> String {
     String::from_utf8(sink.0.lock().unwrap().clone()).unwrap()
 }
 
+fn scrubbed(sink: &Sink) -> Scrubbed<Sink> {
+    // Built-in rules only: these cases are bearer tokens and secret field names, not aulod tokens.
+    Scrubbed::new(sink.clone(), Redactor::new::<&str>(&[]).unwrap())
+}
+
 #[test]
 fn secret_split_across_writes_is_still_masked() {
     let sink = Sink::default();
-    let make = Scrubbed(sink.clone());
+    let make = scrubbed(&sink);
     let mut writer = make.make_writer();
     writer.write_all(b"auth Bearer abcdef").unwrap();
     writer.write_all(b"ghijkl012345\nnext line\n").unwrap();
@@ -50,7 +55,7 @@ fn secret_split_across_writes_is_still_masked() {
 #[test]
 fn flush_emits_only_whole_lines() {
     let sink = Sink::default();
-    let make = Scrubbed(sink.clone());
+    let make = scrubbed(&sink);
     let mut writer = make.make_writer();
     writer.write_all(b"one\npart").unwrap();
     writer.flush().unwrap();
@@ -62,7 +67,7 @@ fn flush_emits_only_whole_lines() {
 #[test]
 fn json_lines_keep_their_shape() {
     let sink = Sink::default();
-    let make = Scrubbed(sink.clone());
+    let make = scrubbed(&sink);
     let mut writer = make.make_writer();
     writer
         .write_all(b"{\"fields\":{\"api_key\":\"x\",\"n\":1}}\n")
@@ -72,20 +77,4 @@ fn json_lines_keep_their_shape() {
         output(&sink),
         "{\"fields\":{\"api_key\":\"[REDACTED]\",\"n\":1}}\n"
     );
-}
-
-#[cfg(feature = "otlp")]
-#[test]
-fn otlp_attributes_are_masked() {
-    use opentelemetry::KeyValue;
-
-    let mut attributes = vec![
-        KeyValue::new("api_key", "k"),
-        KeyValue::new("note", "sent Bearer abcdef0123456789"),
-        KeyValue::new("turn", 3_i64),
-    ];
-    crate::otlp::scrub_attributes(&mut attributes);
-    assert_eq!(attributes[0].value.as_str(), "[REDACTED]");
-    assert_eq!(attributes[1].value.as_str(), "sent [REDACTED]");
-    assert_eq!(attributes[2].value, 3_i64.into());
 }

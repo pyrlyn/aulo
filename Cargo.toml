@@ -50,12 +50,6 @@ hyper-util = "0.1.21"
 figment = "0.10.19"
 # JSON Schema for config files
 schemars = "1.2.2"
-# OTLP trace export, only built with the aulo-telemetry `otlp` feature
-opentelemetry = "0.33.0"
-# OTLP span exporter over HTTP, only built with the aulo-telemetry `otlp` feature
-opentelemetry-otlp = { version = "0.33.0", default-features = false }
-# tracer provider and batch span processor, only built with the aulo-telemetry `otlp` feature
-opentelemetry_sdk = "0.33.0"
 # Objective-C runtime (Retained, downcasts) for the macOS system voices in aulo-speech-system
 objc2 = "0.6.5"
 # AVSpeechSynthesizer and AVAudioPCMBuffer bindings; members pick the framework features they use
@@ -110,8 +104,6 @@ divan = "0.1.21"
 insta = "1.49.0"
 # markdown to plain text for the speakable-text normalizer
 pulldown-cmark = { version = "0.13.4", default-features = false }
-# secret patterns for the log redaction layer
-regex = "1.13.1"
 # HTTPS client for model downloads (aulo-models) and cloud speech (aulo-speech-cloud); rustls, no system OpenSSL
 reqwest = { version = "0.13.5", default-features = false, features = ["rustls"] }
 # base64 audio inside the JSON messages of the ElevenLabs streaming speech socket
@@ -125,7 +117,7 @@ hound = "3.5.1"
 # local speech engines (Parakeet STT, Kokoro TTS); owned by aulo-speech-sherpa. Exact pin: sherpa-onnx-sys pins
 # the same version and its build script downloads that release's native lib (spike T0.5, R2/R7)
 sherpa-onnx = "=1.13.8"
-# Whisper transcriber (whisper.cpp) shared with cox and runa; owned by aulo-speech-whisper and compiled only with its
+# Whisper transcriber (whisper.cpp) shared with the coding agent and the local model runner; owned by aulo-speech-whisper and compiled only with its
 # `whisper` feature. That crate turns on speech-capture's `whisper` feature; the dependency itself is declared above.
 # zero-I/O server-sent-events parser for streaming transcription replies
 sse-core = { version = "0.2.3", default-features = false, features = ["std"] }
@@ -166,11 +158,11 @@ tower = "0.5.3"
 wiremock = "0.6.5"
 # structured logs
 tracing = "0.1.44"
-# daily-rotating, non-blocking log files with a bounded file count
-tracing-appender = "0.2.5"
-# bridges tracing spans to OpenTelemetry, only built with the aulo-telemetry `otlp` feature
-tracing-opentelemetry = "0.34.0"
-# EnvFilter, JSON and human formatters for the log subscriber
+# Rotating JSON logs, a human stderr log and optional OTLP, with secrets masked.
+# aulo-telemetry wraps 0.1.0 (app name, AULO_LOG, the aulod token shape).
+telemetry-setup = "0.1.0"
+# Formatters the aulo-telemetry tests use when driving telemetry-setup's scrubbing writer.
+# The subscriber itself comes from telemetry-setup.
 tracing-subscriber = "0.3.23"
 # full CLI command-output fixtures
 trycmd = "1.2.1"
