@@ -52,4 +52,4 @@ mise exec -- just test
 - Repository: <https://github.com/pyrlyn/aulo>
 - Specification: <https://github.com/pyrlyn/aulo/blob/main/spec.md>
 - gRPC API reference: <https://github.com/pyrlyn/aulo/blob/main/docs/api/aulo.v1.md>
-- License: your choice of GNU GPLv3, a royalty-free license, or a commercial license (see <https://github.com/pyrlyn/aulo#license>)
+- License: your choice of GNU GPLv3 or a commercial license (see <https://github.com/pyrlyn/aulo#license>)
