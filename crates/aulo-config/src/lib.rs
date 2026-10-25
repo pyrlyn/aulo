@@ -22,7 +22,7 @@ pub use render::mask;
 pub use schema::schema_json;
 pub use secrets::{
     CredentialsError, KeyState, MemoryStore, ProviderKeyInfo, SecretStore, configured_keys,
-    delete_key, key_state, resolve_provider_key, store_key, system_store,
+    delete_key, key_state, resolve_provider_key, store_key, system_store, validate_provider_id,
 };
 
 /// The commented-out settings file `aulo config default` prints. Tests keep it

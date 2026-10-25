@@ -1,5 +1,10 @@
 //! Grants and the audit log. The store only persists: hashes are computed and the
 //! chain is verified by `aulo-policy`, so a caller supplies `prev_hash` and `hash`.
+//!
+//! `aulod` lists and revokes grants. It does not insert them: a standing grant
+//! is written by policy when a person chooses always-allow or always-deny
+//! (T5.3). Audit rows are appended by that same policy path (T5.9), not by the
+//! listener.
 
 use diesel::prelude::*;
 
@@ -35,6 +40,25 @@ impl Store {
     pub fn list_grants(&mut self) -> Result<Vec<Grant>, StoreError> {
         Ok(grants::table
             .order(grants::id.asc())
+            .select(Grant::as_select())
+            .load(&mut self.conn)?)
+    }
+
+    /// Keyset page of [`Store::list_grants`]: grants with an id strictly after
+    /// `after`, oldest first. The daemon's `ListGrants` uses this so a client
+    /// cannot ask the process to buffer every row.
+    pub fn list_grants_page(
+        &mut self,
+        after: Option<&str>,
+        limit: i64,
+    ) -> Result<Vec<Grant>, StoreError> {
+        let mut query = grants::table.into_boxed();
+        if let Some(after) = after {
+            query = query.filter(grants::id.gt(after));
+        }
+        Ok(query
+            .order(grants::id.asc())
+            .limit(limit)
             .select(Grant::as_select())
             .load(&mut self.conn)?)
     }

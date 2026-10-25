@@ -1,6 +1,6 @@
 [package]
 name = "aulo-providers"
-description = "Builds llm-wire providers from the providers section of aulo config"
+description = "Builds llm-wire providers from config and detects local model servers"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -10,16 +10,25 @@ publish.workspace = true
 
 [dependencies]
 aulo-config = { path = "../aulo-config" }
+futures-util.workspace = true
+llm-catalog.workspace = true
 llm-http.workspace = true
 llm-wire.workspace = true
 llm-wire-anthropic.workspace = true
 llm-wire-openai.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 thiserror.workspace = true
+tokio.workspace = true
 tracing.workspace = true
 url.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true
+tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread", "sync"] }
+tokio-util.workspace = true
+wiremock.workspace = true
 
 [lints]
 workspace = true
