@@ -55,7 +55,7 @@ Done when:
 
 - a test routes two tiers to two different providers
 
-Outcome: `crates/llm-router` (contract, no I/O) maps `Job` onto `Tier` (`cheap < voice < main < sentinel`) and returns the `llm_wire::Provider` registered for that tier. `route` fails closed with `RouteError::NoProvider` when the tier is empty. Titles and summaries default to `cheap`; a builder override can move one job. The route test registers a local provider on `voice` and an OpenAI provider on `main`, streams one request through each, and checks the call landed on that provider. Decisions: the crate lives in this workspace because these pull requests target pyrlyn/aulo, and it depends on `llm-wire` from pyrlyn/crates at `f0deed54` rather than copying the trait. The tiers are aulo's four (spec §10), not `llm_wire::Tier` (`cheap`/`code`/`think`); changing that enum would break cox. Cox adoption waits until the crate is published, the same gate as the other extracted crates. A router may omit a tier; asking for it fails closed, so the two-provider test does not have to invent sentinel and cheap backends. Pulling `llm-wire` turns on `serde_json`'s `preserve_order` for the whole workspace. Bench JSON and the three committed JSON Schemas sort object keys before printing so that feature does not change fixtures. Main already records those schemas in full key order, so this merge keeps that printer.
+Outcome: `crates/llm-router` (contract, no I/O) maps `Job` onto `Tier` (`cheap < voice < main < sentinel`) and returns the `llm_wire::Provider` registered for that tier. `route` fails closed with `RouteError::NoProvider` when the tier is empty. Titles and summaries default to `cheap`; a builder override can move one job. The route test registers a local provider on `voice` and an OpenAI provider on `main`, streams one request through each, and checks the call landed on that provider. Decisions: the crate lives in this workspace because these pull requests target pyrlyn/aulo, and it depends on `llm-wire` from pyrlyn/crates at `f0deed54` rather than copying the trait. The tiers are aulo's four (spec §10), not `llm_wire::Tier` (`cheap`/`code`/`think`); changing that enum would break the coding agent. The coding agent adoption waits until the crate is published, the same gate as the other extracted crates. A router may omit a tier; asking for it fails closed, so the two-provider test does not have to invent sentinel and cheap backends. Pulling `llm-wire` turns on `serde_json`'s `preserve_order` for the whole workspace. Bench JSON and the three committed JSON Schemas sort object keys before printing so that feature does not change fixtures. Main already records those schemas in full key order, so this merge keeps that printer.
 
 ### T1.5. Extract llm-catalog: model catalog and prices
 
@@ -69,7 +69,7 @@ Done when:
 
 - Catalog::load, get and effort_for tests pass
 
-Outcome: `llm-catalog` lives in pyrlyn/crates (`rust/llm-catalog`) and aulo pins it at `f0deed54`, the same revision as `llm-wire`; `aulo-providers` already reads it for `ConfigService.ListModels` (T4.4). The crate merges four layers by model id: the embedded `models.toml` and `prices.toml`, fill-only plugin `[[models]]` rows (a plugin can never change a built-in price), the host's `ProviderModel`s, then a user `prices.toml`; `Catalog::overlay_served` puts a local server's loaded context window and tool flag on top. It does no I/O. At that revision `cargo test` runs 22 `llm-catalog` tests, covering `Catalog::load`, `Catalog::get`, each layer's precedence and the price schemas, plus the `llm-wire` `effort_for` caps-table test. All pass. Decisions: the effort rule stays in `llm-wire` (`llm_wire::effort_for` reads the row's capabilities), so its test lives there rather than in the catalog. No catalog code was copied into aulo. Cox adoption remains T1.6.
+Outcome: `llm-catalog` lives in pyrlyn/crates (`rust/llm-catalog`) and aulo pins it at `f0deed54`, the same revision as `llm-wire`; `aulo-providers` already reads it for `ConfigService.ListModels` (T4.4). The crate merges four layers by model id: the embedded `models.toml` and `prices.toml`, fill-only plugin `[[models]]` rows (a plugin can never change a built-in price), the host's `ProviderModel`s, then a user `prices.toml`; `Catalog::overlay_served` puts a local server's loaded context window and tool flag on top. It does no I/O. At that revision `cargo test` runs 22 `llm-catalog` tests, covering `Catalog::load`, `Catalog::get`, each layer's precedence and the price schemas, plus the `llm-wire` `effort_for` caps-table test. All pass. Decisions: the effort rule stays in `llm-wire` (`llm_wire::effort_for` reads the row's capabilities), so its test lives there rather than in the catalog. No catalog code was copied into aulo. The coding agent adoption remains T1.6.
 
 ### T1.2. Extract llm-http: credentials, retries, SSE framing
 
@@ -81,7 +81,7 @@ Done when:
 
 - llm-http tests cover env-first, keyring fallback and retry backoff
 
-Outcome: `llm-http` lives in pyrlyn/crates (`rust/llm-http`) and aulo already depends on it at the workspace pin `f0deed54`; `aulo-providers` builds its wires from `llm_http::Transport`. At that revision `http::resolve_key` reads the env var first (a blank value counts as unset), then the platform keyring entry, and a switch variable (`off`, `0`, `false`) keeps the keyring untouched. `retry::stream_with_retry` retries rate limits, overloads, network errors and timeouts with `base × 2ⁿ ± 25 %` backoff (or `retry-after`, capped at a minute), never after the first delivered event, and stops on cancel. `sse` frames Server-Sent Events. Its 21 unit tests pass, including `resolve_key_prefers_the_env_var_over_the_keyring`, `resolve_key_falls_back_to_the_keyring_when_the_env_var_is_unset` and `retry_delay_doubles_and_honours_retry_after`. Decisions: no aulo code changes. aulo already uses the crate and has no copy of the credential, retry or LLM SSE logic. `aulo-speech-cloud` parses transcription SSE with `sse-core` over its own reqwest 0.13 client, not provider events, so it stays as is. Cox adoption is T1.6.
+Outcome: `llm-http` lives in pyrlyn/crates (`rust/llm-http`) and aulo already depends on it at the workspace pin `f0deed54`; `aulo-providers` builds its wires from `llm_http::Transport`. At that revision `http::resolve_key` reads the env var first (a blank value counts as unset), then the platform keyring entry, and a switch variable (`off`, `0`, `false`) keeps the keyring untouched. `retry::stream_with_retry` retries rate limits, overloads, network errors and timeouts with `base × 2ⁿ ± 25 %` backoff (or `retry-after`, capped at a minute), never after the first delivered event, and stops on cancel. `sse` frames Server-Sent Events. Its 21 unit tests pass, including `resolve_key_prefers_the_env_var_over_the_keyring`, `resolve_key_falls_back_to_the_keyring_when_the_env_var_is_unset` and `retry_delay_doubles_and_honours_retry_after`. Decisions: no aulo code changes. aulo already uses the crate and has no copy of the credential, retry or LLM SSE logic. `aulo-speech-cloud` parses transcription SSE with `sse-core` over its own reqwest 0.13 client, not provider events, so it stays as is. The coding agent adoption is T1.6.
 
 ### T1.4. Extract llm-anthropic: Messages wire
 
@@ -93,7 +93,7 @@ Done when:
 
 - recorded-fixture tests pass
 
-Outcome: the wire already lives in pyrlyn/crates as `rust/llm-wire-anthropic` (the card's `llm-anthropic`), and aulo pins it at `f0deed54` and builds its Anthropic client from it in `aulo-providers`. The crate holds `request::build_body` (at most four `cache_control` breakpoints, `output_config.effort`, adaptive thinking, thinking replay only on the producing model), the `AnthropicStream` SSE parser, `AnthropicProvider` over `llm-http` (credentials, retry, framing) and the wire types generated by typify from the vendored OpenAPI spec; its own `done.md` records the copy from cox-provider-anthropic and the switch to `llm_http::Transport` and `llm_wire::effort_for`. This close-out adds no code to aulo. Check: `cargo test --locked -p llm-wire-anthropic` against the pinned checkout passed 47 tests, including the six recorded SSE fixtures, the request snapshots and the loopback wiremock tests. cox adoption stays in T1.6.
+Outcome: the wire already lives in pyrlyn/crates as `rust/llm-wire-anthropic` (the card's `llm-anthropic`), and aulo pins it at `f0deed54` and builds its Anthropic client from it in `aulo-providers`. The crate holds `request::build_body` (at most four `cache_control` breakpoints, `output_config.effort`, adaptive thinking, thinking replay only on the producing model), the `AnthropicStream` SSE parser, `AnthropicProvider` over `llm-http` (credentials, retry, framing) and the wire types generated by typify from the vendored OpenAPI spec; its own `done.md` records the copy from cox-provider-anthropic and the switch to `llm_http::Transport` and `llm_wire::effort_for`. This close-out adds no code to aulo. Check: `cargo test --locked -p llm-wire-anthropic` against the pinned checkout passed 47 tests, including the six recorded SSE fixtures, the request snapshots and the loopback wiremock tests. The coding agent adoption stays in T1.6.
 
 ### T0.1. Decide the licence and how cox code is reused
 
@@ -110,7 +110,7 @@ Done when:
 
 Stage: S0 · Area: decision · Depends on: none · Blocks: 1 task(s)
 
-Candidates: Slint (in rust.md, Rust-only, one codebase, gRPC client in-process; recommended), native SwiftUI/WinUI over UniFFI (the ketch/cox pattern, best platform feel, two codebases), Tauri (web UI, heavier). Record the choice and the reason. Outcome (creator, 2026-10-07): native apps as in cox — SwiftUI on macOS and WinUI 3 on Windows, over a UI-agnostic Rust core (aulo-app) exported with UniFFI (aulo-ffi; Swift bindings, C# via uniffi-bindgen-cs).
+Candidates: Slint (in rust.md, Rust-only, one codebase, gRPC client in-process; recommended), native SwiftUI/WinUI over UniFFI (the package manager and the coding agent pattern, best platform feel, two codebases), Tauri (web UI, heavier). Record the choice and the reason. Outcome (creator, 2026-10-07): native apps as in the coding agent — SwiftUI on macOS and WinUI 3 on Windows, over a UI-agnostic Rust core (aulo-app) exported with UniFFI (aulo-ffi; Swift bindings, C# via uniffi-bindgen-cs).
 
 Done when:
 
@@ -136,7 +136,7 @@ Done when:
 
 - approved list recorded in spec.md Decisions
 
-### T0.7. Decide how the agent loop is reused from cox
+### T0.7. Decide how the agent loop is reused from the coding agent
 
 Stage: S0 · Area: decision · Depends on: none · Blocks: 2 task(s)
 
@@ -290,7 +290,7 @@ Done when:
 
 - the test fails when a contract crate pulls tokio::fs or reqwest
 
-Outcome: crates/aulo/tests/deps.rs parses `cargo metadata --no-deps` (as cox does) against a ROLES table for all 27 spec §4.2 crates: every crate must have a role; dependencies point down only (contract < domain/adapter < assembly < surface, nothing depends on a surface, only a testkit on the testkit); contracts have no I/O deps (tokio, reqwest, hyper, cpal, diesel, wasmtime, uniffi, sherpa-onnx, chromiumoxide, ...); only aulo and aulo-ffi use clap/anyhow; one owner per heavy dependency (diesel -> aulo-store, prost -> aulo-proto, tonic -> aulo-proto/aulo-server/aulo-app, tonic-health/reflection -> aulo-server, sherpa-onnx, whisper, wasmtime, chromiumoxide, uniffi). A synthetic bad graph test asserts each message. Proven by temporarily adding tokio, clap and diesel to aulo-types.
+Outcome: crates/aulo/tests/deps.rs parses `cargo metadata --no-deps` (as the coding agent does) against a ROLES table for all 27 spec §4.2 crates: every crate must have a role; dependencies point down only (contract < domain/adapter < assembly < surface, nothing depends on a surface, only a testkit on the testkit); contracts have no I/O deps (tokio, reqwest, hyper, cpal, diesel, wasmtime, uniffi, sherpa-onnx, chromiumoxide, ...); only aulo and aulo-ffi use clap/anyhow; one owner per heavy dependency (diesel -> aulo-store, prost -> aulo-proto, tonic -> aulo-proto/aulo-server/aulo-app, tonic-health/reflection -> aulo-server, sherpa-onnx, whisper, wasmtime, chromiumoxide, uniffi). A synthetic bad graph test asserts each message. Proven by temporarily adding tokio, clap and diesel to aulo-types.
 
 ### T11.1. Plugin manifest
 
@@ -335,7 +335,7 @@ Outcome: crates/aulo-voice (domain): speakable(markdown, SpeakOptions) strips ma
 
 Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 4 task(s)
 
-Download speech models from Hugging Face with pinned SHA-256 (cox whisper-models.json pattern) into ~/.aulo/models, progress events, aulo models pull/ls/rm. Refuse a hash mismatch.
+Download speech models from Hugging Face with pinned SHA-256 (the coding agent whisper-models.json pattern) into ~/.aulo/models, progress events, aulo models pull/ls/rm. Refuse a hash mismatch.
 
 
 Done when:
@@ -426,7 +426,7 @@ Outcome: aulo_server::auth: Unix socket peers must match the daemon euid (rustix
 
 Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 0 task(s)
 
-/v1/audio/transcriptions client: works with OpenAI (GPT Transcribe), runa (local server) and other compatible servers. Streaming variant where the server supports it.
+/v1/audio/transcriptions client: works with OpenAI (GPT Transcribe), the local model runner (local server) and other compatible servers. Streaming variant where the server supports it.
 
 
 Done when:
@@ -623,13 +623,13 @@ Check: `cargo test -p aulo-speech-local model` — 2 passed; `python3 -c "import
 
 Stage: S4 · Area: providers · Depends on: T4.1 · Blocks: 2 task(s)
 
-`aulo auth set/rm/ls <provider>`: keys go to the keychain (keyring), env vars win, inline keys in config are rejected (runa pattern). gRPC ConfigService can set a key but never return it.
+`aulo auth set/rm/ls <provider>`: keys go to the keychain (keyring), env vars win, inline keys in config are rejected (the local model runner pattern). gRPC ConfigService can set a key but never return it.
 
 Done when:
 
 - test: config with an inline key fails with the file name
 
-Outcome: `keychain-secret` (the shared runa/cox helper, pinned to the same `pyrlyn/crates` revision as `speech-capture`) rejects secret-named keys in config files, `AULO_*` configuration variables and caller overrides; the error names the file or variable and does not contain the value. `aulo auth set` reads the key from stdin into the OS keychain (`AULO_KEYCHAIN=off` refuses). Resolution order is `AULO_<ID>_API_KEY`, then the provider's conventional variable (`OPENAI_API_KEY` and the other hosted ones), then the keychain. `ConfigService.SetProviderKey` writes that store; `ListProviders` reports `key_set` only and `GetConfig` is redacted JSON with no key field. T4.1 can call `resolve_provider_key` when it builds providers. Decisions: provider ids are 1–64 bytes of `[A-Za-z0-9._-]` not starting with `.` or `-`; keys are trimmed and capped at 4096 bytes; `ListModels`, `ListAudioDevices`, `SetDevice` and `SetConfig` stay unimplemented until their tasks; any authenticated caller may set a key until token scopes (T13.3) exist.
+Outcome: `keychain-secret` (the helper shared by the local model runner and the coding agent, pinned to the same `pyrlyn/crates` revision as `speech-capture`) rejects secret-named keys in config files, `AULO_*` configuration variables and caller overrides; the error names the file or variable and does not contain the value. `aulo auth set` reads the key from stdin into the OS keychain (`AULO_KEYCHAIN=off` refuses). Resolution order is `AULO_<ID>_API_KEY`, then the provider's conventional variable (`OPENAI_API_KEY` and the other hosted ones), then the keychain. `ConfigService.SetProviderKey` writes that store; `ListProviders` reports `key_set` only and `GetConfig` is redacted JSON with no key field. T4.1 can call `resolve_provider_key` when it builds providers. Decisions: provider ids are 1–64 bytes of `[A-Za-z0-9._-]` not starting with `.` or `-`; keys are trimmed and capped at 4096 bytes; `ListModels`, `ListAudioDevices`, `SetDevice` and `SetConfig` stay unimplemented until their tasks; any authenticated caller may set a key until token scopes (T13.3) exist.
 
 ### T900. Update vulnerable dependencies
 
@@ -683,13 +683,13 @@ Outcome: `llm-catalog` (same `pyrlyn/crates` pin as `llm-wire`) supplies the bui
 
 Stage: S4 · Area: providers · Depends on: T4.1 · Blocks: 0 task(s)
 
-Presets for runa (127.0.0.1:8080/v1), Ollama (11434), LM Studio (1234, native model list). Probe /v1/models at start and list what is served.
+Presets for the local model runner (127.0.0.1:8080/v1), Ollama (11434), LM Studio (1234, native model list). Probe /v1/models at start and list what is served.
 
 Done when:
 
 - wiremock tests detect each server kind
 
-Outcome: `detect_local` probes the loopback presets (runa and llama.cpp share `127.0.0.1:8080/v1`, Ollama is `11434`, LM Studio is `1234`). `GET /v1/models` names runa (`owned_by` `"runa"`), llama.cpp (`"llamacpp"`) and older Ollama (`"ollama"`). Current Ollama copies the model namespace into `owned_by`, so it is recognized from `GET /api/version` plus that list. LM Studio is recognized from the native lists `GET /api/v0/models` and `GET /api/v1/models`, and those rows (with load state) are what is reported. A server that is down or not one of these kinds is skipped. Bodies are capped at 256 KiB, ids at 256 bytes and 256 models; control characters are dropped; redirects are not followed; no API key is sent. The daemon does not call it yet, because nothing on the serve path builds providers. Check: `cargo test -p aulo-providers` — 24 passed; `cargo clippy -p aulo-providers --all-targets -- -D warnings` clean.
+Outcome: `detect_local` probes the loopback presets (the local model runner and llama.cpp share `127.0.0.1:8080/v1`, Ollama is `11434`, LM Studio is `1234`). `GET /v1/models` names the local model runner (`owned_by` `"runa"`), llama.cpp (`"llamacpp"`) and older Ollama (`"ollama"`). Current Ollama copies the model namespace into `owned_by`, so it is recognized from `GET /api/version` plus that list. LM Studio is recognized from the native lists `GET /api/v0/models` and `GET /api/v1/models`, and those rows (with load state) are what is reported. A server that is down or not one of these kinds is skipped. Bodies are capped at 256 KiB, ids at 256 bytes and 256 models; control characters are dropped; redirects are not followed; no API key is sent. The daemon does not call it yet, because nothing on the serve path builds providers. Check: `cargo test -p aulo-providers` — 24 passed; `cargo clippy -p aulo-providers --all-targets -- -D warnings` clean.
 
 ### T4.9. Scripted-provider test harness
 
@@ -724,10 +724,10 @@ Outcome: the daemon opens `{home}/aulo.db` and mounts `ChatService` and `Approva
 
 Stage: S1 · Area: shared · Depends on: T1.2 · Blocks: 2 task(s)
 
-Move the OpenAI Chat and Responses wires from cox-provider-openai into packages/crates/llm-openai. They also serve every OpenAI-compatible endpoint (Ollama, LM Studio, vLLM, OpenRouter, DeepSeek, Gemini compat, xAI, runa).
+Move the OpenAI Chat and Responses wires from cox-provider-openai into packages/crates/llm-openai. They also serve every OpenAI-compatible endpoint (Ollama, LM Studio, vLLM, OpenRouter, DeepSeek, Gemini compat, xAI, the local model runner).
 
 Done when:
 
 - streaming text and tool-call tests pass against recorded fixtures
 
-Outcome: the wires live in pyrlyn/crates as `rust/llm-wire-openai` (the `llm-wire-*` spelling the workspace already pins), over `llm-wire` and `llm-http`. That crate carries cox's recorded SSE fixtures and the 13 insta snapshots, among them text-only, one tool call and parallel tool calls for both wires. Its `done.md` records T1.3 and the T1.3.1 follow-up. Aulo builds both wires in `aulo-providers` from the `f0deed54` pin. `crates/aulo-providers/tests/wires.rs` replays four recorded replies from a local `wiremock` server through the providers `build_providers` makes from config: Chat text (`ollama`), Chat tool call (`openai-compatible`), Responses text and Responses tool call (`openai`). Each test checks the joined text, the tool name and joined input, the stop and the usage. It also checks that the route comes from the base URL, that the body carries the model `prepare_turn` chose, and that a keyless client sends no `Authorization` header. Cox adoption remains T1.6.
+Outcome: the wires live in pyrlyn/crates as `rust/llm-wire-openai` (the `llm-wire-*` spelling the workspace already pins), over `llm-wire` and `llm-http`. That crate carries the coding agent's recorded SSE fixtures and the 13 insta snapshots, among them text-only, one tool call and parallel tool calls for both wires. Its `done.md` records T1.3 and the T1.3.1 follow-up. Aulo builds both wires in `aulo-providers` from the `f0deed54` pin. `crates/aulo-providers/tests/wires.rs` replays four recorded replies from a local `wiremock` server through the providers `build_providers` makes from config: Chat text (`ollama`), Chat tool call (`openai-compatible`), Responses text and Responses tool call (`openai`). Each test checks the joined text, the tool name and joined input, the stop and the usage. It also checks that the route comes from the base URL, that the body carries the model `prepare_turn` chose, and that a keyless client sends no `Authorization` header. The coding agent adoption remains T1.6.
