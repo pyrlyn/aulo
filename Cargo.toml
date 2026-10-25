@@ -50,12 +50,6 @@ hyper-util = "0.1.21"
 figment = "0.10.19"
 # JSON Schema for config files
 schemars = "1.2.2"
-# OTLP trace export, only built with the aulo-telemetry `otlp` feature
-opentelemetry = "0.33.0"
-# OTLP span exporter over HTTP, only built with the aulo-telemetry `otlp` feature
-opentelemetry-otlp = { version = "0.33.0", default-features = false }
-# tracer provider and batch span processor, only built with the aulo-telemetry `otlp` feature
-opentelemetry_sdk = "0.33.0"
 # Objective-C runtime (Retained, downcasts) for the macOS system voices in aulo-speech-system
 objc2 = "0.6.5"
 # AVSpeechSynthesizer and AVAudioPCMBuffer bindings; members pick the framework features they use
@@ -110,8 +104,6 @@ divan = "0.1.21"
 insta = "1.49.0"
 # markdown to plain text for the speakable-text normalizer
 pulldown-cmark = { version = "0.13.4", default-features = false }
-# secret patterns for the log redaction layer
-regex = "1.13.1"
 # HTTPS client for model downloads (aulo-models) and cloud speech (aulo-speech-cloud); rustls, no system OpenSSL
 reqwest = { version = "0.13.5", default-features = false, features = ["rustls"] }
 # base64 audio inside the JSON messages of the ElevenLabs streaming speech socket
@@ -166,11 +158,11 @@ tower = "0.5.3"
 wiremock = "0.6.5"
 # structured logs
 tracing = "0.1.44"
-# daily-rotating, non-blocking log files with a bounded file count
-tracing-appender = "0.2.5"
-# bridges tracing spans to OpenTelemetry, only built with the aulo-telemetry `otlp` feature
-tracing-opentelemetry = "0.34.0"
-# EnvFilter, JSON and human formatters for the log subscriber
+# Rotating JSON logs, a human stderr log and optional OTLP, with secrets masked.
+# aulo-telemetry wraps 0.1.0 (app name, AULO_LOG, the aulod token shape).
+telemetry-setup = "0.1.0"
+# Formatters the aulo-telemetry tests use when driving telemetry-setup's scrubbing writer.
+# The subscriber itself comes from telemetry-setup.
 tracing-subscriber = "0.3.23"
 # synthetic mouse and keyboard events for input_* tools in aulo-desktop-ax; approved in spec D4 (T0.4).
 # macOS-only in this workspace: the Linux backend links libxkbcommon, which CI does not install.
