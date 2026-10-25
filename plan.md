@@ -60,7 +60,7 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 | T7.5 | in progress | P1 | 2 | 90% | Claude Code / claude-sonnet-5-5 |
 | T7.8 | in progress | P2 | 3 | 90% | Claude Code / claude-opus-5-5 |
 | T7.11 | in progress | P2 | 3 | 90% | Claude Code / claude-sonnet-5-5 |
-| T8.1 | todo | P0 | 4 | 0% | |
+| T8.1 | done | P0 | 4 | 100% | WorkBuddy (wb/voice) |
 | T8.2 | todo | P0 | 2 | 0% | |
 | T8.3 | todo | P0 | 2 | 0% | |
 | T8.4 | todo | P0 | 4 | 0% | |
@@ -777,6 +777,8 @@ frames, VAD, STT, end of turn, Submission, streamed reply, normalizer, TTS, play
 Done when:
 
 - end-to-end test with fake engines drives a full turn
+
+Outcome: `aulo-voice` gains the `pipeline` module: three tokio tasks joined by bounded channels (OUTPUT 128, SUBMISSION 8, SENTENCE 16, COMMAND 8). The **listener** owns the frame source, the VAD, the end-of-turn detector and the STT engine — one audio owner per pipeline (spec §5.3); it never blocks (try_send with a Notice on a full agent queue). The **turn driver** owns the agent session and the `SpeakableStream` normalizer. The **speaker** owns the TTS engine and the audio sink, emitting a `TtsChunk` event before each audio chunk and a zero-length `last` chunk at the end. `VoiceHandle` is the control surface: `start_listening`/`stop_listening` (push-to-talk), `set_volume`, `cancel_speech`, `next_output`, `state`, and `shutdown` (cancels and joins, so the audio streams are known closed). States: Idle/Listening/Thinking/Speaking with guarded transitions (an utterance never downgrades Thinking or Speaking; a reply only ends from Speaking or Thinking). Integration point for T4.8: the pipeline knows only `pipeline::VoiceSession` (`submit(Submission) -> Receiver<SessionEvent>`); the production implementation is aulo-agent's chat session behind `SessionService.Converse` (wb/core), and the tests drive the same trait with a scripted session. Audio seams are `pipeline::FrameSource`/`AudioSink` traits, so the domain crate never reaches `aulo-audio` (Adapter per spec §4.2); the daemon implements them over `Capture`/`Playback` (T8.4 wiring), remote `Talk` clients over a forwarding sink. Untrusted input: the final transcript is capped at `MAX_TRANSCRIPT_CHARS` (8192) characters before the agent or any client sees it, and the normalizer caps reply text. `aulo-speech` gains `FakeVad` and `FakeStt::with_capacity` behind its `testkit` feature and `EngineId::builtin` (infallible id for engines this code vouches for). Tests: `cargo test -p aulo-voice` — 30 passed, including the end-to-end turn (frames → transcript → submission → reply → TTS audio → playback, state cycle Idle/Listening/Thinking/Speaking/Listening), push-to-talk start/stop producing one utterance, the transcript cap, a refusing session failing open, and volume; `cargo test -p aulo-speech` — 25 passed. Clippy `-D warnings` and fmt clean. Note for T8.5: barge-in has its hooks in place (`BargeInMode` config, `SpeakerCmd::Cancel`), but the VAD-while-Speaking trigger and the timing test are T8.5; T8.6 adds the keyword spotter to the listener; T8.15 turns the queued submission into a steering message to the running turn.
 
 ### T8.2. VAD backends
 

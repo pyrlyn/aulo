@@ -16,9 +16,14 @@
 //! engine should say, and [`SpeakableStream`] cuts it into sentences so
 //! playback can start on the first one. The reply text is untrusted model
 //! output, so every entry point caps its input.
+//!
+//! The conversation pipeline (T8.1): [`pipeline`] runs frames through VAD,
+//! STT, end-of-turn, the agent session, the normalizer, TTS and playback as
+//! tokio tasks with bounded channels.
 
 mod active;
 mod expand;
+mod pipeline;
 mod registry;
 mod resolve;
 mod sentences;
@@ -26,6 +31,11 @@ mod speakable;
 mod stream;
 
 pub use active::{ActiveEngine, ActiveStt, ActiveTts};
+pub use pipeline::{
+    AudioChunk, AudioSink, BargeInMode, DEFAULT_SILENCE_MS, FrameSource, ListenMode, Output,
+    PipelineConfig, PipelineDeps, PipelineError, SessionError, SessionEvent, SilenceEndOfTurn,
+    Submission, VoiceHandle, VoiceSession, spawn as spawn_pipeline,
+};
 pub use registry::{Engine, EngineRegistry, Factory, RegistryError, SttRegistry, TtsRegistry};
 pub use resolve::{Overrides, candidates};
 pub use sentences::SentenceSplitter;
