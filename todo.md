@@ -1,7 +1,7 @@
 # aulo — todo
 
 - T1.1. Extract llm-wire: provider contract and neutral types
-- T1.6. Switch cox to the extracted llm crates
+- T1.6. Switch the coding agent to the extracted llm crates
 - T1.8. Extract perm-rules: permission rule engine
 - T1.9. Extract proc-sandbox: Seatbelt, bwrap, Landlock+seccomp
 - T1.10. Extract shell-classify: bash risk classifier
@@ -10,11 +10,11 @@
 - T1.13. Extract speech-capture: microphone capture and resampling
 - T1.14. Extract config-schema: schema-checked config helpers
 - T1.15. Extract agent-loop: neutral turn state machine
-- T1.16. Switch cox to agent-loop
+- T1.16. Switch the coding agent to agent-loop
 - T1.17. Extract agent-ext: skills and shell hooks
 - T1.18. Extract agent-host-config: register MCP servers in agent hosts
-- T1.19. runa: stream tokens as they are generated
-- T1.20. runa: library target for in-process local inference
+- T1.19. The local model runner: stream tokens as they are generated
+- T1.20. The local model runner: library target for in-process local inference
 - T2.3. CI workflows
 - T3.7. aulo CLI: text chat client
 - T4.1. aulo-providers: build providers from config
@@ -91,7 +91,7 @@
 - T10.5. aulo as an MCP server (stdio)
 - T10.6. MCP server over streamable HTTP
 - T10.7. Register aulo in agent hosts
-- T10.8. cox tools through cox mcp
+- T10.8. The coding agent tools through cox mcp
 - T11.2. Plugin host: discovery and grants
 - T11.3. Process plugins over MCP stdio
 - T11.4. Streaming plugins over gRPC (speech engines, providers)

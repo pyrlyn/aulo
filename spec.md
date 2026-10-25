@@ -26,7 +26,7 @@ It ships as one daemon, `aulod`, that owns the agent, the voice pipeline, the to
    - Screenshots plus synthetic input as the last resort.
 3. **MCP both ways.** A built-in MCP client, and aulo as an MCP server.
 4. **Plugins.** Tools, speech engines, LLM providers, skills and hooks.
-5. **Any model.** Local models (runa, Ollama, LM Studio, llama.cpp) and remote providers (OpenAI, Anthropic, Gemini, xAI, OpenRouter, DeepSeek, any OpenAI-compatible endpoint), set per tier and per chat.
+5. **Any model.** Local models (the local model runner, Ollama, LM Studio, llama.cpp) and remote providers (OpenAI, Anthropic, Gemini, xAI, OpenRouter, DeepSeek, any OpenAI-compatible endpoint), set per tier and per chat.
 6. **Two deployment shapes.** A desktop app with chats, and a headless server with a gRPC API.
 7. **Safety by construction.**
    - Policy is deterministic code outside the model and fails closed.
@@ -181,7 +181,7 @@ The full notes with sources are in `research.md`.
   - It runs per user as a login service, or headless on a server.
 - **`aulo`.** A thin CLI client. `aulo mcp` runs the stdio MCP server; it is a client of aulod, so every call still goes through aulod's policy.
 - **Desktop apps** (`desktop/macos`, SwiftUI; `desktop/windows`, WinUI 3).
-  - Native UI over `aulo-app`, a Rust core exported with UniFFI (`aulo-ffi`), as in cox.
+  - Native UI over `aulo-app`, a Rust core exported with UniFFI (`aulo-ffi`), as in the coding agent.
   - `aulo-app` is a gRPC client of aulod; it starts the local daemon when it is not running.
   - It can also connect to remote servers.
 - **Plugins and MCP servers.**
@@ -257,7 +257,7 @@ When a realtime provider is selected for the voice tier:
 | VAD | earshot (pure Rust) | Silero via sherpa-onnx |
 | Wake word | sherpa-onnx keyword spotting (open vocabulary) | plugin |
 | End of turn | silence 700 ms | + Smart Turn v3 (BSD-2) |
-| STT | sherpa-onnx Parakeet TDT v3 (25 languages incl. ru, uk) | Moonshine streaming (en), whisper.cpp, Apple SpeechAnalyzer, OpenAI-compatible endpoint (OpenAI, runa), Deepgram, plugins |
+| STT | sherpa-onnx Parakeet TDT v3 (25 languages incl. ru, uk) | Moonshine streaming (en), whisper.cpp, Apple SpeechAnalyzer, OpenAI-compatible endpoint (OpenAI, the local model runner), Deepgram, plugins |
 | TTS | sherpa-onnx Kokoro (Apache-2.0 weights) | Matcha, VITS, macOS/Windows/Linux system voices, OpenAI-compatible speech, ElevenLabs, Piper (GPL, plugin only), plugins |
 | Realtime front | none (cascade) | OpenAI GPT-Live / Realtime, Gemini Live, xAI Voice Agent |
 
@@ -345,7 +345,7 @@ Also:
 ## 8. MCP
 
 - **Client** (T10.1–T10.4).
-  - Built on the shared `mcp-host` crate (rmcp 3.x), extracted from cox.
+  - Built on the shared `mcp-host` crate (rmcp 3.x), extracted from the coding agent.
   - Servers come from `[mcp.servers]` and `.mcp.json`, over stdio or streamable HTTP, with OAuth for remote servers.
   - Their tools appear as `mcp__server__tool`, deferred by default, and every call goes through policy.
   - Resources, prompts and elicitation are supported; elicitation is answered by voice or in the desktop app.
@@ -392,13 +392,13 @@ Also:
 
 ## 10. Models and providers
 
-- **Wires.** The provider stack is the shared `llm-*` crates extracted from cox:
+- **Wires.** The provider stack is the shared `llm-*` crates extracted from the coding agent:
   - OpenAI Chat and Responses, which also cover every OpenAI-compatible endpoint with no per-vendor code;
   - Anthropic Messages;
   - the model catalog;
   - credentials (env var, then OS keychain; inline keys are rejected).
 - **Local.**
-  - runa, through its OpenAI-compatible server. T1.19 makes it stream tokens; T1.20 adds in-process embedding.
+  - The local model runner, through its OpenAI-compatible server. T1.19 makes it stream tokens; T1.20 adds in-process embedding.
   - Ollama and LM Studio.
   - Running servers are auto-detected.
 - **Remote.** OpenAI, Anthropic, Gemini (compat), xAI, OpenRouter, DeepSeek, any custom endpoint.
@@ -437,7 +437,7 @@ Also:
 
 ## 12. Desktop app
 
-Native apps, as in cox (D2):
+Native apps, as in the coding agent (D2):
 
 - **`aulo-app`** (Rust) holds all client logic: the gRPC connection, folding events into keyed block patches, coalescing patches to one batch per frame, the chat list, the inbox and intents. Replaying a recorded event log yields the same patches as the live run, so UI tests run on fixtures.
 - **`aulo-ffi`** exports it with UniFFI. Every exported body is a single expression, so logic cannot leak into the bindings.
@@ -494,12 +494,12 @@ The full map with `path:line` citations is in `research.md` Part 6. Summary:
 | Provider per tier | cox-session `provider_for` (one provider per session) | `llm-router` (T1.7) |
 | Agent loop | cox-core | `agent-loop` (T1.15, decision T0.7) |
 | Permissions, sandbox, bash risk | cox-permission, cox-sandbox, cox-tools bash classifier | `perm-rules`, `proc-sandbox`, `shell-classify` (T1.8–T1.10) |
-| Sanitizing untrusted text | cox-sanitize, rtok sanitize, ketch changelog::sanitize | `text-sanitize` (T1.11) |
+| Sanitizing untrusted text | cox-sanitize, the token-reduction CLI sanitize, ketch changelog::sanitize | `text-sanitize` (T1.11) |
 | MCP client | cox-mcp | `mcp-host` (T1.12) |
-| MCP server pattern | rtok `src/mcp.rs`, cox-mcp server | Followed in `aulo-mcp` (T10.5) |
+| MCP server pattern | The token-reduction CLI `src/mcp.rs`, cox-mcp server | Followed in `aulo-mcp` (T10.5) |
 | Registering in agent hosts | rtok-agent-sdk `register_mcp` | `agent-host-config` (T1.18) |
 | Mic capture, resample, Whisper, energy VAD | cox-voice, runa-media | `speech-capture` (T1.13) |
-| Config with schema and provenance | cox-config, rtok config/layers.rs, ketch toml_file.rs | `config-schema` (T1.14) |
+| Config with schema and provenance | cox-config, rtok config/layers.rs, the package manager toml_file.rs | `config-schema` (T1.14) |
 | Skills and hooks | cox-ext | `agent-ext` (T1.17) |
 | WASM plugin host and grants | cox-plugin, rtok plugins/wasm.rs | Pattern for T11.7 |
 | Local inference | runa serve and engine | OpenAI-compatible endpoint now; streaming fix (T1.19); library target (T1.20) |
@@ -514,7 +514,7 @@ Licence (D1): aulo is licensed like cox, so cox code can be reused directly. run
 | Stage | Name | Outcome |
 | --- | --- | --- |
 | S0 | Decisions and spikes | Decisions D1–D5 settled; sherpa-onnx and AEC still to measure (T0.5, T0.6) |
-| S1 | Shared crates in packages/ | Provider stack, permissions, sandbox, MCP host, speech capture, agent loop shared with cox/runa |
+| S1 | Shared crates in packages/ | Provider stack, permissions, sandbox, MCP host, speech capture, agent loop shared with the coding agent and the local model runner |
 | S2 | Workspace foundations | Workspace, CI, types, config, telemetry, store |
 | S3 | gRPC API and daemon | Protos, server, auth, TLS, aulod, text CLI |
 | S4 | Models, providers and agent loop | Text chat end to end on local and remote models |
@@ -564,7 +564,7 @@ Settled by the creator on 2026-10-07 (details in `done.md`):
   - The README carries the license-sync block.
   - `license-check.yml` fails on drift.
   - The Cargo manifests use the expression above.
-- **D2 Desktop** (T0.2). Native SwiftUI (macOS) and WinUI 3 (Windows) over `aulo-app` + `aulo-ffi` (UniFFI), as in cox.
+- **D2 Desktop** (T0.2). Native SwiftUI (macOS) and WinUI 3 (Windows) over `aulo-app` + `aulo-ffi` (UniFFI), as in the coding agent.
 - **D3 Platforms** (T0.3). macOS arm64 (15+), Windows 11 x86_64, Linux x86_64 and aarch64.
 - **D4 New crates** (T0.4). Approved:
   - API: tonic, tonic-build, prost, tonic-health, tonic-reflection;
@@ -594,5 +594,5 @@ Open:
 | Prompt injection through web pages and screenshots | Untrusted-content guards, sentinel, blocklist, read-only unattended mode |
 | The model acts on the wrong window or element | Accessibility refs before pixels, batched actions stop on failure, screen viewer and kill switch |
 | Licence mix (espeak-ng and Piper GPL, model licences such as CC BY-NC) | D1 keeps aulo GPL-compatible; D9 accepts espeak-ng inside sherpa-onnx; Piper only as a separate plugin; model licences checked in the model manager table |
-| Extraction work in cox delays aulo | S1 tasks run in parallel with S2–S3, which do not depend on them |
-| runa streaming latency | T1.19, or Ollama/LM Studio until it lands |
+| Extraction work in the coding agent delays aulo | S1 tasks run in parallel with S2–S3, which do not depend on them |
+| The local model runner streaming latency | T1.19, or Ollama/LM Studio until it lands |
