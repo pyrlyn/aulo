@@ -549,33 +549,33 @@ from the GitHub REST API, and crate contents from the published `.crate` files, 
 Read from the local checkouts on 2026-10-07 (primary source: the repositories' own files). Paths are relative to
 `/Users/listepo/GitHub/listepo/`. GitHub homes: `pyrlyn/cox`, `pyrlyn/runa`, `pyrlyn/rtok`, `pyrlyn/ketch`.
 
-### 6.1 the coding agent (terminal coding agent, Rust, GPL-3.0-or-later OR LicenseRef-cox-Royalty-Free — `apps/agent/Cargo.toml`)
+### 6.1 cox (terminal coding agent, Rust, GPL-3.0-or-later OR LicenseRef-cox-Royalty-Free — `apps/cox/Cargo.toml`)
 
-None of the coding agent crates is on crates.io; internal deps use `path` + `version = "0.1.2"`. Crate ownership:
-`apps/agent/AGENTS.md:28-62`.
+None of the cox crates is on crates.io; internal deps use `path` + `version = "0.1.2"`. Crate ownership:
+`apps/cox/AGENTS.md:28-62`.
 
 | What | Where | Notes |
 | --- | --- | --- |
-| Provider trait | `apps/agent/crates/agent-protocol/src/traits.rs:172-197` | `stream(req, sink, cancel) -> Usage`; `Caps`, `count_tokens` |
-| Neutral types | `apps/agent/crates/agent-protocol/src/types.rs:1566` (`Request`), `:1594` (`ProviderEvent`), `:1658` (`Caps`), `:1673` (`ToolSpec` with `Risk`, `Concurrency`) | Streamed text and tool calls on every wire |
+| Provider trait | `apps/cox/crates/cox-protocol/src/traits.rs:172-197` | `stream(req, sink, cancel) -> Usage`; `Caps`, `count_tokens` |
+| Neutral types | `apps/cox/crates/cox-protocol/src/types.rs:1566` (`Request`), `:1594` (`ProviderEvent`), `:1658` (`Caps`), `:1673` (`ToolSpec` with `Risk`, `Concurrency`) | Streamed text and tool calls on every wire |
 | Submission / Event | `types.rs:976`, `types.rs:1147` | The event-driven core every surface consumes |
-| Wires | `agent-provider-openai` (Chat, Responses), `agent-provider-anthropic` (Messages, typify types), `agent-provider/src/lmstudio.rs` | OpenAI-compatible vendors need no code (`apps/agent/config/default.toml:45-145`) |
-| Credentials | `apps/agent/crates/agent-provider-http/src/http.rs:53-77` | env var first, then keyring `the coding agent/<section>` |
-| One provider per session (limitation) | `apps/agent/crates/agent-session/src/provider.rs:27-120` | Tiers only change the model |
-| Model catalog | `apps/agent/crates/agent-models/src/catalog.rs:247` (`Catalog::load`), `:294` (`get`) | Built-in < config < prices.toml + served overlay |
-| Agent loop | `apps/agent/crates/agent-core/src/session.rs:289` (`Session::new`), `:908` (`submit`) | Loop states and rules: `apps/agent/plan.md:315-347` |
-| Tool trait | `apps/agent/crates/agent-protocol/src/traits.rs:242` | `spec`, `subject`, `risk`, `touches`, `call(input, &ToolCx)` |
-| Permissions | `apps/agent/crates/agent-permission/src/lib.rs:115` (`decide`) | Claude Code rule grammar; decision order `apps/agent/plan.md:560-576` |
-| Bash risk classifier | `apps/agent/crates/agent-tools/src/bash/classify.rs` | tree-sitter |
-| Sandbox | `apps/agent/crates/agent-sandbox/src/sandbox/mod.rs:87` (`command`), `:126` (`argv`), `src/path.rs:41` (`confine`) | Seatbelt, bwrap, Landlock+seccomp |
-| Sanitizer | `apps/agent/crates/agent-sanitize/src/lib.rs:33` | Terminal escapes and bidi |
-| MCP client and server | `apps/agent/crates/agent-mcp/src/client.rs:244` (`connect`), `:357` (`tools`), `:442` (`connect_all`); `discovery.rs`, `auth.rs`, `elicit.rs`, `server.rs` | rmcp 3.2 (lock 3.5.0); failing server becomes a notice |
-| Hooks, skills | `apps/agent/crates/agent-ext/src/hooks.rs` (`HookChain`:123), `skills.rs`; hook events `agent-protocol/src/types.rs:488` | Claude Code JSON protocol |
-| WASM plugins | `apps/agent/crates/agent-plugin` (extism 1.30, wasmtime 43), `grant.rs` | Grants tied to the package digest, per-call deadline and memory cap |
-| Voice (push-to-talk) | `apps/agent/crates/agent-voice/src/capture.rs:36,68`, `transcribe.rs:29,55`, `lib.rs:85`; trait `agent-protocol/src/traits.rs:728` | whisper-rs 0.16, cpal 0.18, rubato 5; pinned model hashes in `data/whisper-models.json` |
-| Browser trait (host-supplied) | `apps/agent/crates/agent-app/src/browser.rs` | `browser_open`, `browser_read`, `browser_screenshot` |
-| Config, store, telemetry | `agent-config` (figment, provenance, schema drift test), `agent-store` (Diesel + SQLite), `agent-telemetry` | Pattern for aulo-config/store/telemetry |
-| Crate-boundary test | `apps/agent/crates/agent/tests/deps.rs` | Pattern for T2.2 |
+| Wires | `cox-provider-openai` (Chat, Responses), `cox-provider-anthropic` (Messages, typify types), `cox-provider/src/lmstudio.rs` | OpenAI-compatible vendors need no code (`apps/cox/config/default.toml:45-145`) |
+| Credentials | `apps/cox/crates/cox-provider-http/src/http.rs:53-77` | env var first, then keyring `cox/<section>` |
+| One provider per session (limitation) | `apps/cox/crates/cox-session/src/provider.rs:27-120` | Tiers only change the model |
+| Model catalog | `apps/cox/crates/cox-models/src/catalog.rs:247` (`Catalog::load`), `:294` (`get`) | Built-in < config < prices.toml + served overlay |
+| Agent loop | `apps/cox/crates/cox-core/src/session.rs:289` (`Session::new`), `:908` (`submit`) | Loop states and rules: `apps/cox/plan.md:315-347` |
+| Tool trait | `apps/cox/crates/cox-protocol/src/traits.rs:242` | `spec`, `subject`, `risk`, `touches`, `call(input, &ToolCx)` |
+| Permissions | `apps/cox/crates/cox-permission/src/lib.rs:115` (`decide`) | Claude Code rule grammar; decision order `apps/cox/plan.md:560-576` |
+| Bash risk classifier | `apps/cox/crates/cox-tools/src/bash/classify.rs` | tree-sitter |
+| Sandbox | `apps/cox/crates/cox-sandbox/src/sandbox/mod.rs:87` (`command`), `:126` (`argv`), `src/path.rs:41` (`confine`) | Seatbelt, bwrap, Landlock+seccomp |
+| Sanitizer | `apps/cox/crates/cox-sanitize/src/lib.rs:33` | Terminal escapes and bidi |
+| MCP client and server | `apps/cox/crates/cox-mcp/src/client.rs:244` (`connect`), `:357` (`tools`), `:442` (`connect_all`); `discovery.rs`, `auth.rs`, `elicit.rs`, `server.rs` | rmcp 3.2 (lock 3.5.0); failing server becomes a notice |
+| Hooks, skills | `apps/cox/crates/cox-ext/src/hooks.rs` (`HookChain`:123), `skills.rs`; hook events `cox-protocol/src/types.rs:488` | Claude Code JSON protocol |
+| WASM plugins | `apps/cox/crates/cox-plugin` (extism 1.30, wasmtime 43), `grant.rs` | Grants tied to the package digest, per-call deadline and memory cap |
+| Voice (push-to-talk) | `apps/cox/crates/cox-voice/src/capture.rs:36,68`, `transcribe.rs:29,55`, `lib.rs:85`; trait `cox-protocol/src/traits.rs:728` | whisper-rs 0.16, cpal 0.18, rubato 5; pinned model hashes in `data/whisper-models.json` |
+| Browser trait (host-supplied) | `apps/cox/crates/cox-app/src/browser.rs` | `browser_open`, `browser_read`, `browser_screenshot` |
+| Config, store, telemetry | `cox-config` (figment, provenance, schema drift test), `cox-store` (Diesel + SQLite), `cox-telemetry` | Pattern for aulo-config/store/telemetry |
+| Crate-boundary test | `apps/cox/crates/cox/tests/deps.rs` | Pattern for T2.2 |
 
 ### 6.2 runa (local-first AI runner, Rust, MIT OR Apache-2.0 — `apps/runa/Cargo.toml`)
 
@@ -590,28 +590,28 @@ None of the coding agent crates is on crates.io; internal deps use `path` + `ver
 | MCP client | `apps/runa/crates/runa/src/mcp.rs` | stdio only, `pub(crate)` |
 | Bin-only crate | `apps/runa/crates/runa` | serve/pool/mcp are `pub(crate)` (T1.20) |
 
-### 6.3 the token CLI, the package manager, packages
+### 6.3 rtok, ketch, packages
 
 | What | Where | Notes |
 | --- | --- | --- |
-| MCP server over stdio | `apps/tokcli/src/mcp.rs:61` (`run`), `:573`, `:591`, `:657` (`call_tool`) | rmcp 3.2 model types |
-| Register MCP in agent hosts | `apps/tokcli/crates/tokcli-agent-sdk/src/lib.rs:84` (`backup`), `:325` (`write_atomic`), `:377` (`register_mcp`), `:424` (`unregister_mcp`) | Foreign-config rule in practice |
-| Plugin SDK and WASM host | `apps/tokcli/crates/tokcli-plugin-sdk/src/lib.rs:328` (`trait Plugin`), `apps/tokcli/src/plugins/wasm.rs:74,101,243` | wasmi host behind feature `wasm-host` |
-| Hooks with fail-open | `apps/pkgmgr/crates/pkgmgr-core/src/hooks.rs:96,100,144` | `run_or_warn` |
-| Resident IPC | `apps/tokcli/crates/tokcli-hook/src/lib.rs:1-6` | Length-prefixed frames over UDS / named pipe |
-| Process capture | `apps/tokcli/src/proc.rs:34` | Never waits on pipe EOF |
-| Single-instance lock, kill process group | `apps/tokcli/crates/tokcli-sys/src/lib.rs:11` | The only crate allowed `unsafe` |
-| Layered config | `apps/tokcli/src/config/layers.rs:379,504,584`; `apps/pkgmgr/crates/pkgmgr-core/src/toml_file.rs:21,27,105` | Known duplicate to extract (T1.14) |
-| Sanitizer | `apps/tokcli/src/sanitize.rs:34,70,82` | Duplicate of agent-sanitize and the package manager changelog::sanitize |
-| Rotating log | `apps/tokcli/crates/tokcli-log/src/lib.rs:23,76,121` | |
-| Storage | `apps/tokcli/src/store/mod.rs` | One SQLite file, WAL, FTS5, Diesel |
-| Signature checks | `apps/pkgmgr/crates/pkgmgr-core/src/trust.rs` | sigstore / minisign / pgp (T11.11) |
+| MCP server over stdio | `apps/rtok/src/mcp.rs:61` (`run`), `:573`, `:591`, `:657` (`call_tool`) | rmcp 3.2 model types |
+| Register MCP in agent hosts | `apps/rtok/crates/rtok-agent-sdk/src/lib.rs:84` (`backup`), `:325` (`write_atomic`), `:377` (`register_mcp`), `:424` (`unregister_mcp`) | Foreign-config rule in practice |
+| Plugin SDK and WASM host | `apps/rtok/crates/rtok-plugin-sdk/src/lib.rs:328` (`trait Plugin`), `apps/rtok/src/plugins/wasm.rs:74,101,243` | wasmi host behind feature `wasm-host` |
+| Hooks with fail-open | `apps/ketch/crates/ketch-core/src/hooks.rs:96,100,144` | `run_or_warn` |
+| Resident IPC | `apps/rtok/crates/rtok-hook/src/lib.rs:1-6` | Length-prefixed frames over UDS / named pipe |
+| Process capture | `apps/rtok/src/proc.rs:34` | Never waits on pipe EOF |
+| Single-instance lock, kill process group | `apps/rtok/crates/rtok-sys/src/lib.rs:11` | The only crate allowed `unsafe` |
+| Layered config | `apps/rtok/src/config/layers.rs:379,504,584`; `apps/ketch/crates/ketch-core/src/toml_file.rs:21,27,105` | Known duplicate to extract (T1.14) |
+| Sanitizer | `apps/rtok/src/sanitize.rs:34,70,82` | Duplicate of cox-sanitize and ketch changelog::sanitize |
+| Rotating log | `apps/rtok/crates/rtok-log/src/lib.rs:23,76,121` | |
+| Storage | `apps/rtok/src/store/mod.rs` | One SQLite file, WAL, FTS5, Diesel |
+| Signature checks | `apps/ketch/crates/ketch-core/src/trust.rs` | sigstore / minisign / pgp (T11.11) |
 | File backup | `packages/crates/file-backup/src/lib.rs:19,31` | crates.io 0.1.1 |
-| CI templates | `packages/infra/.github/workflows/ci-rust.yml`; `packages/crates/.github/workflows/{ci,bump,release,pipeline}.yml`; `apps/pkgmgr/.github/workflows/ci.yml:28-63` | Linux x86_64/aarch64, macOS aarch64, Windows x86_64 |
-| Release | `apps/pkgmgr/dist-workspace.toml` | cargo-dist 0.32.0, Homebrew tap |
+| CI templates | `packages/infra/.github/workflows/ci-rust.yml`; `packages/crates/.github/workflows/{ci,bump,release,pipeline}.yml`; `apps/ketch/.github/workflows/ci.yml:28-63` | Linux x86_64/aarch64, macOS aarch64, Windows x86_64 |
+| Release | `apps/ketch/dist-workspace.toml` | cargo-dist 0.32.0, Homebrew tap |
 
 ### 6.4 Not found anywhere in the workspace
 
 TTS, wake-word detection, streaming ASR, Silero VAD, gRPC, browser automation, desktop accessibility control, and
-a tray/desktop UI written in Rust (the package manager and the coding agent desktops are SwiftUI/WinUI over UniFFI). These are new code in aulo,
+a tray/desktop UI written in Rust (ketch and cox desktops are SwiftUI/WinUI over UniFFI). These are new code in aulo,
 built on the blocks in Part 4.

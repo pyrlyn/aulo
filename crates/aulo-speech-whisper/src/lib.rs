@@ -3,7 +3,7 @@
 //! pushes no partials and hears English only; other languages fall back to
 //! another engine.
 //!
-//! The decoding itself is `speech_capture::Transcriber`, the code the coding agent and runa
+//! The decoding itself is `speech_capture::Transcriber`, the code cox and runa
 //! share; this crate adds what aulo's engine contract needs around it: the
 //! catalog model check, a worker thread that loads the model once, bounded
 //! audio buffering and a transcript cap (all from `aulo-speech-local`).

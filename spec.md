@@ -181,7 +181,7 @@ The full notes with sources are in `research.md`.
   - It runs per user as a login service, or headless on a server.
 - **`aulo`.** A thin CLI client. `aulo mcp` runs the stdio MCP server; it is a client of aulod, so every call still goes through aulod's policy.
 - **Desktop apps** (`desktop/macos`, SwiftUI; `desktop/windows`, WinUI 3).
-  - Native UI over `aulo-app`, a Rust core exported with UniFFI (`aulo-ffi`), as in the coding agent.
+  - Native UI over `aulo-app`, a Rust core exported with UniFFI (`aulo-ffi`), as in cox.
   - `aulo-app` is a gRPC client of aulod; it starts the local daemon when it is not running.
   - It can also connect to remote servers.
 - **Plugins and MCP servers.**
@@ -222,7 +222,7 @@ Crate roles follow rust.md: contracts, domain, adapters, assembly, surfaces, tes
 | `aulo-plugin-sdk` | contract | Plugin-side SDK (gRPC plugin services, manifest types) |
 | `aulo-server` | assembly | gRPC services, auth, TLS |
 | `aulo` | surface | CLI binary (`aulo`) and daemon binary (`aulod`) |
-| `aulo-app` | domain | UI-agnostic client core for the native apps: gRPC client, Timeline fold, coalescing Controller, inbox, intents (agent-app pattern) |
+| `aulo-app` | domain | UI-agnostic client core for the native apps: gRPC client, Timeline fold, coalescing Controller, inbox, intents (cox-app pattern) |
 | `aulo-ffi` | surface | Forward-only UniFFI exports over `aulo-app`; Swift and C# (uniffi-bindgen-cs) bindings; the only crate that depends on `uniffi` |
 | `aulo-testkit` | testkit | Scripted provider, test daemon, fake audio and engines |
 
@@ -294,7 +294,7 @@ When a realtime provider is selected for the voice tier:
 | --- | --- | --- |
 | `shell` | proc-sandbox (Seatbelt, bwrap, Landlock+seccomp), output archive | `Shell(cmd)` + risk class |
 | `pty_*` | portable-pty | `Shell(cmd)` |
-| `files_*` | confined to allowed roots; optional `the coding agent mcp` preset for code work | `File(path)` |
+| `files_*` | confined to allowed roots; optional `cox mcp` preset for code work | `File(path)` |
 | `app_*` | NSWorkspace / ShellExecute / gio | `App(id)` |
 | `browser_*` | chromiumoxide on a dedicated profile; Playwright MCP alternative | `Site(host)` |
 | `ax_*` | AXUIElement / UIA / AT-SPI | `App(id)` |
@@ -345,7 +345,7 @@ Also:
 ## 8. MCP
 
 - **Client** (T10.1–T10.4).
-  - Built on the shared `mcp-host` crate (rmcp 3.x), extracted from the coding agent.
+  - Built on the shared `mcp-host` crate (rmcp 3.x), extracted from cox.
   - Servers come from `[mcp.servers]` and `.mcp.json`, over stdio or streamable HTTP, with OAuth for remote servers.
   - Their tools appear as `mcp__server__tool`, deferred by default, and every call goes through policy.
   - Resources, prompts and elicitation are supported; elicitation is answered by voice or in the desktop app.
@@ -392,7 +392,7 @@ Also:
 
 ## 10. Models and providers
 
-- **Wires.** The provider stack is the shared `llm-*` crates extracted from the coding agent:
+- **Wires.** The provider stack is the shared `llm-*` crates extracted from cox:
   - OpenAI Chat and Responses, which also cover every OpenAI-compatible endpoint with no per-vendor code;
   - Anthropic Messages;
   - the model catalog;
@@ -437,7 +437,7 @@ Also:
 
 ## 12. Desktop app
 
-Native apps, as in the coding agent (D2):
+Native apps, as in cox (D2):
 
 - **`aulo-app`** (Rust) holds all client logic: the gRPC connection, folding events into keyed block patches, coalescing patches to one batch per frame, the chat list, the inbox and intents. Replaying a recorded event log yields the same patches as the live run, so UI tests run on fixtures.
 - **`aulo-ffi`** exports it with UniFFI. Every exported body is a single expression, so logic cannot leak into the bindings.
@@ -490,31 +490,31 @@ The full map with `path:line` citations is in `research.md` Part 6. Summary:
 
 | Need | Source | Plan |
 | --- | --- | --- |
-| Provider trait, wires, credentials, catalog | agent-protocol, agent-provider*, agent-models | Extract into `llm-wire`, `llm-http`, `llm-openai`, `llm-anthropic`, `llm-catalog` (T1.1–T1.6) |
-| Provider per tier | agent-session `provider_for` (one provider per session) | `llm-router` (T1.7) |
-| Agent loop | agent-core | `agent-loop` (T1.15, decision T0.7) |
-| Permissions, sandbox, bash risk | agent-permission, agent-sandbox, agent-tools bash classifier | `perm-rules`, `proc-sandbox`, `shell-classify` (T1.8–T1.10) |
-| Sanitizing untrusted text | agent-sanitize, the token CLI sanitize, the package manager changelog::sanitize | `text-sanitize` (T1.11) |
-| MCP client | agent-mcp | `mcp-host` (T1.12) |
-| MCP server pattern | the token CLI `src/mcp.rs`, agent-mcp server | Followed in `aulo-mcp` (T10.5) |
-| Registering in agent hosts | tokcli-agent-sdk `register_mcp` | `agent-host-config` (T1.18) |
-| Mic capture, resample, Whisper, energy VAD | agent-voice, runa-media | `speech-capture` (T1.13) |
-| Config with schema and provenance | agent-config, the token CLI config/layers.rs, the package manager toml_file.rs | `config-schema` (T1.14) |
-| Skills and hooks | agent-ext | `agent-ext` (T1.17) |
-| WASM plugin host and grants | agent-plugin, the token CLI plugins/wasm.rs | Pattern for T11.7 |
+| Provider trait, wires, credentials, catalog | cox-protocol, cox-provider*, cox-models | Extract into `llm-wire`, `llm-http`, `llm-openai`, `llm-anthropic`, `llm-catalog` (T1.1–T1.6) |
+| Provider per tier | cox-session `provider_for` (one provider per session) | `llm-router` (T1.7) |
+| Agent loop | cox-core | `agent-loop` (T1.15, decision T0.7) |
+| Permissions, sandbox, bash risk | cox-permission, cox-sandbox, cox-tools bash classifier | `perm-rules`, `proc-sandbox`, `shell-classify` (T1.8–T1.10) |
+| Sanitizing untrusted text | cox-sanitize, rtok sanitize, ketch changelog::sanitize | `text-sanitize` (T1.11) |
+| MCP client | cox-mcp | `mcp-host` (T1.12) |
+| MCP server pattern | rtok `src/mcp.rs`, cox-mcp server | Followed in `aulo-mcp` (T10.5) |
+| Registering in agent hosts | rtok-agent-sdk `register_mcp` | `agent-host-config` (T1.18) |
+| Mic capture, resample, Whisper, energy VAD | cox-voice, runa-media | `speech-capture` (T1.13) |
+| Config with schema and provenance | cox-config, rtok config/layers.rs, ketch toml_file.rs | `config-schema` (T1.14) |
+| Skills and hooks | cox-ext | `agent-ext` (T1.17) |
+| WASM plugin host and grants | cox-plugin, rtok plugins/wasm.rs | Pattern for T11.7 |
 | Local inference | runa serve and engine | OpenAI-compatible endpoint now; streaming fix (T1.19); library target (T1.20) |
 | File backups | packages/crates/file-backup (crates.io 0.1.1) | Direct dependency |
 | CI and release | pyrlyn/ci ci-rust.yml, pyrlyn/infra bump.yml, cargo-dist | Direct reuse (T2.3, T15.1) |
-| File and code tools | `the coding agent mcp` stdio server | Optional MCP preset (T10.8) |
+| File and code tools | `cox mcp` stdio server | Optional MCP preset (T10.8) |
 
-Licence (D1): aulo is licensed like the coding agent, so the coding agent code can be reused directly. runa is MIT OR Apache-2.0, which can be combined into a GPL work.
+Licence (D1): aulo is licensed like cox, so cox code can be reused directly. runa is MIT OR Apache-2.0, which can be combined into a GPL work.
 
 ## 16. Stages
 
 | Stage | Name | Outcome |
 | --- | --- | --- |
 | S0 | Decisions and spikes | Decisions D1–D5 settled; sherpa-onnx and AEC still to measure (T0.5, T0.6) |
-| S1 | Shared crates in packages/ | Provider stack, permissions, sandbox, MCP host, speech capture, agent loop shared with the coding agent/runa |
+| S1 | Shared crates in packages/ | Provider stack, permissions, sandbox, MCP host, speech capture, agent loop shared with cox/runa |
 | S2 | Workspace foundations | Workspace, CI, types, config, telemetry, store |
 | S3 | gRPC API and daemon | Protos, server, auth, TLS, aulod, text CLI |
 | S4 | Models, providers and agent loop | Text chat end to end on local and remote models |
@@ -558,13 +558,13 @@ Complexity runs from 1 (an hour or two of focused work) to 5 (a multi-part task 
 
 Settled by the creator on 2026-10-07 (details in `done.md`):
 
-- **D1 Licence** (T0.1). Like the coding agent: `GPL-3.0-or-later OR LicenseRef-aulo-Royalty-Free`, plus a commercial licence.
+- **D1 Licence** (T0.1). Like cox: `GPL-3.0-or-later OR LicenseRef-aulo-Royalty-Free`, plus a commercial licence.
   - `LICENSE` and `PRICING.md` are byte copies of the canonical files in `pyrlyn/ci` `licenses/`.
-  - `LICENSE-ROYALTY-FREE.md` is the coding agent text.
+  - `LICENSE-ROYALTY-FREE.md` is the cox text.
   - The README carries the license-sync block.
   - `license-check.yml` fails on drift.
   - The Cargo manifests use the expression above.
-- **D2 Desktop** (T0.2). Native SwiftUI (macOS) and WinUI 3 (Windows) over `aulo-app` + `aulo-ffi` (UniFFI), as in the coding agent.
+- **D2 Desktop** (T0.2). Native SwiftUI (macOS) and WinUI 3 (Windows) over `aulo-app` + `aulo-ffi` (UniFFI), as in cox.
 - **D3 Platforms** (T0.3). macOS arm64 (15+), Windows 11 x86_64, Linux x86_64 and aarch64.
 - **D4 New crates** (T0.4). Approved:
   - API: tonic, tonic-build, prost, tonic-health, tonic-reflection;
@@ -574,7 +574,7 @@ Settled by the creator on 2026-10-07 (details in `done.md`):
   - other: handy-keys, tokio-tungstenite.
 
   Each crate gets its `rust.md` and `toolchain.md` rows in the task that wires it in.
-- **D5 Agent loop** (T0.7). Extract a neutral `agent-loop` crate from agent-core (T1.15) and build `aulo-agent` on it.
+- **D5 Agent loop** (T0.7). Extract a neutral `agent-loop` crate from cox-core (T1.15) and build `aulo-agent` on it.
 
 - **D6** The API is gRPC (tonic and prost), not HTTP/JSON. Creator, 2026-10-07.
 - **D7** There are two deployment shapes: a desktop app with chats, and a server with an API. Creator, 2026-10-07.
@@ -594,5 +594,5 @@ Open:
 | Prompt injection through web pages and screenshots | Untrusted-content guards, sentinel, blocklist, read-only unattended mode |
 | The model acts on the wrong window or element | Accessibility refs before pixels, batched actions stop on failure, screen viewer and kill switch |
 | Licence mix (espeak-ng and Piper GPL, model licences such as CC BY-NC) | D1 keeps aulo GPL-compatible; D9 accepts espeak-ng inside sherpa-onnx; Piper only as a separate plugin; model licences checked in the model manager table |
-| Extraction work in the coding agent delays aulo | S1 tasks run in parallel with S2–S3, which do not depend on them |
+| Extraction work in cox delays aulo | S1 tasks run in parallel with S2–S3, which do not depend on them |
 | runa streaming latency | T1.19, or Ollama/LM Studio until it lands |

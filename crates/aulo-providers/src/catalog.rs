@@ -1,7 +1,7 @@
 //! Catalog rows plus the served overlay, one list per configured endpoint.
 //!
 //! `llm-catalog` stores a model id and not the provider that serves it: the
-//! rows were flattened out of the coding agent's per-provider lists. The id itself puts a
+//! rows were flattened out of cox's per-provider lists. The id itself puts a
 //! built-in row back under a provider kind (`claude-*` is Anthropic, a
 //! slash id is a gateway id). A row with no such hint, such as `qwen3-coder`,
 //! stays hidden until a tier names it or a server reports it.

@@ -163,35 +163,35 @@ Task ids are `T<stage>.<n>`. Each card lists its stage, area and dependencies. S
 
 Stage: S1 · Area: shared · Depends on: T0.1, T0.7 · Blocks: 3 task(s)
 
-Execution plan: in a packages/crates worktree branched from s1-setup, create llm-wire (publish = false, dual licence) with the provider trait and neutral types copied from agent-protocol plus their tests; Replay/Scripted fakes behind `test-util`; crate-level AGENTS.md, README.md, plan.md, todo.md, done.md, roadmap.md, ideas.md, toolchain.md like change-preview; verify cargo clippy/fmt/test in packages/crates. The coding agent re-export waits until the crate is published (crates.io or a git dependency), because a path dependency breaks the coding agent CI.
+Execution plan: in a packages/crates worktree branched from s1-setup, create llm-wire (publish = false, dual licence) with the provider trait and neutral types copied from cox-protocol plus their tests; Replay/Scripted fakes behind `test-util`; crate-level AGENTS.md, README.md, plan.md, todo.md, done.md, roadmap.md, ideas.md, toolchain.md like change-preview; verify cargo clippy/fmt/test in packages/crates. cox re-export waits until the crate is published (crates.io or a git dependency), because a path dependency breaks cox CI.
 
-Move the provider trait and the neutral types (Request, ProviderEvent, Caps, ToolSpec, Usage, Risk) out of agent-protocol into packages/crates/llm-wire. No behaviour change. Keep the Replay/Scripted fakes behind a test-util feature.
+Move the provider trait and the neutral types (Request, ProviderEvent, Caps, ToolSpec, Usage, Risk) out of cox-protocol into packages/crates/llm-wire. No behaviour change. Keep the Replay/Scripted fakes behind a test-util feature.
 
 Done when:
 
 - llm-wire builds and its tests pass in packages/crates
-- agent-protocol re-exports the moved types (no API break for the coding agent)
+- cox-protocol re-exports the moved types (no API break for cox)
 
-Status: the first criterion holds. `llm-wire` lives at `rust/llm-wire` in pyrlyn/crates; aulo pins it at `f0deed54` (`Cargo.toml` `[workspace.dependencies]`) and `aulo-providers`, `aulo-server` and `llm-router` build on it. At that rev `cargo test --locked --all-features --manifest-path <checkout>/rust/llm-wire/Cargo.toml` passes 24 of 24 tests, `test-util` included. No aulo crate redefines a moved type (`aulo_store::models::Usage` is a database row, not the wire `Usage`). The coding agent re-export is the remaining criterion. It is work in the coding agent repository and waits until `llm-wire` is published, because a path dependency breaks the coding agent CI. Nothing is left in this repository.
+Status: the first criterion holds. `llm-wire` lives at `rust/llm-wire` in pyrlyn/crates; aulo pins it at `f0deed54` (`Cargo.toml` `[workspace.dependencies]`) and `aulo-providers`, `aulo-server` and `llm-router` build on it. At that rev `cargo test --locked --all-features --manifest-path <checkout>/rust/llm-wire/Cargo.toml` passes 24 of 24 tests, `test-util` included. No aulo crate redefines a moved type (`aulo_store::models::Usage` is a database row, not the wire `Usage`). The cox re-export is the remaining criterion. It is work in the cox repository and waits until `llm-wire` is published, because a path dependency breaks cox CI. Nothing is left in this repository.
 
 
-### T1.6. Switch the coding agent to the extracted llm crates
+### T1.6. Switch cox to the extracted llm crates
 
 Stage: S1 · Area: shared · Depends on: T1.3, T1.4, T1.5 · Blocks: 2 task(s)
 
-The coding agent depends on llm-wire, llm-http, llm-openai, llm-anthropic and llm-catalog; the old code is deleted. Update the coding agent tests/deps.rs, the coding agent toolchain.md and rust.md.
+cox depends on llm-wire, llm-http, llm-openai, llm-anthropic and llm-catalog; the old code is deleted. Update cox tests/deps.rs, cox toolchain.md and rust.md.
 
 Done when:
 
-- The coding agent CI green with no duplicated provider code left
+- cox CI green with no duplicated provider code left
 
 ### T1.8. Extract perm-rules: permission rule engine
 
 Stage: S1 · Area: shared · Depends on: T0.1 · Blocks: 1 task(s)
 
-Execution plan: in a packages/crates worktree branched from s1-setup, create perm-rules (publish = false, dual licence) from agent-permission with a neutral, extensible subject type and its rule-grammar and decision-order tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. The coding agent adoption waits for publication (a path dependency breaks the coding agent CI).
+Execution plan: in a packages/crates worktree branched from s1-setup, create perm-rules (publish = false, dual licence) from cox-permission with a neutral, extensible subject type and its rule-grammar and decision-order tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption waits for publication (a path dependency breaks cox CI).
 
-Move agent-permission (rule grammar such as Bash(git commit:*), Edit(src/**), mcp__srv__*, decision order, risk fallback) into packages/crates/perm-rules with neutral subject types so aulo can add App(...) and Site(...) subjects. The coding agent adopts it.
+Move cox-permission (rule grammar such as Bash(git commit:*), Edit(src/**), mcp__srv__*, decision order, risk fallback) into packages/crates/perm-rules with neutral subject types so aulo can add App(...) and Site(...) subjects. cox adopts it.
 
 Done when:
 
@@ -201,9 +201,9 @@ Done when:
 
 Stage: S1 · Area: shared · Depends on: T0.1 · Blocks: 1 task(s)
 
-Execution plan: in a packages/crates worktree branched from s1-setup, create proc-sandbox (publish = false, dual licence) from agent-sandbox with its tests (macOS and Linux paths cfg-gated); crate-level project files like change-preview; verify cargo clippy/fmt/test on macOS. The coding agent adoption waits for publication.
+Execution plan: in a packages/crates worktree branched from s1-setup, create proc-sandbox (publish = false, dual licence) from cox-sandbox with its tests (macOS and Linux paths cfg-gated); crate-level project files like change-preview; verify cargo clippy/fmt/test on macOS. cox adoption waits for publication.
 
-Move agent-sandbox (SandboxMode, command wrapping, argv for PTYs, path::confine) into packages/crates/proc-sandbox. The coding agent adopts it.
+Move cox-sandbox (SandboxMode, command wrapping, argv for PTYs, path::confine) into packages/crates/proc-sandbox. cox adopts it.
 
 Done when:
 
@@ -213,21 +213,21 @@ Done when:
 
 Stage: S1 · Area: shared · Depends on: T0.1 · Blocks: 1 task(s)
 
-Execution plan: in a packages/crates worktree branched from s1-setup, create shell-classify (publish = false, dual licence) from agent-tools/src/bash/classify.rs with its fixture tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. The coding agent adoption waits for publication.
+Execution plan: in a packages/crates worktree branched from s1-setup, create shell-classify (publish = false, dual licence) from cox-tools/src/bash/classify.rs with its fixture tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption waits for publication.
 
-Move the tree-sitter bash classifier from agent-tools/src/bash/classify.rs into packages/crates/shell-classify (ReadOnly, Write, Exec, Destructive).
+Move the tree-sitter bash classifier from cox-tools/src/bash/classify.rs into packages/crates/shell-classify (ReadOnly, Write, Exec, Destructive).
 
 Done when:
 
-- classifier fixture tests pass; the coding agent adopts it
+- classifier fixture tests pass; cox adopts it
 
 ### T1.11. Extract text-sanitize: terminal and bidi guard
 
 Stage: S1 · Area: shared · Depends on: none · Blocks: 1 task(s)
 
-Execution plan: in a packages/crates worktree branched from s1-setup, create text-sanitize (publish = false, dual licence, rust-version 1.86 so the package manager can adopt it) merging agent-sanitize, the token CLI src/sanitize.rs and the package manager changelog::sanitize, with the union of their tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. Adoption by the coding agent, the token CLI and the package manager and the rust.md duplicate note wait for publication and creator permission.
+Execution plan: in a packages/crates worktree branched from s1-setup, create text-sanitize (publish = false, dual licence, rust-version 1.86 so ketch can adopt it) merging cox-sanitize, rtok src/sanitize.rs and ketch changelog::sanitize, with the union of their tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. Adoption by cox, rtok and ketch and the rust.md duplicate note wait for publication and creator permission.
 
-Merge agent-sanitize, the token CLI src/sanitize.rs and the package manager changelog::sanitize (a known duplicate in rust.md) into packages/crates/text-sanitize. All three projects adopt it.
+Merge cox-sanitize, rtok src/sanitize.rs and ketch changelog::sanitize (a known duplicate in rust.md) into packages/crates/text-sanitize. All three projects adopt it.
 
 Done when:
 
@@ -237,67 +237,67 @@ Done when:
 
 Stage: S1 · Area: shared · Depends on: T0.1 · Blocks: 1 task(s)
 
-Execution plan: in a packages/crates worktree branched from s1-setup, create mcp-host (publish = false, dual licence) from the agent-mcp client parts on rmcp 3.x with the fail-open and discovery tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. The coding agent adoption waits for publication.
+Execution plan: in a packages/crates worktree branched from s1-setup, create mcp-host (publish = false, dual licence) from the cox-mcp client parts on rmcp 3.x with the fail-open and discovery tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption waits for publication.
 
-Move agent-mcp client parts (connect_all that turns a failing server into a notice, .mcp.json discovery with ${VAR} expansion, OAuth with injectable store, elicitation mapping, deferred tools) into packages/crates/mcp-host on rmcp 3.x. The coding agent adopts it.
+Move cox-mcp client parts (connect_all that turns a failing server into a notice, .mcp.json discovery with ${VAR} expansion, OAuth with injectable store, elicitation mapping, deferred tools) into packages/crates/mcp-host on rmcp 3.x. cox adopts it.
 
 Done when:
 
-- fail-open and discovery tests pass; the coding agent adopts it
+- fail-open and discovery tests pass; cox adopts it
 
 ### T1.13. Extract speech-capture: microphone capture and resampling
 
 Stage: S1 · Area: shared · Depends on: T0.1 · Blocks: 2 task(s)
 
-Execution plan: in a packages/crates worktree branched from s1-setup, create speech-capture (publish = false, dual licence) merging agent-voice capture (cpal default device, downmix, rubato to 16 kHz) with runa-media decode/resample/energy VAD; whisper behind a feature; crate-level project files like change-preview; verify cargo clippy/fmt/test. The coding agent and runa adoption waits for publication.
+Execution plan: in a packages/crates worktree branched from s1-setup, create speech-capture (publish = false, dual licence) merging cox-voice capture (cpal default device, downmix, rubato to 16 kHz) with runa-media decode/resample/energy VAD; whisper behind a feature; crate-level project files like change-preview; verify cargo clippy/fmt/test. cox and runa adoption waits for publication.
 
-Merge agent-voice capture (cpal default device, downmix, rubato to 16 kHz) with runa-media decode/resample/energy VAD into packages/crates/speech-capture. The coding agent and runa adopt it; whisper transcription stays behind a feature.
+Merge cox-voice capture (cpal default device, downmix, rubato to 16 kHz) with runa-media decode/resample/energy VAD into packages/crates/speech-capture. cox and runa adopt it; whisper transcription stays behind a feature.
 
 Done when:
 
-- The coding agent and runa build against it; duplicated rubato/whisper code removed
+- cox and runa build against it; duplicated rubato/whisper code removed
 
 ### T1.14. Extract config-schema: schema-checked config helpers
 
 Stage: S1 · Area: shared · Depends on: none · Blocks: 0 task(s)
 
-Execution plan: in a packages/crates worktree branched from s1-setup, create config-schema (publish = false, dual licence, MSRV low enough for the package manager and the token CLI) from the duplicates in agent-config, the token CLI config/layers.rs and the package manager toml_file.rs: stale-schema test helper, figment layering with per-key provenance, toml_edit editing; union of their tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. Adoption by the package manager or the token CLI waits for publication.
+Execution plan: in a packages/crates worktree branched from s1-setup, create config-schema (publish = false, dual licence, MSRV low enough for ketch and rtok) from the duplicates in cox-config, rtok config/layers.rs and ketch toml_file.rs: stale-schema test helper, figment layering with per-key provenance, toml_edit editing; union of their tests; crate-level project files like change-preview; verify cargo clippy/fmt/test. Adoption by ketch or rtok waits for publication.
 
-rust.md lists "config with schema and one owner" as a known duplicate (agent-config, the token CLI config/layers.rs, the package manager toml_file.rs). Extract the stale-schema test helper, figment layering with per-key provenance and toml_edit editing into packages/crates/config-schema.
+rust.md lists "config with schema and one owner" as a known duplicate (cox-config, rtok config/layers.rs, ketch toml_file.rs). Extract the stale-schema test helper, figment layering with per-key provenance and toml_edit editing into packages/crates/config-schema.
 
 Done when:
 
-- The package manager or the token CLI adopts it; helper tests pass
+- ketch or rtok adopts it; helper tests pass
 
 ### T1.15. Extract agent-loop: neutral turn state machine
 
 Stage: S1 · Area: shared · Depends on: T1.1, T0.7 · Blocks: 2 task(s)
 
-Execution plan: in a packages/crates worktree branched from t1-1-llm-wire, create agent-loop (publish = false, dual licence, rust-version 1.98) from the neutral part of agent-core: Submission/Event, parallel and exclusive tool dispatch, approvals, interrupt via CancellationToken, max steps; tools and approvals behind traits; coding-specific parts stay in the coding agent; tests with a scripted provider for tool calls, approval and interrupt; verify cargo clippy/fmt/test. the coding agent adoption (T1.16) waits for publication.
+Execution plan: in a packages/crates worktree branched from t1-1-llm-wire, create agent-loop (publish = false, dual licence, rust-version 1.98) from the neutral part of cox-core: Submission/Event, parallel and exclusive tool dispatch, approvals, interrupt via CancellationToken, max steps; tools and approvals behind traits; coding-specific parts stay in cox; tests with a scripted provider for tool calls, approval and interrupt; verify cargo clippy/fmt/test. cox adoption (T1.16) waits for publication.
 
-Per the T0.7 decision, extract the turn state machine (Submission/Event, parallel and exclusive tool dispatch, approvals, interrupt via CancellationToken, max steps) from agent-core into packages/crates/agent-loop. Coding-specific parts stay in the coding agent.
+Per the T0.7 decision, extract the turn state machine (Submission/Event, parallel and exclusive tool dispatch, approvals, interrupt via CancellationToken, max steps) from cox-core into packages/crates/agent-loop. Coding-specific parts stay in cox.
 
 Done when:
 
 - agent-loop tests with a scripted provider cover tool calls, approval and interrupt
 
-### T1.16. Switch the coding agent to agent-loop
+### T1.16. Switch cox to agent-loop
 
 Stage: S1 · Area: shared · Depends on: T1.15 · Blocks: 0 task(s)
 
-agent-core uses agent-loop; duplicated loop code is deleted.
+cox-core uses agent-loop; duplicated loop code is deleted.
 
 Done when:
 
-- The coding agent CI green
+- cox CI green
 
 ### T1.17. Extract agent-ext: skills and shell hooks
 
 Stage: S1 · Area: shared · Depends on: T0.1 · Blocks: 2 task(s)
 
-Execution plan: in a packages/crates worktree branched from s1-setup, create agent-ext (publish = false, dual licence) from agent-ext: SKILL.md discovery (index line, deferred skill tool) and Claude-Code-style shell hooks (JSON on stdin, exit 2 blocks, HookChain, fail open); crate-level project files like change-preview; verify cargo clippy/fmt/test. The coding agent adoption waits for publication.
+Execution plan: in a packages/crates worktree branched from s1-setup, create agent-ext (publish = false, dual licence) from cox-ext: SKILL.md discovery (index line, deferred skill tool) and Claude-Code-style shell hooks (JSON on stdin, exit 2 blocks, HookChain, fail open); crate-level project files like change-preview; verify cargo clippy/fmt/test. cox adoption waits for publication.
 
-Move SKILL.md discovery (index line in prompt, deferred skill tool) and Claude-Code-style shell hooks (JSON on stdin, exit 2 blocks, HookChain) from agent-ext into packages/crates/agent-ext. The coding agent adopts it.
+Move SKILL.md discovery (index line in prompt, deferred skill tool) and Claude-Code-style shell hooks (JSON on stdin, exit 2 blocks, HookChain) from cox-ext into packages/crates/agent-ext. cox adopts it.
 
 Done when:
 
@@ -307,13 +307,13 @@ Done when:
 
 Stage: S1 · Area: shared · Depends on: none · Blocks: 1 task(s)
 
-Execution plan: in a packages/crates worktree branched from s1-setup, create agent-host-config (publish = false, dual licence, MSRV of the token CLI) from tokcli-agent-sdk register_mcp/unregister_mcp: touch only our entry, keep foreign bytes, write atomically, back up with file-backup (path dep in the same workspace); round-trip test keeps foreign keys byte-for-byte; crate-level project files like change-preview; verify cargo clippy/fmt/test. the token CLI adoption waits for publication.
+Execution plan: in a packages/crates worktree branched from s1-setup, create agent-host-config (publish = false, dual licence, MSRV of rtok) from rtok-agent-sdk register_mcp/unregister_mcp: touch only our entry, keep foreign bytes, write atomically, back up with file-backup (path dep in the same workspace); round-trip test keeps foreign keys byte-for-byte; crate-level project files like change-preview; verify cargo clippy/fmt/test. rtok adoption waits for publication.
 
-Move register_mcp/unregister_mcp, backup and atomic JSON edits from tokcli-agent-sdk into packages/crates/agent-host-config (foreign-config rule: touch only our entry, keep bytes, write atomically, back up with file-backup).
+Move register_mcp/unregister_mcp, backup and atomic JSON edits from rtok-agent-sdk into packages/crates/agent-host-config (foreign-config rule: touch only our entry, keep bytes, write atomically, back up with file-backup).
 
 Done when:
 
-- The token CLI adopts it; round-trip test keeps foreign keys byte-for-byte
+- rtok adopts it; round-trip test keeps foreign keys byte-for-byte
 
 ### T1.19. runa: stream tokens as they are generated
 
@@ -347,7 +347,7 @@ Stage: S2 · Area: infra · Depends on: T2.1 · Blocks: 0 task(s)
 
 ci.yml calls pyrlyn/ci ci-rust.yml (Linux x86_64 and aarch64, macOS aarch64, Windows x86_64; no x86_64 macOS), commit-subject lint, pipeline.yml (CodeQL, Semgrep). Linux job installs libasound2-dev.
 
-Execution plan: 1. .github/workflows/ci.yml calling pyrlyn/ci ci-rust.yml at the same pinned SHA style the coding agent uses (targets Linux x86_64/aarch64, macOS aarch64, Windows x86_64; no x86_64 macOS), with protoc and libasound2-dev installed where the reusable workflow allows. 2. Commit-subject lint and pipeline.yml (CodeQL, Semgrep) following the coding agent's workflows. 3. Validate locally with actionlint (and zizmor if rust.md/cox uses it). 4. CI green can only be checked after a push, which needs the creator's permission; until then readiness stays below 100% and the card notes it.
+Execution plan: 1. .github/workflows/ci.yml calling pyrlyn/ci ci-rust.yml at the same pinned SHA style cox uses (targets Linux x86_64/aarch64, macOS aarch64, Windows x86_64; no x86_64 macOS), with protoc and libasound2-dev installed where the reusable workflow allows. 2. Commit-subject lint and pipeline.yml (CodeQL, Semgrep) following cox's workflows. 3. Validate locally with actionlint (and zizmor if rust.md/cox uses it). 4. CI green can only be checked after a push, which needs the creator's permission; until then readiness stays below 100% and the card notes it.
 Status note: ci.yml (pyrlyn/ci ci-rust.yml at f880dee, shared matrix without Intel macOS; setup-command installs libasound2-dev and protoc per OS), a bash Conventional Commits check on pull requests, pipeline.yml and .github/infra.yml (CodeQL actions/python/rust, Semgrep) are on main and pass actionlint. Waiting for a push to see CI green; apt protoc is 3.21 while local is 36.2.
 
 Done when:
@@ -730,7 +730,7 @@ Done when:
 
 Stage: S7 · Area: speech · Depends on: T7.3, T1.13 · Blocks: 0 task(s)
 
-Whisper backend reusing the speech-capture whisper feature (agent-voice Transcriber).
+Whisper backend reusing the speech-capture whisper feature (cox-voice Transcriber).
 
 Execution plan: whisper STT engine in aulo-speech-system (or its own crate) over speech-capture's `whisper` feature (path dependency until the crate is published; branch stays unmerged until then), registered as an engine; fixture transcription test.
 
@@ -932,7 +932,7 @@ Done when:
 
 Stage: S9 · Area: control · Depends on: T5.4, T5.2 · Blocks: 2 task(s)
 
-Run a command in the sandbox with timeout, output cap, streamed output events, cwd and env allowlist. Long output is archived losslessly and the model sees a truncated view with an id (the coding agent expand pattern).
+Run a command in the sandbox with timeout, output cap, streamed output events, cwd and env allowlist. Long output is archived losslessly and the model sees a truncated view with an id (cox expand pattern).
 
 Done when:
 
@@ -1178,7 +1178,7 @@ Done when:
 
 Stage: S10 · Area: mcp · Depends on: T8.1, T5.3 · Blocks: 2 task(s)
 
-aulo mcp serves aulo's abilities to other agents (Claude Code, Cursor, Codex): speak(text, voice), listen(timeout), ask_user(question) by voice, notify, plus computer tools. Every call goes through aulo policy and approvals, the caller cannot bypass them. Built on rmcp, following the token CLI's MCP server.
+aulo mcp serves aulo's abilities to other agents (Claude Code, Cursor, Codex): speak(text, voice), listen(timeout), ask_user(question) by voice, notify, plus computer tools. Every call goes through aulo policy and approvals, the caller cannot bypass them. Built on rmcp, following rtok's MCP server.
 
 Done when:
 
@@ -1204,15 +1204,15 @@ Done when:
 
 - round-trip test keeps other entries byte-for-byte
 
-### T10.8. The coding agent tools through the coding agent mcp
+### T10.8. cox tools through cox mcp
 
 Stage: S10 · Area: mcp · Depends on: T10.1 · Blocks: 0 task(s)
 
-Optional preset that mounts `the coding agent mcp` (the coding agent's built-in read/edit/grep/glob tools) as an MCP server for file and code work instead of reimplementing them. Process boundary, no linking.
+Optional preset that mounts `cox mcp` (cox's built-in read/edit/grep/glob tools) as an MCP server for file and code work instead of reimplementing them. Process boundary, no linking.
 
 Done when:
 
-- preset documented; fixture test lists the coding agent tools
+- preset documented; fixture test lists cox tools
 
 ## S11. Plugins, skills and hooks
 
@@ -1270,7 +1270,7 @@ Done when:
 
 Stage: S11 · Area: plugins · Depends on: T11.2 · Blocks: 0 task(s)
 
-In-process sandboxed plugins (extism, as agent-plugin, or wasmtime components) for tools and hooks; deadline and memory cap per call; network only through an allowlisted host function.
+In-process sandboxed plugins (extism, as cox-plugin, or wasmtime components) for tools and hooks; deadline and memory cap per call; network only through an allowlisted host function.
 
 Done when:
 
@@ -1310,7 +1310,7 @@ Done when:
 
 Stage: S11 · Area: plugins · Depends on: T11.10 · Blocks: 0 task(s)
 
-A plugin index with minisign signatures (the package manager trust.rs pattern) for discovery and install by name.
+A plugin index with minisign signatures (ketch trust.rs pattern) for discovery and install by name.
 
 Done when:
 
@@ -1322,7 +1322,7 @@ Done when:
 
 Stage: S12 · Area: desktop · Depends on: T0.2, T3.7 · Blocks: 2 task(s)
 
-Rust core the native apps drive, modelled on agent-app: a tonic client of aulod (local socket or remote URL with token and pin, starts the local daemon when absent), a Timeline fold (events in, keyed block patches out), a Controller that coalesces patches to at most one batch per 16 ms frame, chat list and inbox (approvals, takeovers, finished turns), one Intent enum dispatched to submissions. No UI toolkit in its dependency tree.
+Rust core the native apps drive, modelled on cox-app: a tonic client of aulod (local socket or remote URL with token and pin, starts the local daemon when absent), a Timeline fold (events in, keyed block patches out), a Controller that coalesces patches to at most one batch per 16 ms frame, chat list and inbox (approvals, takeovers, finished turns), one Intent enum dispatched to submissions. No UI toolkit in its dependency tree.
 
 Done when:
 
@@ -1333,7 +1333,7 @@ Done when:
 
 Stage: S12 · Area: desktop · Depends on: T12.1 · Blocks: 2 task(s)
 
-Forward-only UniFFI exports over aulo-app (agent-ffi rule: every exported body is one expression, logic stays in aulo-app, enforced by a syn test). Swift bindings via uniffi-bindgen, C# bindings via uniffi-bindgen-cs. Host callbacks for notifications, URLs and secrets. Records fixtures for the app tests.
+Forward-only UniFFI exports over aulo-app (cox-ffi rule: every exported body is one expression, logic stays in aulo-app, enforced by a syn test). Swift bindings via uniffi-bindgen, C# bindings via uniffi-bindgen-cs. Host callbacks for notifications, URLs and secrets. Records fixtures for the app tests.
 
 Done when:
 
