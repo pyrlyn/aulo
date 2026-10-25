@@ -214,9 +214,11 @@ Crate roles follow rust.md: contracts, domain, adapters, assembly, surfaces, tes
 | `aulo-agent` | domain | Sessions on agent-loop, tool registry, persona, compaction |
 | `aulo-policy` | domain | perm-rules subjects, grants, blocklist, sentinel, audit, vault, takeover |
 | `aulo-tools` | adapter | Shell, PTY, files, clipboard |
+| `aulo-unattended` | adapter | Unattended and routine runs may read; writes, exec and synthetic input are denied (T5.7) |
 | `aulo-apps` | adapter | App launch, focus and listing per OS |
 | `aulo-browser` | adapter (chromiumoxide owner) | Managed Chromium over CDP |
 | `aulo-desktop-ax` | adapter | AX (macOS), UIA (Windows), AT-SPI (Linux), screenshots, input |
+| `aulo-screen` | adapter | Screenshot frames downscaled for the model, with 0–999 coordinates across resolution and Retina scale (T9.15) |
 | `aulo-mcp` | adapter | MCP client (mcp-host) and aulo's MCP server (rmcp) |
 | `aulo-plugin` | adapter | Manifest, discovery, grants, process and WASM hosts |
 | `aulo-plugin-sdk` | contract | Plugin-side SDK (gRPC plugin services, manifest types) |
