@@ -5,7 +5,7 @@
 use crate::{
     AudioFormat, AudioFrame, Capabilities, EngineId, EngineInfo, EngineKind, LanguageSupport,
     SpeechError, SttEngine, SttPoll, Transcript, TranscriptKind, TtsEngine, TtsPoll, TtsRequest,
-    TurnId, Voice,
+    TurnId, Vad, VadEvent, Voice,
 };
 
 /// 20 ms at 16 kHz, the frame size aulo-audio delivers.
@@ -35,6 +35,78 @@ pub fn info(id: EngineId, kind: EngineKind) -> EngineInfo {
     }
 }
 
+/// A VAD that calls a frame speech when its loudest sample passes
+/// `threshold`, and holds speech for `hangover_frames` quiet frames before it
+/// reports the end. Tests script speech and silence with loud and quiet
+/// frames, so the boundaries are exact and need no wall clock.
+#[derive(Debug)]
+pub struct FakeVad {
+    info: EngineInfo,
+    threshold: f32,
+    hangover_frames: u32,
+    in_speech: bool,
+    quiet_run: u32,
+}
+
+impl FakeVad {
+    /// `hangover_frames` quiet frames after the last loud one end speech;
+    /// zero ends it on the first quiet frame.
+    pub fn new(id: EngineId, threshold: f32, hangover_frames: u32) -> Self {
+        Self {
+            info: info(id, EngineKind::Vad),
+            threshold,
+            hangover_frames,
+            in_speech: false,
+            quiet_run: 0,
+        }
+    }
+
+    /// The current verdict, which is what the pipeline feeds the end-of-turn
+    /// detector between the events this engine emits.
+    pub fn in_speech(&self) -> bool {
+        self.in_speech
+    }
+}
+
+impl Vad for FakeVad {
+    fn info(&self) -> &EngineInfo {
+        &self.info
+    }
+
+    fn push(&mut self, frame: AudioFrame<'_>) -> Result<Option<VadEvent>, SpeechError> {
+        let loud = frame.samples().iter().any(|s| s.abs() > self.threshold);
+        let event = if loud {
+            self.quiet_run = 0;
+            if self.in_speech {
+                None
+            } else {
+                self.in_speech = true;
+                Some(VadEvent::SpeechStarted {
+                    position: frame.position(),
+                })
+            }
+        } else if self.in_speech {
+            self.quiet_run += 1;
+            if self.quiet_run > self.hangover_frames {
+                self.in_speech = false;
+                Some(VadEvent::SpeechEnded {
+                    position: frame.position(),
+                })
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        Ok(event)
+    }
+
+    fn reset(&mut self) {
+        self.in_speech = false;
+        self.quiet_run = 0;
+    }
+}
+
 /// Buffers audio in fixed storage and "recognizes" a prefix of [`SPOKEN`]
 /// that grows with the amount of audio heard.
 #[derive(Debug)]
@@ -58,6 +130,15 @@ impl FakeStt {
             fresh: false,
             finished: false,
             final_sent: false,
+        }
+    }
+
+    /// An engine with room for `capacity_samples` of audio, for tests whose
+    /// utterance is longer than [`STT_CAPACITY_SAMPLES`].
+    pub fn with_capacity(id: EngineId, capacity_samples: usize) -> Self {
+        Self {
+            audio: Vec::with_capacity(capacity_samples),
+            ..Self::new(id)
         }
     }
 

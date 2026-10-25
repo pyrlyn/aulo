@@ -80,6 +80,9 @@ llm-wire-anthropic = { git = "https://github.com/pyrlyn/crates", rev = "f0deed54
 # SKILL.md discovery and the deferred skill tool (T11.8). Unpublished.
 # Newer than the llm-wire pin, which predates this crate.
 agent-ext = { git = "https://github.com/pyrlyn/crates", rev = "319d363cfe499358203b446ae3d8d20528277e54" }
+# Untrusted-text guard (T5.12): strips terminal and bidi tricks before the
+# injection check. Unpublished. Newer than the llm-wire pin, which predates it.
+text-sanitize = { git = "https://github.com/pyrlyn/crates", rev = "319d363cfe499358203b446ae3d8d20528277e54" }
 # Bash risk classes for the policy fallback (T5.2). Unpublished. This revision is
 # newer than the llm-wire pin: that pin predates shell-classify and perm-rules.
 shell-classify = { git = "https://github.com/pyrlyn/crates", rev = "319d363cfe499358203b446ae3d8d20528277e54" }

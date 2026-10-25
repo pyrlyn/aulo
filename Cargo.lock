@@ -765,6 +765,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "aulo-untrusted"
+version = "0.0.0"
+dependencies = [
+ "text-sanitize",
+]
+
+[[package]]
 name = "aulo-voice"
 version = "0.0.0"
 dependencies = [
@@ -773,6 +780,8 @@ dependencies = [
  "insta",
  "pulldown-cmark",
  "thiserror 2.0.21",
+ "tokio",
+ "tokio-util",
  "url",
 ]
 
@@ -4816,6 +4825,11 @@ dependencies = [
  "rustix",
  "windows-sys 0.61.2",
 ]
+
+[[package]]
+name = "text-sanitize"
+version = "0.1.0"
+source = "git+https://github.com/pyrlyn/crates?rev=319d363cfe499358203b446ae3d8d20528277e54#319d363cfe499358203b446ae3d8d20528277e54"
 
 [[package]]
 name = "thiserror"

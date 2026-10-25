@@ -15,10 +15,16 @@ aulo-types = { path = "../aulo-types" }
 pulldown-cmark = { workspace = true }
 thiserror = { workspace = true }
 url = { workspace = true }
+# The pipeline runs as tokio tasks joined by bounded channels; the sync engine
+# traits are driven from those tasks, never from an audio callback.
+tokio = { workspace = true, features = ["rt", "macros", "sync", "time"] }
+# One cancellation token fans the shutdown out to every pipeline task.
+tokio-util = { workspace = true }
 
 [dev-dependencies]
 aulo-speech = { path = "../aulo-speech", features = ["testkit"] }
 insta = { workspace = true }
+tokio = { workspace = true, features = ["rt", "macros", "sync", "time", "test-util"] }
 
 [lints]
 workspace = true

@@ -43,6 +43,25 @@ impl EngineId {
     pub fn as_str(&self) -> &str {
         &self.0
     }
+
+    /// An id for an engine this code itself vouches for: unlike
+    /// [`new`](Self::new) it repairs what it is given instead of refusing, so
+    /// a built-in engine can never fail to register because of a typo in its
+    /// own constant. Ids from config, plugins and clients still go through
+    /// [`new`](Self::new).
+    pub fn builtin(id: &str) -> Self {
+        let cleaned: String = id
+            .chars()
+            .filter(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || "-_.".contains(*c))
+            .take(MAX_ENGINE_ID_BYTES - 1)
+            .collect();
+        let cleaned = if cleaned.starts_with(|c: char| c.is_ascii_lowercase()) {
+            cleaned
+        } else {
+            format!("a{cleaned}")
+        };
+        Self(cleaned)
+    }
 }
 
 impl fmt::Display for EngineId {
@@ -154,5 +173,18 @@ mod tests {
         assert!(listed.supports("RU"));
         assert!(!listed.supports("uk"));
         assert!(LanguageSupport::Any.supports("uk"));
+    }
+
+    #[test]
+    fn a_builtin_id_repairs_what_it_is_given() {
+        assert_eq!(EngineId::builtin("sherpa-kokoro").as_str(), "sherpa-kokoro");
+        assert_eq!(EngineId::builtin("Kokoro TTS!").as_str(), "okoro");
+        assert_eq!(EngineId::builtin("1st").as_str(), "a1st");
+        // Whatever comes out is a valid id, and the result is stable.
+        let long = "b".repeat(MAX_ENGINE_ID_BYTES + 10);
+        let repaired = EngineId::builtin(&long);
+        assert!(repaired.as_str().len() <= MAX_ENGINE_ID_BYTES);
+        assert!(EngineId::new(repaired.as_str()).is_ok());
+        assert_eq!(repaired, EngineId::builtin(&long));
     }
 }
