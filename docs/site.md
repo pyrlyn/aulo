@@ -28,7 +28,7 @@ specification.
 - **Switchable speech.** Every speech-to-text and text-to-speech engine is swappable at runtime.
 - **Controls the computer.** Shell, apps, browser and screen reading.
 - **MCP both ways.** aulo is an MCP client and an MCP server, and loads plugins.
-- **Local or remote models.** runa, Ollama, LM Studio, or OpenAI, Anthropic, Gemini, xAI, OpenRouter and any OpenAI-compatible endpoint.
+- **Local or remote models.** the local model runner, Ollama, LM Studio, or OpenAI, Anthropic, Gemini, xAI, OpenRouter and any OpenAI-compatible endpoint.
 - **gRPC API.** `aulod` serves desktop apps, the CLI, and remote clients of a headless server.
 
 ## Install
