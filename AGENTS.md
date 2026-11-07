@@ -8,7 +8,7 @@ If an `AGENTS.md` or `CLAUDE.md` exists higher in the tree, follow it too; on co
 
 - `spec.md` — the specification. Section numbers are stable; tasks cite them.
 - `research.md` — sources for every external fact and the reuse map of the workspace (Part 6).
-- `plan.md` — active tasks; `done.md` — settled decisions (D1–D5) and finished work. Never decide an open question in `spec.md` §17 yourself; ask the creator.
+- `plan/` — one folder per task (`plan/<id>/task.md`, closed ones also `done.md`); `plan/README.md` says how to read it. Settled decisions D1–D5 are the closed T0.x tasks and `spec.md` §17. Never decide an open question in `spec.md` §17 yourself; ask the creator.
 
 ## Hard rules
 
@@ -29,7 +29,7 @@ If an `AGENTS.md` or `CLAUDE.md` exists higher in the tree, follow it too; on co
 - `proto/aulo/v1/` — gRPC service definitions (T3.1).
 - `plugins/` — plugin SDK examples (T11.5).
 - `docs/` — guides, threat model, spike reports (`docs/spikes/`).
-- `scripts/sync-issues.py` — creates GitHub issues from `plan.md` (dry run by default).
+- `scripts/sync-issues.py` — creates GitHub issues from the active tasks in `plan/` (dry run by default).
 
 ## Commands
 

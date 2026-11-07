@@ -1,0 +1,1 @@
+Outcome (creator, 2026-10-07): native apps as in the coding agent — SwiftUI on macOS and WinUI 3 on Windows, over a UI-agnostic Rust core (aulo-app) exported with UniFFI (aulo-ffi; Swift bindings, C# via uniffi-bindgen-cs).
