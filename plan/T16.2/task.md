@@ -1,0 +1,3 @@
+# T16.2. `Resampler` hangs on a zero/negative input rate
+
+`crates/aulo-speech-system/src/resample.rs` computed `step = input_hz / output_hz` whenever the rates differed and only guarded `output_hz > 0`: a malformed buffer reporting 0 Hz (or negative — the macOS callback path feeds `format.sampleRate()` straight in, `src/macos/worker.rs:200-218`) produced a `step <= 0` that never advanced `pos`, and `push`'s emit loop spun forever on the main dispatch queue, hanging the whole process. Found by the 2026-10-07 audit. Fix: non-positive input rates pass samples through, like equal rates — the same degradation the wav path's 8000..=192000 guard reaches by refusing the input.

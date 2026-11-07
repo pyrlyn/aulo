@@ -1,6 +1,6 @@
 # aulo — ideas
 
-Not approved. Nothing here moves to `roadmap.md` or `plan.md` without the creator's approval.
+Not approved. Nothing here moves to `roadmap.md` or `plan/` without the creator's approval.
 
 - **grpc-web for browsers.** tonic-web in aulod so a web client can connect without a proxy.
 - **OpenAI-compatible HTTP facade.** `/v1/chat/completions` on top of the agent, for tools that only speak that API.

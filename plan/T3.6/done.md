@@ -1,0 +1,1 @@
+Outcome: aulod [run] [--config DIR] [--listen ADDR]; std File::try_lock single-instance lock with pidfile under <home>/run (0700/0600), SIGINT/SIGTERM graceful shutdown, UDS always and loopback-only TCP; trycmd fixtures for help, version and second instance. --config takes a directory holding config.toml; log level fixed at info until a logging config section exists.

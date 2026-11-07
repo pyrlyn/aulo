@@ -7,7 +7,7 @@ Only what the project uses today. Crates are added by the task that wires each o
 | Program | How to install | Why here | Source |
 | --- | --- | --- | --- |
 | python3 | system / mise | Runs `scripts/sync-issues.py` (stdlib only) | https://github.com/python/cpython |
-| gh | brew / mise | Creates labels, milestones and issues from `plan.md` | https://github.com/cli/cli |
+| gh | brew / mise | Creates labels, milestones and issues from `plan/` | https://github.com/cli/cli |
 | rustc, cargo, rustfmt, clippy | mise (`mise.toml`, 1.99.0) | Build, format and lint the workspace | https://github.com/rust-lang/rust |
 | just | mise (`mise.toml`) | Task runner (`justfile`) | https://github.com/casey/just |
 | jactionlint | mise (`mise.toml` pins `github:jdx/jactionlint` 2.0.2) | Lint the workflows (the pre-push hook and `mise x -- jactionlint`); CI lints through pyrlyn/ci's `lint.yml` | https://github.com/jdx/jactionlint |

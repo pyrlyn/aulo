@@ -11,4 +11,4 @@ aulo is in early development; user-facing guides arrive with the first release.
 | [threat-model.md](threat-model.md) | Trust boundaries, STRIDE, and the guard for each threat |
 
 Planned here: the user guide (T15.4) and the API guide (T15.5) — see
-[plan.md](../plan.md). The full specification is [spec.md](../spec.md).
+[plan/](../plan/README.md). The full specification is [spec.md](../spec.md).

@@ -560,7 +560,7 @@ Complexity runs from 1 (an hour or two of focused work) to 5 (a multi-part task 
 
 ## 17. Decisions
 
-Settled by the creator on 2026-10-07 (details in `done.md`):
+Settled by the creator on 2026-10-07 (details in `plan/T0.*/`):
 
 - **D1 Licence** (T0.1). Like cox: `GPL-3.0-or-later OR LicenseRef-aulo-Royalty-Free`, plus a commercial licence.
   - `LICENSE` and `PRICING.md` are byte copies of the canonical files in `pyrlyn/ci` `licenses/`.

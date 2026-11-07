@@ -1,0 +1,5 @@
+Outcome: `docs/threat-model.md` lists the assets, the trusted computing base, and one STRIDE table per boundary: remote client, local socket and pipe, model, tools, MCP, plugins, web pages and screenshots, speech and downloads, config and the audit log. The spec §7 pipeline is a table whose steps cite T5.1 through T5.12. A guard cell is either `test:` with a crate path and a function that exists in the tree, or `task:` with a plan id. The document states that T5.1 is not implemented and that a process already running as the daemon user is inside the trust boundary.
+
+The outcome as the old `plan.md` card recorded it:
+
+Outcome: `docs/threat-model.md` maps spec §7 and the daemon's trust boundaries (remote client, local socket and pipe, model, tools, MCP, plugins, web and screenshots, speech and downloads, config and audit). Every guard cell is `test:` plus a path and function that exists in this tree, or `task:` plus a plan id. T5.1 is cited as the policy gate and is not described as implemented.

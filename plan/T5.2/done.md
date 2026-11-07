@@ -1,0 +1,5 @@
+Outcome: `crates/aulo-policy` builds a `perm-rules` call from `shell-classify`. `decide_shell` compiles the configured rule lists and, when none match, uses the engine's risk fallback. Fixtures: `rm -rf` is Destructive and asks; `ls` is ReadOnly and allowed; `Shell(ls)` deny still refuses; `Bash(rm -rf /tmp/build)` allow still permits. Commands over 64 KiB are not parsed. The subject grammar for the other tools is T5.1.
+
+The outcome as the old `plan.md` card recorded it:
+
+Outcome: `aulo-policy` rates a shell line with `shell-classify` and hands that risk to `perm-rules`. With no matching rule the decision is the risk fallback (`Default` mode, `OnRequest`, workspace-write sandbox): `ls` is ReadOnly and runs, `rm -rf` is Destructive and asks. A `Shell(ls)` deny rule still refuses `ls`, and a `Bash(rm -rf /tmp/build)` allow rule still permits that destructive line. A command longer than 64 KiB is not parsed, drops its text, and asks. Both crates are pinned at `319d363` of pyrlyn/crates (the `llm-wire` pin predates them). App, site, file, MCP and input subjects stay T5.1.

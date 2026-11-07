@@ -12,11 +12,11 @@ aulo runs as a daemon, `aulod`, with a gRPC API. Use it from the native desktop 
 **Status:** early development, no release yet. The Rust workspace in [`crates/`](crates/)
 holds the first crates of the daemon (audio, speech engines, models, plugins, the gRPC
 protocol, realtime, store, telemetry); the desktop apps are not in the repository yet.
-Progress is tracked in [plan.md](plan.md).
+Progress is tracked in [plan/](plan/README.md).
 
 - [Specification](spec.md)
 - [Research and sources](research.md)
-- [Plan](plan.md) · [Roadmap](roadmap.md)
+- [Plan](plan/README.md) · [Roadmap](roadmap.md)
 - [Documentation](docs/README.md): [gRPC API reference](docs/api/aulo.v1.md), [spike reports](docs/spikes/)
 
 ## How to test
