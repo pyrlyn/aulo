@@ -63,6 +63,8 @@ pub enum ServerError {
         #[source]
         source: aulo_store::StoreError,
     },
+    #[error("a [policy] rule is invalid: {0}")]
+    Policy(#[source] aulo_policy::RuleError),
 }
 
 impl ServerError {

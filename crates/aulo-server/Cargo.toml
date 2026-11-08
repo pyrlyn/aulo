@@ -12,12 +12,18 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+agent-loop.workspace = true
+async-trait.workspace = true
+aulo-agent = { path = "../aulo-agent" }
 aulo-config = { path = "../aulo-config" }
+aulo-policy = { path = "../aulo-policy" }
 aulo-proto = { path = "../aulo-proto" }
 aulo-providers = { path = "../aulo-providers" }
 aulo-store = { path = "../aulo-store" }
 aulo-types = { path = "../aulo-types" }
 getrandom.workspace = true
+llm-wire.workspace = true
+serde_json.workspace = true
 rcgen.workspace = true
 keyring.workspace = true
 rustls.workspace = true
@@ -48,9 +54,7 @@ windows = { workspace = true, features = [
 
 [dev-dependencies]
 aulo-telemetry = { path = "../aulo-telemetry" }
-async-trait.workspace = true
 hyper-util = { workspace = true, features = ["tokio"] }
-llm-wire.workspace = true
 tempfile.workspace = true
 tokio = { workspace = true, features = ["macros", "rt-multi-thread", "sync"] }
 tokio-rustls.workspace = true

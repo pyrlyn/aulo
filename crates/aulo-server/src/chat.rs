@@ -47,26 +47,40 @@ impl ChatApi {
         T: Send + 'static,
         F: FnOnce(&mut Store) -> Result<T, Status> + Send + 'static,
     {
-        let store = Arc::clone(&self.store);
-        tokio::task::spawn_blocking(move || {
-            // A panic in another call must not take chat history offline: the
-            // connection rolls back an unfinished transaction when dropped.
-            let mut guard = store.lock().unwrap_or_else(PoisonError::into_inner);
-            f(&mut guard)
-        })
-        .await
-        .map_err(|e| {
-            tracing::error!(op, error = %e, "chat storage task failed");
-            internal()
-        })?
+        on_store(&self.store, op, f).await
     }
 }
 
-fn internal() -> Status {
+/// Runs `f` on the shared store from the blocking pool, so no handler holds
+/// the lock across an await.
+pub(crate) async fn on_store<T, F>(
+    store: &Arc<Mutex<Store>>,
+    op: &'static str,
+    f: F,
+) -> Result<T, Status>
+where
+    T: Send + 'static,
+    F: FnOnce(&mut Store) -> Result<T, Status> + Send + 'static,
+{
+    let store = Arc::clone(store);
+    tokio::task::spawn_blocking(move || {
+        // A panic in another call must not take chat history offline: the
+        // connection rolls back an unfinished transaction when dropped.
+        let mut guard = store.lock().unwrap_or_else(PoisonError::into_inner);
+        f(&mut guard)
+    })
+    .await
+    .map_err(|e| {
+        tracing::error!(op, error = %e, "storage task failed");
+        internal()
+    })?
+}
+
+pub(crate) fn internal() -> Status {
     Status::internal("internal storage error")
 }
 
-fn storage(op: &'static str, e: &StoreError) -> Status {
+pub(crate) fn storage(op: &'static str, e: &StoreError) -> Status {
     tracing::error!(op, error = %e, "chat storage call failed");
     internal()
 }

@@ -20,7 +20,7 @@ fn migrations_apply_revert_and_reapply() {
     );
 
     let reverted = s.conn.revert_all_migrations(MIGRATIONS).unwrap();
-    assert_eq!(reverted.len(), 3);
+    assert_eq!(reverted.len(), 4);
     // The DSL cannot inspect sqlite_master; a failing query proves the table is gone.
     assert!(chats::table.count().get_result::<i64>(&mut s.conn).is_err());
     assert!(usage::table.count().get_result::<i64>(&mut s.conn).is_err());
@@ -304,4 +304,60 @@ fn an_unknown_bot_is_a_missing_reference() {
     let (_dir, mut s) = open();
     let err = s.create_chat(Some("missing"), "t", "m").unwrap_err();
     assert!(err.is_missing_reference(), "{err}");
+}
+
+#[test]
+fn a_turn_appends_its_messages_and_calls_together() {
+    let (_dir, mut s) = open();
+    let chat = s.create_chat(None, "t", "m").unwrap();
+    s.append_message(&chat.id, "user", "old").unwrap();
+    let turn = [
+        NewMessage {
+            role: "assistant".into(),
+            content: "looking".into(),
+            wire: Some("{}".into()),
+            tool_calls: vec![NewToolCall {
+                name: "shell".into(),
+                arguments: "{}".into(),
+                output: Some("a.txt".into()),
+                status: "succeeded".into(),
+            }],
+        },
+        NewMessage {
+            role: "tool".into(),
+            ..NewMessage::default()
+        },
+    ];
+    s.append_turn(&chat.id, &turn).unwrap();
+
+    let history = s.chat_history(&chat.id).unwrap();
+    let rows: Vec<_> = history
+        .iter()
+        .map(|m| (m.role.as_str(), m.wire.as_deref()))
+        .collect();
+    assert_eq!(
+        rows,
+        [("user", None), ("assistant", Some("{}")), ("tool", None)]
+    );
+    let calls = s.list_tool_calls(&history[1].id).unwrap();
+    assert_eq!(calls.len(), 1);
+    assert_eq!(calls[0].output.as_deref(), Some("a.txt"));
+    // Search still serves the text column.
+    assert_eq!(
+        s.search_messages("looking", Some(&chat.id), None, 10)
+            .unwrap()
+            .len(),
+        1
+    );
+}
+
+#[test]
+fn a_turn_for_an_unknown_chat_writes_nothing() {
+    let (_dir, mut s) = open();
+    let turn = [NewMessage {
+        role: "user".into(),
+        content: "hi".into(),
+        ..NewMessage::default()
+    }];
+    assert!(s.append_turn("missing", &turn).is_err());
 }

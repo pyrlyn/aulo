@@ -7,8 +7,9 @@
 //! same reason.
 
 use std::path::Path;
-use std::sync::{Arc, Mutex, PoisonError};
+use std::sync::{Arc, Mutex};
 
+use aulo_config::Config;
 use aulo_proto::Timestamp;
 use aulo_proto::aulo::v1::approval_service_server::{ApprovalService, ApprovalServiceServer};
 use aulo_proto::aulo::v1::{
@@ -23,6 +24,7 @@ use crate::chat::ChatApi;
 use crate::chat::input::{fetch_limit, page_size, trim_page};
 use crate::error::ServerError;
 use crate::server::ApiServer;
+use crate::session::{SessionApi, SessionSetup};
 
 /// Lists and revokes grants. Clone-cheap: clones share the chat service's store.
 #[derive(Debug, Clone)]
@@ -47,21 +49,18 @@ impl GrantApi {
         T: Send + 'static,
         F: FnOnce(&mut Store) -> Result<T, Status> + Send + 'static,
     {
-        let store = Arc::clone(&self.store);
-        tokio::task::spawn_blocking(move || {
-            let mut guard = store.lock().unwrap_or_else(PoisonError::into_inner);
-            f(&mut guard)
-        })
-        .await
-        .map_err(|e| {
-            tracing::error!(op, error = %e, "grant storage task failed");
-            internal()
-        })?
+        crate::chat::on_store(&self.store, op, f).await
     }
 }
 
-/// Opens `{home}/aulo.db` and mounts [`ChatApi`] and [`GrantApi`] on one connection.
-pub fn mount_database(server: ApiServer, home: &Path) -> Result<ApiServer, ServerError> {
+/// Opens `{home}/aulo.db` and mounts [`ChatApi`], [`GrantApi`] and
+/// [`SessionApi`] on one connection.
+pub fn mount_database(
+    server: ApiServer,
+    config: &Config,
+    home: &Path,
+) -> Result<ApiServer, ServerError> {
+    let setup = SessionSetup::from_config(config)?;
     let path = aulo_store::database_path(home);
     let Some(path_str) = path.to_str() else {
         return Err(ServerError::DatabasePath(path));
@@ -73,7 +72,8 @@ pub fn mount_database(server: ApiServer, home: &Path) -> Result<ApiServer, Serve
     let store = Arc::new(Mutex::new(store));
     Ok(server
         .add_service(ChatApi::new(Arc::clone(&store)).service())
-        .add_service(GrantApi::new(store).service()))
+        .add_service(GrantApi::new(Arc::clone(&store)).service())
+        .add_service(SessionApi::new(store, setup).service()))
 }
 
 fn internal() -> Status {
