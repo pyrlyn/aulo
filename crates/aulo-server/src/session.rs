@@ -391,7 +391,7 @@ impl SessionApi {
                 Err(SessionError::Loop(LoopError::Sink { message })) => {
                     // The session cannot report anymore; the next Attach
                     // rebuilds it from the store.
-                    tracing::error!(%message, "chat session failed; retiring it");
+                    tracing::error!(error = %message, "chat session failed; retiring it");
                     retire(&inner, &chat);
                 }
                 Err(error) => tracing::debug!(%error, "turn ended early"),
