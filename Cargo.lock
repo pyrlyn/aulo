@@ -597,8 +597,11 @@ dependencies = [
 name = "aulo-server"
 version = "0.0.0"
 dependencies = [
+ "agent-loop",
  "async-trait",
+ "aulo-agent",
  "aulo-config",
+ "aulo-policy",
  "aulo-proto",
  "aulo-providers",
  "aulo-store",
@@ -611,6 +614,7 @@ dependencies = [
  "rcgen",
  "rustix",
  "rustls",
+ "serde_json",
  "sha2",
  "subtle",
  "tempfile",

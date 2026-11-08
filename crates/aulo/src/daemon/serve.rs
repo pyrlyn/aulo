@@ -59,9 +59,10 @@ pub async fn serve(config: &Config, home: &Path) -> Result<()> {
         .probe_local_models()
         .await;
     server = server.add_service(config_api.service());
-    // Chat rows and grant list/revoke. Inserting a grant stays with policy
-    // (T5.3); message, tool and usage writes stay with the agent (T4.8).
-    server = aulo_server::mount_database(server, home).context("cannot open the database")?;
+    // Chat rows, grant list/revoke and Converse. Inserting a grant stays
+    // with policy (T5.3).
+    server =
+        aulo_server::mount_database(server, config, home).context("cannot open the database")?;
     server.serve(listeners, shutdown).await?;
     tracing::info!("aulod stopped");
     Ok(())

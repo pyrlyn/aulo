@@ -15,7 +15,9 @@ use diesel::sqlite::SqliteConnection;
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use ulid::Generator;
 
-pub use models::{AuditRow, Bot, Chat, Grant, Message, ToolCall, Usage};
+pub use models::{
+    AuditRow, Bot, Chat, Grant, HistoryMessage, Message, NewMessage, NewToolCall, ToolCall, Usage,
+};
 pub use search::{MAX_QUERY_BYTES, SearchHit};
 
 use schema::{bots, chats, messages, tool_calls, usage};
@@ -210,8 +212,7 @@ impl Store {
 
     /// Appends a message and bumps the chat's `updated_at` atomically.
     ///
-    /// `aulod` does not call this, nor [`Store::record_tool_call`] or
-    /// [`Store::record_usage`]. Those writes belong to the agent (T4.8).
+    /// The session writes whole turns with [`Store::append_turn`] instead.
     pub fn append_message(
         &mut self,
         chat_id: &str,
@@ -236,6 +237,63 @@ impl Store {
                 Ok(())
             })?;
         Ok(msg)
+    }
+
+    /// Appends a finished turn's messages and their tool calls, and bumps the
+    /// chat's `updated_at`, in one transaction: a crash never leaves a tool use
+    /// without its result, which would make the resumed history malformed.
+    pub fn append_turn(&mut self, chat_id: &str, turn: &[NewMessage]) -> Result<(), StoreError> {
+        let now = now_ms();
+        let ids: Vec<(String, Vec<String>)> = turn
+            .iter()
+            .map(|m| {
+                let message = self.next_id();
+                let calls = m.tool_calls.iter().map(|_| self.next_id()).collect();
+                (message, calls)
+            })
+            .collect();
+        self.conn
+            .transaction::<_, diesel::result::Error, _>(|conn| {
+                for (m, (id, call_ids)) in turn.iter().zip(&ids) {
+                    diesel::insert_into(messages::table)
+                        .values(models::NewMessageRow {
+                            id,
+                            chat_id,
+                            role: &m.role,
+                            content: &m.content,
+                            wire: m.wire.as_deref(),
+                            created_at: now,
+                        })
+                        .execute(conn)?;
+                    for (call, call_id) in m.tool_calls.iter().zip(call_ids) {
+                        diesel::insert_into(tool_calls::table)
+                            .values(ToolCall {
+                                id: call_id.clone(),
+                                message_id: id.clone(),
+                                name: call.name.clone(),
+                                arguments: call.arguments.clone(),
+                                output: call.output.clone(),
+                                status: call.status.clone(),
+                                created_at: now,
+                            })
+                            .execute(conn)?;
+                    }
+                }
+                diesel::update(chats::table.find(chat_id))
+                    .set(chats::updated_at.eq(now))
+                    .execute(conn)?;
+                Ok(())
+            })?;
+        Ok(())
+    }
+
+    /// Every message of a chat, oldest first, as a resumed session needs it.
+    pub fn chat_history(&mut self, chat_id: &str) -> Result<Vec<HistoryMessage>, StoreError> {
+        Ok(messages::table
+            .filter(messages::chat_id.eq(chat_id))
+            .order(messages::id.asc())
+            .select(HistoryMessage::as_select())
+            .load(&mut self.conn)?)
     }
 
     /// Keyset pagination: oldest first, only messages after `after` (the last id of

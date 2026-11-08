@@ -34,6 +34,47 @@ pub struct Message {
     pub created_at: i64,
 }
 
+/// A message as a resumed session reads it back. `wire` is the provider-form
+/// message as JSON; rows written without one (before the column existed, or
+/// by another writer) leave it `None`.
+#[derive(Debug, Clone, PartialEq, Eq, Queryable, Selectable)]
+#[diesel(table_name = messages)]
+pub struct HistoryMessage {
+    pub id: String,
+    pub role: String,
+    pub content: String,
+    pub wire: Option<String>,
+}
+
+/// One message of a finished turn, with the tool calls it made.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct NewMessage {
+    pub role: String,
+    /// The text a person reads; `ListMessages` and search serve this.
+    pub content: String,
+    pub wire: Option<String>,
+    pub tool_calls: Vec<NewToolCall>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct NewToolCall {
+    pub name: String,
+    pub arguments: String,
+    pub output: Option<String>,
+    pub status: String,
+}
+
+#[derive(Debug, Insertable)]
+#[diesel(table_name = messages)]
+pub(crate) struct NewMessageRow<'a> {
+    pub id: &'a str,
+    pub chat_id: &'a str,
+    pub role: &'a str,
+    pub content: &'a str,
+    pub wire: Option<&'a str>,
+    pub created_at: i64,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Queryable, Selectable, Insertable)]
 #[diesel(table_name = tool_calls)]
 pub struct ToolCall {

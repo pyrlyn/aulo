@@ -26,6 +26,7 @@ diesel::table! {
         role -> Text,
         content -> Text,
         created_at -> BigInt,
+        wire -> Nullable<Text>,
     }
 }
 

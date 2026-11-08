@@ -30,7 +30,9 @@ mod preset;
 mod served;
 mod turn;
 
-pub use build::{ProviderSet, ProviderWarning, SkipReason, build_providers, resolved_base_url};
+pub use build::{
+    EndpointProvider, ProviderSet, ProviderWarning, SkipReason, build_providers, resolved_base_url,
+};
 pub use catalog::{ListedModel, ModelCatalog};
 pub use detect::{
     DetectedServer, LoadState, MAX_BODY_BYTES, MAX_ID_BYTES, MAX_MODELS, ProbeError, ServerKind,

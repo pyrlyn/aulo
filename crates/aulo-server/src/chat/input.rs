@@ -13,14 +13,14 @@ const MAX_PAGE_SIZE: usize = 200;
 // A real token is under 60 bytes; the cap keeps garbage from being parsed at all.
 const MAX_TOKEN_BYTES: usize = 128;
 /// Joins provider and model in the store, which keeps one model string per chat.
-pub(super) const MODEL_SEPARATOR: char = '/';
+pub(crate) const MODEL_SEPARATOR: char = '/';
 
 fn invalid(msg: &'static str) -> Status {
     Status::invalid_argument(msg)
 }
 
 // Parsed and re-printed so a lowercase id still finds the row stored in canonical form.
-pub(super) fn chat_id(raw: &str) -> Result<String, Status> {
+pub(crate) fn chat_id(raw: &str) -> Result<String, Status> {
     raw.parse::<ChatId>()
         .map(|id| id.to_string())
         .map_err(|_| invalid("chat_id is not a valid ULID"))
@@ -54,7 +54,7 @@ fn model_part(raw: &str, max: usize, name: &'static str) -> Result<(), Status> {
 }
 
 /// The store's single model string for a [`ModelRef`].
-pub(super) fn model(m: &ModelRef) -> Result<String, Status> {
+pub(crate) fn model(m: &ModelRef) -> Result<String, Status> {
     model_part(
         &m.provider,
         MAX_PROVIDER_BYTES,

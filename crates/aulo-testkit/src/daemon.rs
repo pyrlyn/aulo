@@ -2,8 +2,9 @@
 //!
 //! The socket path is the one `aulod` binds (`run/aulod.sock`), and the
 //! services are the ones the daemon mounts today (`ConfigService`,
-//! `ChatService`) plus anything the caller adds. The `aulo` binary is not
-//! a dependency: the testkit role may not depend on a surface crate.
+//! `ChatService`, and `SessionService` once an endpoint is scripted) plus
+//! anything the caller adds. The `aulo` binary is not a dependency: the
+//! testkit role may not depend on a surface crate.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -14,9 +15,13 @@ use std::os::unix::fs::PermissionsExt;
 
 use aulo_config::{Config, LoadOptions, MemoryStore};
 use aulo_proto::aulo::v1::chat_service_server::ChatServiceServer;
-use aulo_server::{ApiServer, CancellationToken, ChatApi, ConfigApi, Limits, Listen, bind};
+use aulo_server::{
+    ApiServer, CancellationToken, ChatApi, ConfigApi, Endpoints, Limits, Listen, SessionApi,
+    SessionSetup, bind,
+};
 use aulo_store::Store;
 use hyper_util::rt::TokioIo;
+use llm_wire::Provider;
 use tokio::net::UnixStream;
 use tokio::task::JoinHandle;
 use tonic::transport::{Channel, Endpoint};
@@ -37,6 +42,7 @@ pub const STORE_FILE: &str = "aulo.sqlite";
 /// after [`TestDaemon::shutdown`].
 pub struct TestDaemon {
     home: tempfile::TempDir,
+    endpoints: Endpoints,
     socket: PathBuf,
     shutdown: CancellationToken,
     task: JoinHandle<Result<(), aulo_server::ServerError>>,
@@ -63,6 +69,7 @@ impl TestDaemon {
     pub fn builder() -> TestDaemonBuilder {
         TestDaemonBuilder {
             config_toml: CONFIG_TOML.to_owned(),
+            endpoints: Endpoints::new(),
         }
     }
 
@@ -102,25 +109,43 @@ impl TestDaemon {
 
     /// Cancels the server and waits for it to leave the socket.
     pub async fn shutdown(self) -> Result<(), TestkitError> {
-        self.shutdown.cancel();
-        match tokio::time::timeout(std::time::Duration::from_secs(3), self.task).await {
-            Ok(Ok(Ok(()))) => Ok(()),
-            Ok(Ok(Err(error))) => Err(error.into()),
-            Ok(Err(error)) => Err(TestkitError::ServerTask(error.to_string())),
-            Err(_) => Err(TestkitError::Timeout),
-        }
+        stop(self.shutdown, self.task).await
+    }
+
+    /// Stops the server and serves again on the same home, as a daemon
+    /// restart does: the database and config stay, everything in memory
+    /// goes. The scripted endpoints are mounted again; services added
+    /// through [`TestDaemonBuilder::start_with`] are not.
+    pub async fn restart(self) -> Result<Self, TestkitError> {
+        stop(self.shutdown, self.task).await?;
+        serve(self.home, self.endpoints, |server| server).await
+    }
+}
+
+async fn stop(
+    shutdown: CancellationToken,
+    task: JoinHandle<Result<(), aulo_server::ServerError>>,
+) -> Result<(), TestkitError> {
+    shutdown.cancel();
+    match tokio::time::timeout(std::time::Duration::from_secs(3), task).await {
+        Ok(Ok(Ok(()))) => Ok(()),
+        Ok(Ok(Err(error))) => Err(error.into()),
+        Ok(Err(error)) => Err(TestkitError::ServerTask(error.to_string())),
+        Err(_) => Err(TestkitError::Timeout),
     }
 }
 
 /// What [`TestDaemon::start`] reads from the temporary home.
 pub struct TestDaemonBuilder {
     config_toml: String,
+    endpoints: Endpoints,
 }
 
 impl std::fmt::Debug for TestDaemonBuilder {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("TestDaemonBuilder")
             .field("config_bytes", &self.config_toml.len())
+            .field("endpoints", &self.endpoints.keys().collect::<Vec<_>>())
             .finish()
     }
 }
@@ -134,8 +159,17 @@ impl TestDaemonBuilder {
         self
     }
 
-    /// Binds the socket, mounts config and chat, then `mount` for the
-    /// services under test (a `SessionService`, once T4.8 has one).
+    /// Answers calls to the config endpoint `name` with `provider` (usually
+    /// a [`crate::Scripted`]) and mounts the real `SessionService`, so a
+    /// chat whose model is `name/<model>` runs on it.
+    #[must_use]
+    pub fn endpoint(mut self, name: impl Into<String>, provider: Arc<dyn Provider>) -> Self {
+        self.endpoints.insert(name.into(), provider);
+        self
+    }
+
+    /// Binds the socket, mounts config and chat (and the session when an
+    /// endpoint is scripted), then `mount` for the services under test.
     pub async fn start_with(
         self,
         mount: impl FnOnce(ApiServer) -> ApiServer,
@@ -144,40 +178,58 @@ impl TestDaemonBuilder {
         fs::set_permissions(home.path(), fs::Permissions::from_mode(0o700))
             .map_err(TestkitError::Home)?;
         fs::write(home.path().join("config.toml"), self.config_toml).map_err(TestkitError::Home)?;
-        let loaded = Config::load(&LoadOptions {
-            home: Some(home.path().to_owned()),
-            ..LoadOptions::default()
-        })?;
-        let store_path = home.path().join(STORE_FILE);
-        let store_path = store_path.to_str().ok_or_else(|| {
-            TestkitError::Home(std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                "test home is not valid UTF-8",
-            ))
-        })?;
-        let store = Arc::new(Mutex::new(Store::open(store_path)?));
-        let socket = aulo_server::local_socket_path(home.path());
-        let bound = bind(&Listen::Unix(socket.clone())).await?;
-        let limits = Limits {
-            shutdown_grace: std::time::Duration::from_millis(200),
-            ..Limits::default()
-        };
-        let server = ApiServer::new(limits)?
-            .add_service(ConfigApi::new(loaded.config, Arc::new(MemoryStore::default())).service())
-            .add_service(ChatServiceServer::new(ChatApi::new(store)));
-        let server = mount(server);
-        let shutdown = CancellationToken::new();
-        let task = tokio::spawn(server.serve(vec![bound], shutdown.clone()));
-        Ok(TestDaemon {
-            home,
-            socket,
-            shutdown,
-            task,
-        })
+        serve(home, self.endpoints, mount).await
     }
 
     /// [`Self::start_with`] with no extra service.
     pub async fn start(self) -> Result<TestDaemon, TestkitError> {
         self.start_with(|server| server).await
     }
+}
+
+async fn serve(
+    home: tempfile::TempDir,
+    endpoints: Endpoints,
+    mount: impl FnOnce(ApiServer) -> ApiServer,
+) -> Result<TestDaemon, TestkitError> {
+    let loaded = Config::load(&LoadOptions {
+        home: Some(home.path().to_owned()),
+        ..LoadOptions::default()
+    })?;
+    let store_path = home.path().join(STORE_FILE);
+    let store_path = store_path.to_str().ok_or_else(|| {
+        TestkitError::Home(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "test home is not valid UTF-8",
+        ))
+    })?;
+    let store = Arc::new(Mutex::new(Store::open(store_path)?));
+    let socket = aulo_server::local_socket_path(home.path());
+    let bound = bind(&Listen::Unix(socket.clone())).await?;
+    let limits = Limits {
+        shutdown_grace: std::time::Duration::from_millis(200),
+        ..Limits::default()
+    };
+    let mut server = ApiServer::new(limits)?
+        .add_service(
+            ConfigApi::new(loaded.config.clone(), Arc::new(MemoryStore::default())).service(),
+        )
+        .add_service(ChatServiceServer::new(ChatApi::new(Arc::clone(&store))));
+    if !endpoints.is_empty() {
+        let setup = SessionSetup {
+            endpoints: endpoints.clone(),
+            ..SessionSetup::from_config(&loaded.config)?
+        };
+        server = server.add_service(SessionApi::new(store, setup).service());
+    }
+    let server = mount(server);
+    let shutdown = CancellationToken::new();
+    let task = tokio::spawn(server.serve(vec![bound], shutdown.clone()));
+    Ok(TestDaemon {
+        home,
+        endpoints,
+        socket,
+        shutdown,
+        task,
+    })
 }

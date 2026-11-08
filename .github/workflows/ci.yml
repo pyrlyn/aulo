@@ -1,8 +1,8 @@
-# Rust CI through pyrlyn/ci's ci-rust.yml (fmt once, then clippy -D warnings, check and tests per
+# Rust CI through pyrlyn-archive/ci-old's ci-rust.yml (fmt once, then clippy -D warnings, check and tests per
 # target: Linux x86_64 and aarch64, macOS aarch64 and Windows x86_64; Intel macOS is not
 # supported), plus a Conventional Commits check of pull request commit subjects. The scans
 # (CodeQL, Semgrep) live in pipeline.yml.
-# Shared workflows: https://github.com/pyrlyn/ci/blob/main/docs/reusable-workflows.md
+# Shared workflows: https://github.com/pyrlyn-archive/ci-old/blob/main/docs/reusable-workflows.md
 name: CI
 
 on:
@@ -29,7 +29,7 @@ jobs:
   # GitHub image that ships Xcode 27.
   rust:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
-    uses: pyrlyn/ci/.github/workflows/ci-rust.yml@main
+    uses: pyrlyn-archive/ci-old/.github/workflows/ci-rust.yml@9675ff42a0e3785beabccb68b0e4fa65910de453 # main 2026-10-27
     # ci-rust cancels the whole run when a job fails (cancel-run-on-failure), which needs
     # `actions: write` on the calling job.
     permissions:
