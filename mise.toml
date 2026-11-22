@@ -11,4 +11,4 @@ hk = "2.5.0" # runs jactionlint as a pre-push hook (hk.pkl); `mise x -- hk insta
 shellcheck = "0.11.0" # used by jactionlint for run: scripts; CI uses the runner image's copy
 node = "26.12.1" # Active LTS; runtime for the npm: tools below
 "npm:agent-browser" = "0.39.2" # browser automation CLI for agents: Run and verify the browser tasks aulo performs.
-"npm:agent-device" = "0.21.31" # device/app automation CLI for agents (Callstack): Launch and drive the aulo desktop app.
+"npm:agent-device" = "0.21.37" # device/app automation CLI for agents (Callstack): Launch and drive the aulo desktop app.
