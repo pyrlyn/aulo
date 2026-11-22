@@ -1,3 +1,11 @@
+---
+status: in progress
+priority: P0
+complexity: 2
+readiness: 10%
+agent: Claude Code / claude-opus-5-5
+---
+
 # T2.1. Gradle KMP project skeleton
 
 Stage: S2 · Area: infra · Depends on: T0.1 · Blocks: 6 task(s)
