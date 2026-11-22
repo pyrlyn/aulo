@@ -7,6 +7,8 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class UlidTest {
     @Test
@@ -56,5 +58,60 @@ class UlidTest {
         assertEquals(BotId.new().value.length, Ulid.LENGTH)
         assertTrue(Ulid.isValid(ClientId.new().value) && Ulid.isValid(CallId.new().value))
         assertFailsWith<IllegalArgumentException> { Json.decodeFromString(BotId.serializer(), "\"not-a-ulid\"") }
+    }
+
+    private class FixedClock(
+        var ms: Long,
+    ) : Clock {
+        override fun now(): Instant = Instant.fromEpochMilliseconds(ms)
+    }
+
+    @Test
+    fun monotonicIdsInOneMillisecondCountUp() {
+        val clock = FixedClock(1_700_000_000_000)
+        val gen = MonotonicUlid(clock) { ByteArray(10) }
+        val ids = List(3) { gen.next() }
+        assertEquals(ids.sorted(), ids)
+        assertEquals(3, ids.toSet().size)
+        assertEquals(listOf("0000000000000000", "0000000000000001", "0000000000000002"), ids.map { it.drop(10) })
+        assertTrue(ids.all { Ulid.timestampMs(it) == clock.ms })
+    }
+
+    @Test
+    fun aNewMillisecondTakesFreshRandomness() {
+        val clock = FixedClock(1_700_000_000_000)
+        var draws = 0
+        val gen =
+            MonotonicUlid(clock) {
+                draws++
+                ByteArray(10) { 7 }
+            }
+        val a = gen.next()
+        clock.ms += 1
+        val b = gen.next()
+        assertEquals(2, draws)
+        assertEquals(a.drop(10), b.drop(10))
+        assertTrue(a < b)
+    }
+
+    @Test
+    fun aClockThatStepsBackStillSortsLater() {
+        val clock = FixedClock(1_700_000_000_000)
+        val gen = MonotonicUlid(clock) { ByteArray(10) }
+        val a = gen.next()
+        clock.ms -= 5_000
+        val b = gen.next()
+        assertTrue(a < b)
+        assertEquals(Ulid.timestampMs(a), Ulid.timestampMs(b))
+    }
+
+    @Test
+    fun exhaustedRandomnessCarriesIntoTheNextMillisecond() {
+        val clock = FixedClock(1_700_000_000_000)
+        val gen = MonotonicUlid(clock) { ByteArray(10) { -1 } }
+        val a = gen.next()
+        val b = gen.next()
+        assertTrue(a < b)
+        assertEquals(clock.ms + 1, Ulid.timestampMs(b))
     }
 }
