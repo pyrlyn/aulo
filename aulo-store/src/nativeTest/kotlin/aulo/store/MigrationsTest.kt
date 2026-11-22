@@ -14,22 +14,25 @@ import kotlin.test.assertTrue
 // Raw SQL here only inspects a database (sqlite_master, the table-valued PRAGMAs) or stands in
 // for a migration file: SQLDelight has no way to say either.
 class MigrationsTest {
-    private val core = MIGRATIONS.single().key
+    private val keys = MIGRATIONS.map { it.key }
 
     @Test
     fun migrationsRevertAndReapply() =
         withStore { s, _ ->
-            assertEquals(listOf(core), s.migrator.applied())
+            assertEquals(keys, s.migrator.applied())
             assertEquals(0, s.listChats(10).size)
 
-            assertEquals(listOf(core), s.migrator.down())
+            assertEquals(keys.reversed(), s.migrator.down())
             assertEquals(emptyList(), s.migrator.applied())
             // The typed queries cannot list tables; a failing query proves the table is gone.
             assertFailsWith<StoreException> { s.listChats(10) }
             assertFailsWith<StoreException> { s.listUsage("c") }
+            assertFailsWith<StoreException> { s.listGrants() }
+            assertFailsWith<StoreException> { s.lastAudit() }
 
-            assertEquals(listOf(core), s.migrator.up())
+            assertEquals(keys, s.migrator.up())
             assertEquals(0, s.listBots().size)
+            assertEquals(0, s.listGrants().size)
         }
 
     @Test
@@ -132,6 +135,7 @@ class MigrationsTest {
 
             val want = sqlite.open(declared).use(::schema)
             assertTrue(want.any { it.startsWith("messages.column wire ") }, want.joinToString("\n"))
+            assertTrue(want.any { it.startsWith("audit.index sqlite_autoindex_audit_") }, want.joinToString("\n"))
             assertEquals(want, sqlite.open(migrated).use(::schema))
         }
 

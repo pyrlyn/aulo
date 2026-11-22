@@ -79,3 +79,23 @@ data class Usage(
     val outputTokens: Long,
     val createdAt: Long,
 )
+
+/** A standing decision for a subject and scope. Times are Unix milliseconds; a null [expiresAt] never expires. */
+data class Grant(
+    val id: String,
+    val subject: String,
+    val scope: String,
+    val decision: String,
+    val expiresAt: Long?,
+    val createdAt: Long,
+)
+
+/** One audit row; [seq] is assigned by the database. */
+data class AuditRow(
+    val seq: Long,
+    val prevHash: String,
+    val hash: String,
+    val kind: String,
+    val payload: String,
+    val createdAt: Long,
+)
