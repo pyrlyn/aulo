@@ -1,0 +1,35 @@
+CREATE VIRTUAL TABLE message_search USING fts5 (
+    content,
+    content = 'messages',
+    content_rowid = 'rowid',
+    tokenize = 'unicode61 remove_diacritics 2'
+);
+
+CREATE TRIGGER message_search_insert AFTER INSERT ON messages BEGIN
+    INSERT INTO message_search (rowid, content) VALUES (new.rowid, new.content);
+END;
+
+CREATE TRIGGER message_search_delete AFTER DELETE ON messages BEGIN
+    INSERT INTO message_search (message_search, rowid, content)
+    VALUES ('delete', old.rowid, old.content);
+END;
+
+CREATE TRIGGER message_search_update AFTER UPDATE OF content ON messages BEGIN
+    INSERT INTO message_search (message_search, rowid, content)
+    VALUES ('delete', old.rowid, old.content);
+    INSERT INTO message_search (rowid, content) VALUES (new.rowid, new.content);
+END;
+
+-- Best matches first, keyset-paged in (rank, id) order. The subquery makes rnk an ordinary
+-- column so the keyset predicate can use it. :expr is a bound MATCH expression built by
+-- matchExpression, never SQL text.
+search:
+SELECT id, chat_id, role, content, created_at, rnk FROM (
+    SELECT m.id AS id, m.chat_id AS chat_id, m.role AS role, m.content AS content,
+           m.created_at AS created_at, bm25(message_search) AS rnk
+    FROM message_search JOIN messages m ON m.rowid = message_search.rowid
+    WHERE message_search MATCH :expr AND (:chatId IS NULL OR m.chat_id = :chatId)
+)
+WHERE :afterRank IS NULL OR rnk > :afterRank OR (rnk = :afterRank AND id > :afterId)
+ORDER BY rnk, id
+LIMIT :limit;
