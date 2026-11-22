@@ -1,6 +1,12 @@
+import aulo.buildlogic.ModuleRole
+
 // The surface module: links the `aulo` CLI and the `aulod` daemon executables.
 plugins {
     id("aulo.kmp")
+}
+
+aulo {
+    role = ModuleRole.SURFACE
 }
 
 val gitSha: Provider<String> =
