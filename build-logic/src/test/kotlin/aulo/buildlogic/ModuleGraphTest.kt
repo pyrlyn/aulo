@@ -87,6 +87,16 @@ class ModuleGraphTest {
     }
 
     @Test
+    fun kotlinKitSqliteAdaptersCountAsSqlite() {
+        val graph =
+            listOf(
+                node(":aulo-store", ModuleRole.LIBRARY, setOf("pyrlyn.kit:db-sqldelight", "pyrlyn.kit:db-room")),
+                node(":aulo-memory", ModuleRole.LIBRARY, setOf("pyrlyn.kit:db-native")),
+            )
+        assertEquals(listOf("SQLite has more than one owner module: :aulo-memory, :aulo-store"), ModuleGraph.violations(graph))
+    }
+
+    @Test
     fun everyModuleDeclaresARole() {
         assertEquals(
             listOf(":aulo-x: declares no role (set aulo { role = ... } in its build file)"),
