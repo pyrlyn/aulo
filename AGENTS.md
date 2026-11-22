@@ -27,7 +27,7 @@ If an `AGENTS.md` or `CLAUDE.md` exists higher in the tree, follow it too; on co
 
 ## Layout
 
-- Gradle KMP modules (`aulo-<role>`), created by S2+ tasks, hold the Kotlin/Native daemon and CLI.
+- Gradle KMP modules (`aulo-<role>`), created by S2+ tasks, hold the Kotlin/Native daemon and CLI. Every module applies the `aulo.kmp` convention plugin from `build-logic/` (targets per spec §17 D3, warnings as errors, ktlint). `:aulo` is the surface module that links the `aulo` and `aulod` executables.
 - `desktop/macos` (SwiftUI) and `desktop/windows` (WinUI 3) — native apps over `aulo-ffi` (T12.3, T12.15).
 - `proto/aulo/v1/` — gRPC service definitions (T3.1).
 - `plugins/` — plugin SDK examples (T11.5).
@@ -41,6 +41,8 @@ baseline `.github/jactionlint-baseline.json`. `hk.pkl` runs jactionlint as a pre
 
 ```bash
 mise install                               # JDK 21 and the lint tools
+mise x -- ./gradlew test                   # host-target tests (just test)
+mise x -- ./gradlew ktlintCheck            # style (just lint)
 mise x -- jactionlint                      # lint workflows, composite actions, dependabot.yml
 mise x -- jactionlint --baseline-write     # refresh the baseline after fixing findings
 mise x -- hk install --mise                # install the pre-push hook once per clone
