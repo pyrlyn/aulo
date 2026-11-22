@@ -1,9 +1,8 @@
-# T3.3. aulo-server: tonic server scaffold
+# T3.3. aulo-server: gRPC server scaffold
 
 Stage: S3 · Area: api · Depends on: T3.2, T2.5, T2.7 · Blocks: 4 task(s)
 
-tonic server with tonic-health and reflection, listeners for a Unix socket / Windows named pipe (local) and TCP (remote), graceful shutdown, request size limits.
-
+gRPC server with health and reflection, listeners for a Unix socket / Windows named pipe (local) and TCP (remote), graceful shutdown, request size limits.
 
 Done when:
 

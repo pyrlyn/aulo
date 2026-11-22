@@ -1,5 +1,8 @@
 # aulo — research
 
+> The product is now implemented in Kotlin/Native (Gradle KMP).
+> Sources below still include the Rust-ecosystem survey from the first research pass.
+
 All sources checked on **2026-10-07** unless a different date is given. "cd" means "checked date".
 Facts backed only by press, blogs or forums are marked **unverified**. Star counts and versions come from
 the GitHub REST API (`api.github.com/repos/...`) and the crates.io / Hugging Face registry APIs, queried on 2026-10-07.

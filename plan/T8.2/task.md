@@ -10,7 +10,7 @@ agent:
 
 Stage: S8 · Area: voice · Depends on: T8.1 · Blocks: 3 task(s)
 
-earshot (pure Rust) by default, Silero through sherpa-onnx as an alternative; thresholds and hangover in config.
+earshot (pure Kotlin/Native) by default, Silero through sherpa-onnx as an alternative; thresholds and hangover in config.
 
 Done when:
 

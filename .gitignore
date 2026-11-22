@@ -1,2 +1,16 @@
-/target/
+# Gradle / Kotlin
+.gradle/
+build/
+.kotlin/
+local.properties
+# Keep the wrapper jar once the Gradle wrapper is added.
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE / OS
+.idea/
+*.iml
 .DS_Store
+
+# Local model weights and caches (never committed)
+*.gguf
+/models/

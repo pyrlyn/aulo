@@ -2,8 +2,7 @@
 
 Stage: S2 · Area: infra · Depends on: T2.8 · Blocks: 1 task(s)
 
-
-FTS5 virtual table over message text. Raw SQL stays in the storage crate with a comment that Diesel cannot model FTS5.
+FTS5 virtual table over message text. Raw SQL stays in the storage module with a comment that Diesel cannot model FTS5.
 
 Done when:
 

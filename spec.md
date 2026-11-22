@@ -6,7 +6,7 @@ The name comes from the Greek *aulos*, a reed pipe: breath turned into voice.
 
 ## 1. What aulo is
 
-aulo is a local-first voice agent that controls the computer it runs on. You talk to it, and it talks back. It runs shell commands, launches and drives programs, and works in a browser. It can use MCP servers and act as one for other agents. It loads plugins, and it runs on local or remote language models that you can switch at any time.
+aulo is a local-first voice agent that controls the computer it runs on. It is implemented in Kotlin/Native (Gradle KMP, native targets). You talk to it, and it talks back. It runs shell commands, launches and drives programs, and works in a browser. It can use MCP servers and act as one for other agents. It loads plugins, and it runs on local or remote language models that you can switch at any time.
 
 It ships as one daemon, `aulod`, that owns the agent, the voice pipeline, the tools and the data. Three kinds of client reach it over gRPC:
 
@@ -77,8 +77,8 @@ The full notes with sources are in `research.md`.
   - A realtime voice model *consults* the main agent instead of calling tools.
   - A central wake-word list routed to agents.
   - Weak spots: sandbox off by default, in-process plugins.
-- **Goose** (Rust). An MCP-native host on `rmcp`, with local Whisper dictation.
-- **Handy** (Rust). A push-to-talk STT reference:
+- **Goose** (Kotlin/Native). An MCP-native host on `rmcp`, with local Whisper dictation.
+- **Handy** (Kotlin/Native). A push-to-talk STT reference:
   - `cpal`, Silero VAD, Whisper/Parakeet, `enigo`.
 - **Voice pipeline frameworks.**
   - Pipecat: Smart Turn v3 end-of-turn model.
@@ -163,7 +163,7 @@ The full notes with sources are in `research.md`.
             │    │    │          │       │                    │ allowed calls  │
             │ aulo-  aulo-   aulo-      tool registry ────────▼──────────────┐ │
             │ audio  speech  providers  shell · pty · apps · browser · AX ·  │ │
-            │ (cpal) (STT,   (llm-*)    screen · input · mcp__* · plugin__*  │ │
+            │ (I/O)  (STT,   (llm-*)    screen · input · mcp__* · plugin__*  │ │
             │        TTS,                                                    │ │
             │        VAD,KWS)  aulo-realtime (S2S front, consult only)       │ │
             │  aulo-store (SQLite) · aulo-config · aulo-telemetry             │ │
@@ -181,22 +181,22 @@ The full notes with sources are in `research.md`.
   - It runs per user as a login service, or headless on a server.
 - **`aulo`.** A thin CLI client. `aulo mcp` runs the stdio MCP server; it is a client of aulod, so every call still goes through aulod's policy.
 - **Desktop apps** (`desktop/macos`, SwiftUI; `desktop/windows`, WinUI 3).
-  - Native UI over `aulo-app`, a Rust core exported with UniFFI (`aulo-ffi`), as in the coding agent.
+  - Native UI over `aulo-app`, a Kotlin/Native core exported through a C ABI (`aulo-ffi`), as in the coding agent.
   - `aulo-app` is a gRPC client of aulod; it starts the local daemon when it is not running.
   - It can also connect to remote servers.
 - **Plugins and MCP servers.**
   - Child processes of aulod with the capabilities they were granted.
   - Untrusted. Their output is data.
 
-### 4.2 Crates
+### 4.2 Modules
 
-Crate roles follow rust.md: contracts, domain, adapters, assembly, surfaces, testkit. The dependency-graph test (T2.2) enforces them.
+Module roles follow the usual layering: contracts, domain, adapters, assembly, surfaces, testkit. The dependency-graph test (T2.2) enforces them.
 
-| Crate | Role | Purpose |
+| Module | Role | Purpose |
 | --- | --- | --- |
 | `aulo-types` | contract | Ids, aulo events, voice state |
 | `llm-router` | contract | One provider per tier; routes a job to that tier's provider (T1.7). Depends on `llm-wire`; no I/O |
-| `aulo-proto` | contract | gRPC protos and generated code (tonic, prost) |
+| `aulo-proto` | contract | gRPC protos and generated Kotlin/Native code |
 | `aulo-speech` | contract | `SttEngine`, `TtsEngine`, `Vad`, `KeywordSpotter`, `TurnDetector` traits |
 | `aulo-config` | adapter (config owner) | Typed config, JSON Schema, layers, provenance |
 | `aulo-store` | adapter (diesel owner) | SQLite: bots, chats, messages, tool calls, usage, grants, audit, memory |
@@ -210,7 +210,7 @@ Crate roles follow rust.md: contracts, domain, adapters, assembly, surfaces, tes
 | `aulo-speech-bench` | adapter | Word error rate, real-time factor and time to first audio per speech engine (`aulo bench speech`) |
 | `aulo-realtime` | adapter | Realtime speech-to-speech fronts (OpenAI, Gemini, xAI) |
 | `aulo-voice` | domain | Conversation pipeline, turn-taking, barge-in, fillers, voice commands |
-| `aulo-providers` | assembly | LLM providers from config (llm-* crates), tiers, local presets |
+| `aulo-providers` | assembly | LLM providers from config (llm-* modules), tiers, local presets |
 | `aulo-agent` | domain | Sessions on agent-loop, tool registry, persona, compaction |
 | `aulo-policy` | domain | perm-rules subjects, grants, blocklist, sentinel, audit, vault, takeover |
 | `aulo-untrusted` | domain | Wraps, sanitizes and caps untrusted web, tool, screenshot and plugin text; an injection forces Ask (T5.12) |
@@ -227,7 +227,7 @@ Crate roles follow rust.md: contracts, domain, adapters, assembly, surfaces, tes
 | `aulo-server` | assembly | gRPC services, auth, TLS |
 | `aulo` | surface | CLI binary (`aulo`) and daemon binary (`aulod`) |
 | `aulo-app` | domain | UI-agnostic client core for the native apps: gRPC client, Timeline fold, coalescing Controller, inbox, intents (cox-app pattern) |
-| `aulo-ffi` | surface | Forward-only UniFFI exports over `aulo-app`; Swift and C# (uniffi-bindgen-cs) bindings; the only crate that depends on `uniffi` |
+| `aulo-ffi` | surface | Forward-only a C ABI exports over `aulo-app`; Swift and C# (the C ABI bindings for C#) bindings; the only module that owns the C ABI |
 | `aulo-testkit` | testkit | Scripted provider, test daemon, fake audio and engines |
 
 Heavy subsystems are off-by-default features of the binaries: `sherpa`, `whisper`, `browser`, `desktop-control`, `wasm-plugins`, `realtime`, `otel`.
@@ -258,7 +258,7 @@ When a realtime provider is selected for the voice tier:
 
 | Kind | Default (local) | Alternatives |
 | --- | --- | --- |
-| VAD | earshot (pure Rust) | Silero via sherpa-onnx |
+| VAD | a local VAD (Kotlin/Native or cinterop) | Silero via sherpa-onnx |
 | Wake word | sherpa-onnx keyword spotting (open vocabulary) | plugin |
 | End of turn | silence 700 ms | + Smart Turn v3 (BSD-2) |
 | STT | sherpa-onnx Parakeet TDT v3 (25 languages incl. ru, uk) | Moonshine streaming (en), whisper.cpp, Apple SpeechAnalyzer, OpenAI-compatible endpoint (OpenAI, the local model runner), Deepgram, plugins |
@@ -282,7 +282,7 @@ When a realtime provider is selected for the voice tier:
 
 ### 5.3 Audio
 
-- **I/O.** `cpal` capture, `rubato` resampling, `ringbuf` frames, and `rodio` streaming playback with an immediate stop.
+- **I/O.** Capture, resampling, fixed-size ring-buffer frames, and streaming playback with an immediate stop. Concrete libraries are chosen in S6 (D4).
 - **Echo cancellation.**
   - macOS: Voice Processing I/O.
   - Windows and Linux: webrtc-audio-processing (AEC3, noise suppression, AGC).
@@ -349,7 +349,7 @@ Also:
 ## 8. MCP
 
 - **Client** (T10.1–T10.4).
-  - Built on the shared `mcp-host` crate (rmcp 3.x), extracted from the coding agent.
+  - Built on the shared `mcp-host` module (rmcp 3.x), extracted from the coding agent.
   - Servers come from `[mcp.servers]` and `.mcp.json`, over stdio or streamable HTTP, with OAuth for remote servers.
   - Their tools appear as `mcp__server__tool`, deferred by default, and every call goes through policy.
   - Resources, prompts and elicitation are supported; elicitation is answered by voice or in the desktop app.
@@ -392,11 +392,11 @@ Also:
   - Heard
   - BeforeSpeak
   - SessionStart and SessionEnd
-- Both come from the shared `agent-ext` crate.
+- Both come from the shared `agent-ext` module.
 
 ## 10. Models and providers
 
-- **Wires.** The provider stack is the shared `llm-*` crates extracted from the coding agent:
+- **Wires.** The provider stack is the shared `llm-*` modules extracted from the coding agent:
   - OpenAI Chat and Responses, which also cover every OpenAI-compatible endpoint with no per-vendor code;
   - Anthropic Messages;
   - the model catalog;
@@ -429,7 +429,7 @@ Also:
 | `McpService` | ListServers, ServerStatus, Enable, Disable, Restart |
 | `PluginService` | List, Install, Enable, Disable, Remove |
 | `AuditService` | Query, Verify, Export |
-| `grpc.health.v1` | Health (tonic-health); reflection for tooling |
+| `grpc.health.v1` | Health; reflection for tooling |
 
 **Transport.**
 
@@ -443,8 +443,8 @@ Also:
 
 Native apps, as in the coding agent (D2):
 
-- **`aulo-app`** (Rust) holds all client logic: the gRPC connection, folding events into keyed block patches, coalescing patches to one batch per frame, the chat list, the inbox and intents. Replaying a recorded event log yields the same patches as the live run, so UI tests run on fixtures.
-- **`aulo-ffi`** exports it with UniFFI. Every exported body is a single expression, so logic cannot leak into the bindings.
+- **`aulo-app`** (Kotlin/Native) holds all client logic: the gRPC connection, folding events into keyed block patches, coalescing patches to one batch per frame, the chat list, the inbox and intents. Replaying a recorded event log yields the same patches as the live run, so UI tests run on fixtures.
+- **`aulo-ffi`** exports it with a C ABI. Every exported body is a single expression, so logic cannot leak into the bindings.
 - **macOS:** SwiftUI app in `desktop/macos` with a window and a menu bar extra.
 - **Windows:** WinUI 3 (C#) app in `desktop/windows` with a window and a tray icon.
 - **Linux:** no native app yet; use the CLI or connect a desktop app on another machine to the Linux server.
@@ -483,8 +483,8 @@ Both apps offer:
 - **Database.** SQLite through Diesel, at `~/.aulo/aulo.db`, in WAL mode. Raw SQL only in migrations and for FTS5.
 - **Config.**
   - Layers: `~/.aulo/config.toml`, then project `.aulo.toml`, then `AULO_*` env, then flags, with per-key provenance.
-  - A JSON Schema is generated from the Rust types and committed, with a stale-schema test.
-  - One crate owns config I/O.
+  - A JSON Schema is generated from the Kotlin types and committed, with a stale-schema test.
+  - One module owns config I/O.
 - **Foreign configs** (agent hosts' MCP entries) are edited only at aulo's own key: atomically, byte-preserving, with a `file-backup` copy.
 - **Models** live in `~/.aulo/models`, and logs in `~/.aulo/logs`.
 
@@ -507,8 +507,8 @@ The full map with `path:line` citations is in `research.md` Part 6. Summary:
 | Skills and hooks | cox-ext | `agent-ext` (T1.17) |
 | WASM plugin host and grants | cox-plugin, rtok plugins/wasm.rs | Pattern for T11.7 |
 | Local inference | runa serve and engine | OpenAI-compatible endpoint now; streaming fix (T1.19); library target (T1.20) |
-| File backups | packages/crates/file-backup (crates.io 0.1.1) | Direct dependency |
-| CI and release | pyrlyn/ci ci-rust.yml, pyrlyn/infra bump.yml, cargo-dist | Direct reuse (T2.3, T15.1) |
+| File backups | the shared Kotlin modules/file-backup (modules.io 0.1.1) | Direct dependency |
+| CI and release | the shared Kotlin/Gradle CI workflow, pyrlyn/infra bump.yml, the Gradle/Native distribution tooling | Direct reuse (T2.3, T15.1) |
 | File and code tools | `cox mcp` stdio server | Optional MCP preset (T10.8) |
 
 Licence (D1): aulo is licensed like cox, so cox code can be reused directly. runa is MIT OR Apache-2.0, which can be combined into a GPL work.
@@ -518,7 +518,7 @@ Licence (D1): aulo is licensed like cox, so cox code can be reused directly. run
 | Stage | Name | Outcome |
 | --- | --- | --- |
 | S0 | Decisions and spikes | Decisions D1–D5 settled; sherpa-onnx and AEC still to measure (T0.5, T0.6) |
-| S1 | Shared crates in packages/ | Provider stack, permissions, sandbox, MCP host, speech capture, agent loop shared with the coding agent and the local model runner |
+| S1 | Shared Kotlin modules | Provider stack, permissions, sandbox, MCP host, speech capture, agent loop, shared with the coding agent and the local model runner as Kotlin/Native modules |
 | S2 | Workspace foundations | Workspace, CI, types, config, telemetry, store |
 | S3 | gRPC API and daemon | Protos, server, auth, TLS, aulod, text CLI |
 | S4 | Models, providers and agent loop | Text chat end to end on local and remote models |
@@ -529,7 +529,7 @@ Licence (D1): aulo is licensed like cox, so cox code can be reused directly. run
 | S9 | Computer control | Shell, PTY, apps, browser, AX, screenshots, input, ladder |
 | S10 | MCP | Client, server (stdio and HTTP), host registration |
 | S11 | Plugins, skills and hooks | Manifest, host, MCP/gRPC/WASM plugins, SDK, skills, hooks |
-| S12 | Desktop apps (SwiftUI and WinUI) | aulo-app core, UniFFI bindings, macOS app, Windows app |
+| S12 | Desktop apps (SwiftUI and WinUI) | aulo-app core, a C ABI bindings, macOS app, Windows app |
 | S13 | Server mode | Headless, tokens, multi-client, container image |
 | S14 | Bots, routines and memory | Named bots, background turns, routines, memory, teach-a-task |
 | S15 | Release and docs | Packages, signing, guides, API reference |
@@ -567,20 +567,13 @@ Settled by the creator on 2026-10-07 (details in `plan/T0.*/`):
   - `LICENSE-ROYALTY-FREE.md` is the cox text.
   - The README carries the license-sync block.
   - `license-check.yml` fails on drift.
-  - The Cargo manifests use the expression above.
-- **D2 Desktop** (T0.2). Native SwiftUI (macOS) and WinUI 3 (Windows) over `aulo-app` + `aulo-ffi` (UniFFI), as in the coding agent.
+  - The Gradle build files use the expression above.
+- **D2 Desktop** (T0.2). Native SwiftUI (macOS) and WinUI 3 (Windows) over `aulo-app` + `aulo-ffi` (a C ABI), as in the coding agent.
 - **D3 Platforms** (T0.3). macOS arm64 (15+), Windows 11 x86_64, Linux x86_64 and aarch64.
-- **D4 New crates** (T0.4). Approved:
-  - API: tonic, tonic-build, prost, tonic-health, tonic-reflection;
-  - speech and audio: sherpa-onnx, earshot, rodio, ringbuf, webrtc-audio-processing;
-  - browser, screen and input: chromiumoxide, xcap, enigo;
-  - platform accessibility and audio: objc2-application-services, objc2-avf-audio, atspi, uiautomation;
-  - other: handy-keys, tokio-tungstenite.
+- **D4 New modules** (T0.4). The earlier approved list was of Rust crates. Those choices do not carry over automatically. Each task that first wires a module chooses a Kotlin/Native library, a cinterop binding, or a small in-tree implementation, records the licence, and adds a `toolchain.md` row. Library additions that are not an obvious equivalent still need the creator's approval.
+- **D5 Agent loop** (T0.7). Extract a neutral `agent-loop` module from cox-core (T1.15) and build `aulo-agent` on it.
 
-  Each crate gets its `rust.md` and `toolchain.md` rows in the task that wires it in.
-- **D5 Agent loop** (T0.7). Extract a neutral `agent-loop` crate from cox-core (T1.15) and build `aulo-agent` on it.
-
-- **D6** The API is gRPC (tonic and prost), not HTTP/JSON. Creator, 2026-10-07.
+- **D6** The API is gRPC, generated from `proto/aulo/v1`, not HTTP/JSON. Creator, 2026-10-07.
 - **D7** There are two deployment shapes: a desktop app with chats, and a server with an API. Creator, 2026-10-07.
 - **D8** The repository is the public `pyrlyn/aulo`. Creator, 2026-10-07.
 - **D9** sherpa-onnx links espeak-ng (GPL-3.0) in-process; the GPL is accepted. A build that contains sherpa-onnx TTS is distributed under GPL-3.0-or-later only, so the royalty-free and commercial options of D1 do not cover it. Other GPL engines (Piper) still run as separate plugin processes. Creator, 2026-10-07 (sherpa-onnx spike, risk R1).

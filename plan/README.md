@@ -2,14 +2,22 @@
 
 https://github.com/pyrlyn/aulo
 
-A local-first voice agent that controls the computer (shell, apps, browser, desktop), speaks MCP both ways, takes plugins, and runs on local or remote models. A daemon (`aulod`) serves a gRPC API to the desktop chat app, the CLI and remote clients. See `spec.md` for the specification and `research.md` for the sources.
+A local-first voice agent that controls the computer (shell, apps, browser, desktop), speaks MCP both ways, takes plugins, and runs on local or remote models. A daemon (`aulod`) serves a gRPC API to the desktop chat app, the CLI and remote clients. The implementation stack is **Kotlin/Native** (Gradle KMP, native targets). See `spec.md` for the specification and `research.md` for the sources.
+
+## Reset (2026-11-22)
+
+The project starts from zero on the Kotlin/Native stack. Every previously closed task is
+open again: all `done.md` closing reports were removed, and every `task.md` front matter
+`status` is `todo`. Implementation notes that described the retired Rust workspace were
+cleared from the cards. Task ids, titles, stages and acceptance criteria stay; work is
+redone in Kotlin/Native.
 
 ## Tasks
 
 Every task is a folder `plan/<id>/`:
 
 - `task.md` — the task: front matter (`status`, `priority`, `complexity`, `readiness`, `agent`) on active tasks, then `# <id>. Title`, the `Stage · Area · Depends on · Blocks` line, why it exists and what done means.
-- `done.md` — the closing report. A folder with `done.md` is a closed task; one without it is active.
+- `done.md` — the closing report. A folder with `done.md` is a closed task; one without it is active. After the reset, no folder has a `done.md`.
 
 Task ids are `T<stage>.<n>`; the stages are listed below and described in `spec.md` §16. List the active tasks:
 
@@ -24,7 +32,7 @@ for d in plan/*/; do [ -f "$d/done.md" ] || echo "${d%/}"; done
 The milestone names `scripts/sync-issues.py` creates.
 
 - S0. Decisions and spikes
-- S1. Shared crates in packages/
+- S1. Shared Kotlin modules
 - S2. Workspace foundations
 - S3. gRPC API and daemon
 - S4. Models, providers and agent loop
@@ -40,12 +48,5 @@ The milestone names `scripts/sync-issues.py` creates.
 - S14. Bots, routines and memory
 - S15. Release and docs
 
-## Audit 2026-10-07
-
-Findings from a code audit on 2026-10-07, filed as T16.1–T16.7. Verified-clean areas worth noting: strict input caps, constant-time token compare, pinned SHA-256 model downloads, XML/systemd/schtasks escaping, secret redaction at every sink, endpoint and model-path validation.
-
-## Migration notes
-
-- The tasks moved here from `plan.md`, `todo.md` and `done.md`. Where a closed task had both a `plan.md` card and a `done.md` entry written differently, `task.md` keeps the card and `done.md` keeps the entry's report followed by the other wording.
-- `done.md` held two different tasks under `T16.7`; the second, "Isolate credential-list fixtures from developer credentials", is now T16.8.
-- T4.6, T4.7, T5.1 and T8.1 were marked done in the `plan.md` table without a `done.md` entry; their `done.md` is the card's Outcome.
+T16.1–T16.8 are audit findings from 2026-10-07, now open again so they can be re-checked
+on the Kotlin/Native implementation. T900 is the dependency-update task.

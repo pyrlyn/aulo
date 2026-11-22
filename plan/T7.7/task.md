@@ -2,8 +2,7 @@
 
 Stage: S7 · Area: speech · Depends on: T7.1 · Blocks: 0 task(s)
 
-
-Official deepgram crate, streaming over WebSocket with interim results.
+Official deepgram module, streaming over WebSocket with interim results.
 
 Done when:
 

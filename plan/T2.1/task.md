@@ -1,11 +1,11 @@
-# T2.1. Cargo workspace skeleton
+# T2.1. Gradle KMP project skeleton
 
 Stage: S2 · Area: infra · Depends on: T0.1 · Blocks: 6 task(s)
 
-Virtual manifest (members = crates/*, resolver 3, edition 2024), workspace.package, workspace.dependencies with one-line reasons, workspace.lints (no unwrap/expect/panic outside tests), dev and dist profiles, mise.toml pinning Rust, justfile, .gitignore.
+Root Gradle KMP project for Kotlin/Native: native targets (macOS arm64, Linux x86_64 and aarch64, Windows x86_64), version catalog, licence from D1, ktlint, a surface module that links `aulo` and `aulod` executables printing their version, `mise.toml` pinning JDK 21, `justfile`, `.gitignore`.
 
-Execution plan: 1. Root Cargo.toml: virtual workspace, members crates/*, resolver 3, edition 2024, rust-version 1.99, license expression from D1, workspace.lints (deny unwrap_used, expect_used, panic, todo outside tests), dev profile line-tables-only, dist profile (fat LTO, codegen-units 1, strip). 2. crates/aulo: the surface crate with `aulo` and `aulod` bin targets printing their version, so the workspace has a default member. 3. mise.toml pinning Rust 1.99.0 with rustfmt and clippy; justfile (check, test, lint, fmt); rustfmt.toml. 4. Verify: `mise exec -- cargo check --workspace`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo fmt --check`, run both binaries. 5. toolchain.md rows for rustc, cargo, mise, just.
+Execution plan: 1. Root `settings.gradle.kts` / `build.gradle.kts` and a version catalog; native targets as in D3; licence expression from D1; ktlint on every module. 2. `:aulo` surface module with `aulo` and `aulod` executables that print their version, so the project has a default entry point. 3. `mise.toml` pins JDK 21 (Temurin); `justfile` wraps `./gradlew test` and `ktlintCheck` once the wrapper exists; `.gitignore` covers Gradle and Kotlin output. 4. Verify with `mise exec -- ./gradlew test` and `./gradlew ktlintCheck` once the wrapper is in the tree.
 
 Done when:
 
-- cargo check, clippy and fmt --check pass on an empty workspace
+- `./gradlew test` and `./gradlew ktlintCheck` pass on the skeleton

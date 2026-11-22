@@ -11,7 +11,7 @@ order: 10
 
 <!-- Website copy for the pyrlyn project site, copied to pyrlyn/landing as
 content/projects/aulo.md; front matter follows CONTENT_CONTRACT.md in that repository.
-Sources (checked 2026-10-14): README.md, spec.md and plan.md; version from the workspace Cargo.toml (no release yet, hence status). The accent is a placeholder: the repository has no brand colour yet. -->
+Sources (checked 2026-10-14): README.md, spec.md and plan.md; version from the workspace build.gradle.kts (no release yet, hence status). The accent is a placeholder: the repository has no brand colour yet. -->
 
 ## Overview
 
@@ -19,7 +19,7 @@ aulo is a local-first voice agent: talk to it and it talks back, runs shell comm
 drives apps, works in a browser and reads the screen when it has to. It runs as a daemon, `aulod`,
 with a gRPC API for desktop apps, the `aulo` CLI and remote clients.
 
-aulo is in early development with no release: the Rust crates of the daemon are being built and
+aulo is in early development with no release: the Kotlin modules of the daemon are being built and
 the desktop apps are not in the repository yet. What follows is the planned scope from the
 specification.
 

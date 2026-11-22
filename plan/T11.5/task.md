@@ -6,11 +6,11 @@ readiness: 0%
 agent:
 ---
 
-# T11.5. aulo-plugin-sdk for Rust
+# T11.5. aulo-plugin-sdk for Kotlin/Native
 
 Stage: S11 · Area: plugins · Depends on: T11.4 · Blocks: 0 task(s)
 
-SDK crate with manifest types, gRPC service traits and helpers; examples: echo TTS, hello tool.
+SDK module with manifest types, gRPC service traits and helpers; examples: echo TTS, hello tool.
 
 Done when:
 

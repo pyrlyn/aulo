@@ -1,5 +1,5 @@
 ---
-status: in progress
+status: todo
 priority: P0
 complexity: 3
 readiness: 100%
@@ -34,10 +34,10 @@ Done when:
      written before `TurnFinished` reaches clients.
    - `Interrupt{all}` interrupts every live chat (kill switch); scopes stay
      T13.3. `TakeoverDone` answers with a notice until T5.11.
-3. `aulod`: mount `SessionApi` in `serve.rs` on the shared store.
+3. `aulod`: mount `SessionApi` in the daemon serve path on the shared store.
 4. `aulo-testkit`: `TestDaemon` mounts the real session with scripted
    endpoints and can restart on the same home.
 5. Verify: a testkit test runs a turn, restarts the daemon, continues the
    chat and asserts the provider saw the full history (text and tool call);
-   unit tests for the history mapping; `cargo test --workspace`, clippy
+   unit tests for the history mapping; `./gradlew test`, ktlint
    `-D warnings`, `fmt --check`, `buf lint`.

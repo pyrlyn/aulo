@@ -1,8 +1,8 @@
-# T0.4. Approve the new crates for rust.md
+# T0.4. Approve new libraries for the Kotlin/Native modules
 
 Stage: S0 · Area: decision · Depends on: none · Blocks: 0 task(s)
 
-New crates the plan needs that rust.md does not list yet: tonic, tonic-build, prost, tonic-health, tonic-reflection, sherpa-onnx, earshot, rodio, ringbuf, webrtc-audio-processing, chromiumoxide, xcap, enigo, objc2-application-services, objc2-avf-audio, atspi, uiautomation, handy-keys, tokio-tungstenite (already listed as dev). The creator approves the list; each crate gets its rust.md and toolchain.md rows in the task that wires it in.
+The plan needs libraries for gRPC, speech and audio, browser/screen/input, platform accessibility, and WebSockets. The earlier approved list was of Rust crates and does not carry over automatically. The creator approves Kotlin/Native libraries, cinterop bindings, or in-tree implementations; each module gets a `toolchain.md` row in the task that wires it in.
 
 Done when:
 
