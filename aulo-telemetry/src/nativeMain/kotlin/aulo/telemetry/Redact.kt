@@ -35,6 +35,7 @@ object Redact {
     private class Rules(
         val value: Regex,
         val pair: Regex,
+        val userinfo: Regex,
     )
 
     // A rule that fails to compile must not become a crash or a silent pass-through, so callers
@@ -49,6 +50,8 @@ object Redact {
                         """(?i)\b([\w.-]*(?:""" + secretNameParts.joinToString("|") +
                             """)[\w.-]*)(\s*[=:]\s*)("(?:[^"\\]|\\.)*"|'[^']*'|[^\s,;}]+)""",
                     ),
+                // `scheme://user:password@host`: the authority's userinfo, whatever it looks like.
+                userinfo = Regex("""(://)[^/?#\s@]+@"""),
             )
         }.getOrNull()
     }
@@ -63,7 +66,8 @@ object Redact {
         val r = rules ?: return REDACTED
         // Values first, so `Authorization: Bearer abc` is one token when the pair rule runs.
         val afterValues = r.value.replace(text, REDACTED)
-        return r.pair.replace(afterValues, "\$1\$2$REDACTED")
+        val afterPairs = r.pair.replace(afterValues, "\$1\$2$REDACTED")
+        return r.userinfo.replace(afterPairs, "\$1$REDACTED@")
     }
 
     /** Secret-named keys lose their whole value, of any type; every other string is scrubbed. */

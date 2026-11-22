@@ -1,0 +1,15 @@
+log.level = "info"  # built-in defaults
+mcp.servers.files.args = ["--token=[REDACTED]"]  # [HOME]/config.toml
+mcp.servers.files.command = "mcp-files"  # [HOME]/config.toml
+mcp.servers.files.transport = "stdio"  # [HOME]/config.toml
+plugins.dirs = []  # built-in defaults
+plugins.disabled = []  # built-in defaults
+policy.allow = []  # built-in defaults
+policy.approval_timeout_secs = 30  # [HOME]/config.toml
+policy.ask = []  # built-in defaults
+policy.deny = []  # built-in defaults
+voice.barge_in = "interrupt"  # built-in defaults
+voice.listen = "wake-word"  # AULO_VOICE__LISTEN
+voice.stt.engine = "whisper"  # [PROJECT]/.aulo.toml
+voice.stt.fallback = []  # built-in defaults
+voice.tts.fallback = []  # built-in defaults

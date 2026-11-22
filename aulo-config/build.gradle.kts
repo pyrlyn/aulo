@@ -12,8 +12,33 @@ aulo {
     role = ModuleRole.LIBRARY
 }
 
+// config/default.toml is documentation users copy from, and the binary prints it; one file
+// serves both, embedded as a Kotlin string because Kotlin/Native has no resources.
+val defaultToml = layout.projectDirectory.file("config/default.toml")
+val embedDefaultToml =
+    tasks.register("embedDefaultToml") {
+        val source = defaultToml
+        val outDir = layout.buildDirectory.dir("generated/defaultToml/kotlin")
+        inputs.file(source)
+        outputs.dir(outDir)
+        doLast {
+            val text = source.asFile.readText()
+            check("\"\"\"" !in text) { "config/default.toml must not contain three double quotes" }
+            val file = outDir.get().file("aulo/config/DefaultToml.kt").asFile
+            file.parentFile.mkdirs()
+            file.writeText(
+                "package aulo.config\n\n" +
+                    "/** `config/default.toml`: every key with its default, all commented out. */\n" +
+                    "val DEFAULT_TOML: String = \"\"\"" + text.replace("$", "\${'$'}") + "\"\"\"\n",
+            )
+        }
+    }
+
 kotlin {
     sourceSets {
+        nativeMain {
+            kotlin.srcDir(embedDefaultToml)
+        }
         nativeMain.dependencies {
             implementation(libs.kotlinx.serialization.json)
             // Config exposes LogLevel.
