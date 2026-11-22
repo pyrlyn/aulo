@@ -1,6 +1,6 @@
 # Configuration for pyrlyn-archive/ci-old's ci.yml, called from pipeline.yml (docs/config.md in
-# pyrlyn-archive/ci-old). The Kotlin/Native Gradle build will live in ci.yml once plan S2
-# adds the workspace; this file turns on the scans.
+# pyrlyn-archive/ci-old). The Kotlin/Native Gradle build lives in ci.yml; this file turns on
+# the scans.
 version: 1
 
 codeql:

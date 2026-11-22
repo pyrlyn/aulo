@@ -1,6 +1,7 @@
-# Conventional Commits check of pull request commit subjects. The Kotlin/Native Gradle
-# workspace (and its CI jobs) lands with plan S2; until then this workflow only lints
-# commit subjects. The scans (CodeQL, Semgrep) live in pipeline.yml.
+# Commit-subject lint and the Gradle Kotlin/Native build. Each target builds and tests on its own
+# runner (cinterop with native libraries cannot be cross-built in general); linuxArm64 is
+# cross-linked on Linux x86_64 and run on an arm64 runner. Job names `<os> (<target>)` are the
+# checks to require on main. The scans (CodeQL, Semgrep) live in pipeline.yml.
 name: CI
 
 on:
@@ -56,3 +57,169 @@ jobs:
             fi
           done
           exit $bad
+
+  # Which runner the macOS job uses: pyrlyn/ci's macos-runner action reads the MACOS_RUNNER
+  # variable (unset or `hosted` = the hosted label, `xcode-27-local` = the dedicated Mac).
+  macos-runner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      value: ${{ steps.r.outputs.value }}
+    steps:
+      - id: r
+        uses: pyrlyn/ci/.github/actions/macos-runner@9675ff42a0e3785beabccb68b0e4fa65910de453 # main
+        with:
+          runner: ${{ vars.MACOS_RUNNER }}
+          value: '["macos-14"]'
+
+  # `docs-only` is "true" when every changed file is documentation (.github/infra.yml); it fails
+  # open, so a failed `config` runs everything.
+  config:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      docs-only: ${{ steps.config.outputs.docs-only }}
+    steps:
+      - id: config
+        uses: pyrlyn/ci/.github/actions/config@9675ff42a0e3785beabccb68b0e4fa65910de453 # main
+
+  build:
+    name: ${{ matrix.os }} (${{ matrix.target }})
+    needs: [config, macos-runner]
+    # Draft PRs skip. A docs-only change still runs the job with every step a no-op, so the
+    # required `<os> (<target>)` checks report instead of waiting.
+    if: >-
+      !cancelled()
+      && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    # Fork PRs keep the hosted macOS label; MACOS_CI_DISABLED moves the macOS job to Ubuntu as a no-op.
+    runs-on: ${{ vars.MACOS_CI_DISABLED == 'true' && startsWith(matrix.os, 'macos') && 'ubuntu-24.04' || startsWith(matrix.os, 'macos') && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON(needs.macos-runner.outputs.value)[0] || matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            target: macosArm64
+            task: MacosArm64
+            ext: kexe
+          - os: ubuntu-24.04
+            target: linuxX64
+            task: LinuxX64
+            ext: kexe
+          - os: windows-2025
+            target: mingwX64
+            task: MingwX64
+            ext: exe
+    defaults:
+      run:
+        shell: bash
+    env:
+      RUN: ${{ needs.config.outputs.docs-only != 'true' && !(vars.MACOS_CI_DISABLED == 'true' && startsWith(matrix.os, 'macos')) }}
+      SKIP_TESTS: ${{ vars.SKIP_CI_TESTS == 'true' }}
+    steps:
+      - if: env.RUN == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Only the JDK: the lint and agent tools in mise.toml are not needed to build.
+      - if: env.RUN == 'true'
+        name: Install the JDK (mise.toml)
+        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
+        with:
+          install_args: java
+
+      - if: env.RUN == 'true'
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+
+      - if: env.RUN == 'true'
+        name: Cache the Kotlin/Native toolchain
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('gradle/libs.versions.toml') }}
+
+      - if: env.RUN == 'true' && env.SKIP_TESTS != 'true'
+        name: Test and lint
+        run: ./gradlew test ktlintCheck --console=plain
+
+      - if: env.RUN == 'true' && env.SKIP_TESTS == 'true'
+        name: tests skipped (SKIP_CI_TESTS)
+        run: echo "::notice title=SKIP_CI_TESTS::tests skipped by SKIP_CI_TESTS"
+
+      - if: env.RUN == 'true'
+        name: Link the release executables
+        run: ./gradlew :aulo:linkAuloReleaseExecutable${{ matrix.task }} :aulo:linkAulodReleaseExecutable${{ matrix.task }} --console=plain
+
+      - if: env.RUN == 'true'
+        name: Smoke test
+        env:
+          TARGET: ${{ matrix.target }}
+          EXT: ${{ matrix.ext }}
+        run: |
+          for exe in aulo aulod; do
+            out=$("aulo/build/bin/$TARGET/${exe}ReleaseExecutable/$exe.$EXT")
+            echo "$out"
+            printf '%s\n' "$out" | grep -q "^$exe " || { echo "$exe did not print its version" >&2; exit 1; }
+          done
+
+      # linuxArm64 is cross-linked here and run by the linux-arm64 job.
+      - if: env.RUN == 'true' && matrix.target == 'linuxX64'
+        name: Cross-link linuxArm64
+        run: ./gradlew :aulo:linkAuloReleaseExecutableLinuxArm64 :aulo:linkAulodReleaseExecutableLinuxArm64 :aulo:linkDebugTestLinuxArm64 --console=plain
+
+      - if: env.RUN == 'true' && matrix.target == 'linuxX64'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: linuxArm64-binaries
+          path: |
+            aulo/build/bin/linuxArm64/auloReleaseExecutable/aulo.kexe
+            aulo/build/bin/linuxArm64/aulodReleaseExecutable/aulod.kexe
+            aulo/build/bin/linuxArm64/debugTest/test.kexe
+          if-no-files-found: error
+          retention-days: 3
+
+      - if: env.RUN == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: aulo-${{ matrix.target }}
+          path: |
+            aulo/build/bin/${{ matrix.target }}/auloReleaseExecutable/aulo.${{ matrix.ext }}
+            aulo/build/bin/${{ matrix.target }}/aulodReleaseExecutable/aulod.${{ matrix.ext }}
+          if-no-files-found: error
+
+  # Runs what the Linux x86_64 job cross-linked for linuxArm64: the tests and both executables.
+  linux-arm64:
+    name: ubuntu-24.04-arm (linuxArm64)
+    needs: [config, build]
+    if: >-
+      !cancelled()
+      && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    env:
+      RUN: ${{ needs.config.outputs.docs-only != 'true' }}
+      SKIP_TESTS: ${{ vars.SKIP_CI_TESTS == 'true' }}
+    steps:
+      - if: env.RUN == 'true'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: linuxArm64-binaries
+          path: bin
+
+      - if: env.RUN == 'true' && env.SKIP_TESTS != 'true'
+        name: Tests
+        run: |
+          chmod +x bin/debugTest/test.kexe
+          bin/debugTest/test.kexe
+
+      - if: env.RUN == 'true'
+        name: Smoke test
+        run: |
+          for exe in aulo aulod; do
+            chmod +x "bin/${exe}ReleaseExecutable/$exe.kexe"
+            out=$("bin/${exe}ReleaseExecutable/$exe.kexe")
+            echo "$out"
+            printf '%s\n' "$out" | grep -q "^$exe " || { echo "$exe did not print its version" >&2; exit 1; }
+          done
