@@ -10,9 +10,9 @@ agent: Claude Code / claude-sonnet-5-5
 
 Stage: S6 · Area: audio · Depends on: T6.1 · Blocks: 4 task(s)
 
-Streaming playback (rodio on cpal) with volume, immediate stop for barge-in and a played-position counter for echo reference.
+Streaming playback with volume, immediate stop for barge-in and a played-position counter for echo reference.
 
-Execution plan: playback in aulo-audio (stacked on branch t6-1-audio-capture, so it merges with T6.1 once speech-capture is published); reuse a shared playback module if one exists (check speech-capture and packages/), else rodio on cpal; volume, stop within 50 ms, played-position counter; fake-sink tests.
+Execution plan: playback in aulo-audio (stacked on branch t6-1-audio-capture, so it merges with T6.1 once speech-capture is published); reuse a shared playback module if one exists (check speech-capture and packages/), else a platform playback path; volume, stop within 50 ms, played-position counter; fake-sink tests.
 
 Done when:
 

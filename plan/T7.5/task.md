@@ -6,7 +6,7 @@ readiness: 90%
 agent: Claude Code / claude-sonnet-5-5
 ---
 
-# T7.5. STT: whisper.cpp via whisper-rs
+# T7.5. STT: whisper.cpp
 
 Stage: S7 · Area: speech · Depends on: T7.3, T1.13 · Blocks: 0 task(s)
 

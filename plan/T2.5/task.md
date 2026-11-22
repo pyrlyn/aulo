@@ -2,7 +2,7 @@
 
 Stage: S2 · Area: infra · Depends on: T2.1 · Blocks: 5 task(s)
 
-Config types with schemars; committed schemas/aulo.schema.json with a stale test; figment layers default < ~/.aulo/config.toml < project .aulo.toml < AULO_* env < flags, with per-key provenance. The only module that touches toml/toml_edit/figment. Use config-schema when T1.14 lands.
+Config types; committed schemas/aulo.schema.json with a stale-schema test; layers default < ~/.aulo/config.toml < project .aulo.toml < AULO_* env < flags, with per-key provenance. The only module that reads and writes TOML config. Use config-schema when T1.14 lands.
 
 Done when:
 
