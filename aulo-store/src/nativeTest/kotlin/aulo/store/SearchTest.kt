@@ -108,7 +108,7 @@ class SearchTest {
                     "x*",
                     "\u0000",
                     "'; DROP TABLE messages; --",
-                    "‮",
+                    "\u202E",
                     "",
                 )
             for (q in hostile) s.search(q)
