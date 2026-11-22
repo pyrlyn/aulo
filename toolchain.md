@@ -30,6 +30,8 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 | org.jlleitschuh.gradle:ktlint-gradle | local (`build-logic`) | https://github.com/JLLeitschuh/ktlint-gradle | `ktlintCheck` / `ktlintFormat` on every module |
 | com.pinterest.ktlint (1.8.0) | local (run by ktlint-gradle) | https://github.com/pinterest/ktlint | Kotlin style rules |
 | org.jetbrains.kotlin:kotlin-test | local (`commonTest`) | https://github.com/JetBrains/kotlin | Unit tests |
+| org.jetbrains.kotlin:kotlin-test-junit5 | local (`build-logic` tests) | https://github.com/JetBrains/kotlin | Tests of the module-graph rules on the JVM |
+| org.junit.platform:junit-platform-launcher | local (`build-logic` tests) | https://github.com/junit-team/junit-framework | Gradle 9 needs it on the test runtime classpath |
 
 Native libraries used by the speech and audio modules (sherpa-onnx, whisper.cpp, libopus,
 and so on) are chosen and recorded here by the task that first wires each of them, including
