@@ -6,7 +6,8 @@ java = "temurin-21" # runs Gradle and the Kotlin/Native compiler
 python = "3.15.2" # runs scripts/sync-issues.py (stdlib only)
 just = "1.58.0" # justfile (Gradle test, lint and build wrappers, api-docs)
 # SQLite for Windows: kotlin-kit's db-native builds it with Conan, CMake and (on Windows) Ninja.
-# Every `test` run compiles the mingw target, so each CI runner installs these. uv installs Conan.
+# Every `test` run compiles the mingw target, so each CI runner installs these. uv installs Conan
+# into the Python above.
 uv = "0.13.9"
 conan = "2.33.0" # the version kotlin-kit's conan.lock was made with
 cmake = "3.31.12" # the version kotlin-kit's mingwX64 Conan profile declares

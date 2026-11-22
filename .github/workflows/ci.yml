@@ -139,12 +139,13 @@ jobs:
           persist-credentials: false
 
       # The JDK and what builds SQLite for Windows (aulo-store's tests compile the mingw target on
-      # every runner); the lint and agent tools in mise.toml are not needed to build.
+      # every runner; mise installs Conan with uv into its pinned Python); the lint and agent tools
+      # in mise.toml are not needed to build.
       - if: env.RUN == 'true'
         name: Install the JDK and the SQLite build tools (mise.toml)
         uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
         with:
-          install_args: java uv conan cmake ninja
+          install_args: java python uv conan cmake ninja
 
       - if: env.RUN == 'true'
         uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
