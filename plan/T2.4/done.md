@@ -17,4 +17,5 @@ The `:aulo-types` contract module. PR: https://github.com/pyrlyn/aulo/pull/86 (s
 How it was checked:
 
 - `./gradlew test ktlintCheck` passes locally on macOS arm64, with 10 aulo-types tests (`UlidTest`, `AuloEventTest`) and 0 failures.
-- CI was dispatched on the branch: https://github.com/pyrlyn/aulo/actions/runs/45073239082. It is green on macosArm64, linuxX64, mingwX64 and linuxArm64.
+- CI was dispatched on the branch: https://github.com/pyrlyn/aulo/actions/runs/45073239082. It built and linked on macosArm64, linuxX64, mingwX64 and linuxArm64. The organisation variable `SKIP_CI_TESTS=true` skipped the unit tests and ktlint there.
+- The linuxArm64 test binary ran in an Ubuntu 24.04 container on Colima: 10 tests passed. The Windows test binary cross-links, but has not been run.
