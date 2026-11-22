@@ -1,5 +1,6 @@
 package aulo.config
 
+import aulo.telemetry.LogLevel
 import fs.TempDir
 import kotlinx.io.files.Path
 import kotlinx.serialization.json.JsonObject
@@ -189,5 +190,14 @@ class LoadTest {
     fun anEmptyFileIsNoLayer() {
         write(homeFile, "")
         assertEquals(Config(), load().config)
+    }
+
+    @Test
+    fun logLevelComesFromTheEnvironmentLayer() {
+        val loaded = load(env = mapOf("AULO_LOG__LEVEL" to "debug"))
+        assertEquals(LogLevel.DEBUG, loaded.config.log.level)
+        assertEquals(Origin.Env("AULO_LOG__LEVEL"), loaded.provenance["log.level"])
+        assertEquals(LogLevel.INFO, load().config.log.level)
+        failure(env = mapOf("AULO_LOG__LEVEL" to "loud"))
     }
 }

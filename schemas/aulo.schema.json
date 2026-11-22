@@ -61,6 +61,28 @@
       ],
       "type": "string"
     },
+    "LogConfig": {
+      "additionalProperties": false,
+      "description": "Log files in `$AULO_HOME/logs`. Secrets are masked before any line is written.",
+      "properties": {
+        "level": {
+          "$ref": "#/$defs/LogLevel",
+          "default": "info",
+          "description": "Least severe level written: trace, debug, info, warn or error."
+        }
+      },
+      "type": "object"
+    },
+    "LogLevel": {
+      "enum": [
+        "trace",
+        "debug",
+        "info",
+        "warn",
+        "error"
+      ],
+      "type": "string"
+    },
     "McpConfig": {
       "additionalProperties": false,
       "properties": {
@@ -300,6 +322,12 @@
     "daemon": {
       "$ref": "#/$defs/DaemonConfig",
       "default": {}
+    },
+    "log": {
+      "$ref": "#/$defs/LogConfig",
+      "default": {
+        "level": "info"
+      }
     },
     "mcp": {
       "$ref": "#/$defs/McpConfig",

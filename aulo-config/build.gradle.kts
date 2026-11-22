@@ -16,6 +16,8 @@ kotlin {
     sourceSets {
         nativeMain.dependencies {
             implementation(libs.kotlinx.serialization.json)
+            // Config exposes LogLevel.
+            api(project(":aulo-telemetry"))
             implementation("pyrlyn.kit:toml")
             implementation("pyrlyn.kit:fs")
         }
