@@ -33,7 +33,9 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 | org.jetbrains.kotlinx:kotlinx-serialization-core (1.13.0) | local (`aulo-types`) | https://github.com/Kotlin/kotlinx.serialization | `@Serializable` ids and events (spec §17 D4: the equivalent of serde) |
 | org.jetbrains.kotlinx:kotlinx-serialization-json (1.13.0) | local (`aulo-config`; `aulo-types` tests) | https://github.com/Kotlin/kotlinx.serialization | Config layers as JSON trees, the generated schema; JSON round-trip tests of the contract types |
 | pyrlyn.kit:toml | local (included build `packages/kotlin-kit`, pyrlyn/packages 0.0.5 in CI) | https://github.com/pyrlyn/packages/tree/main/kotlin-kit/toml | Strict TOML 1.1 parser for config files |
-| pyrlyn.kit:fs | local (included build `packages/kotlin-kit`, pyrlyn/packages 0.0.5 in CI) | https://github.com/pyrlyn/packages/tree/main/kotlin-kit/fs | Reading config files (missing is empty), atomic writes |
+| pyrlyn.kit:fs | local (included build `packages/kotlin-kit`, pyrlyn/packages 0.0.5 in CI) | https://github.com/pyrlyn/packages/tree/main/kotlin-kit/fs | Reading config files (missing is empty), atomic writes, rotating log files |
+| pyrlyn.kit:cli | local (included build `packages/kotlin-kit`, pyrlyn/packages 0.0.5 in CI) | https://github.com/pyrlyn/packages/tree/main/kotlin-kit/cli | `aulo` command tree, help and errors with clap semantics |
+| pyrlyn.kit:process | local (included build `packages/kotlin-kit`, pyrlyn/packages 0.0.5 in CI) | https://github.com/pyrlyn/packages/tree/main/kotlin-kit/process | The process environment for the config env layer |
 | org.jetbrains.kotlin:kotlin-test | local (`commonTest`) | https://github.com/JetBrains/kotlin | Unit tests |
 | org.jetbrains.kotlin:kotlin-test-junit5 | local (`build-logic` tests) | https://github.com/JetBrains/kotlin | Tests of the module-graph rules on the JVM |
 | org.junit.platform:junit-platform-launcher | local (`build-logic` tests) | https://github.com/junit-team/junit-framework | Gradle 9 needs it on the test runtime classpath |

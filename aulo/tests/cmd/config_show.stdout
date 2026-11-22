@@ -1,0 +1,11 @@
+log.level = "info"
+plugins.dirs = []
+plugins.disabled = []
+policy.allow = []
+policy.approval_timeout_secs = 60
+policy.ask = []
+policy.deny = []
+voice.barge_in = "interrupt"
+voice.listen = "push-to-talk"
+voice.stt.fallback = []
+voice.tts.fallback = []
