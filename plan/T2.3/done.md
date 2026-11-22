@@ -19,3 +19,4 @@ How it was checked:
   - GitHub no longer serves the `macos-14` image ("configuration 'macos-14-arm64-us-default' is not supported"), so the label moved to `macos-15`;
   - Maven Central returned 429 to the Linux job.
 - Second run (https://github.com/pyrlyn/aulo/actions/runs/45072136180) was green on all four targets.
+- After the T2.4 run hit 429 again in a second Gradle pass, test, lint and both links became one Gradle invocation per job.

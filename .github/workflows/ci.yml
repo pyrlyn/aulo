@@ -140,17 +140,25 @@ jobs:
           path: ~/.konan
           key: konan-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('gradle/libs.versions.toml') }}
 
-      - if: env.RUN == 'true' && env.SKIP_TESTS != 'true'
-        name: Test and lint
-        run: ./gradlew test ktlintCheck --console=plain
-
-      - if: env.RUN == 'true' && env.SKIP_TESTS == 'true'
-        name: tests skipped (SKIP_CI_TESTS)
-        run: echo "::notice title=SKIP_CI_TESTS::tests skipped by SKIP_CI_TESTS"
-
+      # One Gradle invocation: each extra one re-resolves the build classpath, and Maven Central
+      # answers GitHub's Linux runners with 429 often enough to fail a second pass.
       - if: env.RUN == 'true'
-        name: Link the release executables
-        run: ./gradlew :aulo:linkAuloReleaseExecutable${{ matrix.task }} :aulo:linkAulodReleaseExecutable${{ matrix.task }} --console=plain
+        name: Test, lint and link
+        env:
+          TASK: ${{ matrix.task }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          tasks=(":aulo:linkAuloReleaseExecutable$TASK" ":aulo:linkAulodReleaseExecutable$TASK")
+          if [ "$SKIP_TESTS" = true ]; then
+            echo "::notice title=SKIP_CI_TESTS::tests skipped by SKIP_CI_TESTS"
+          else
+            tasks+=(test ktlintCheck)
+          fi
+          # linuxArm64 is cross-linked here and run by the linux-arm64 job.
+          if [ "$TARGET" = linuxX64 ]; then
+            tasks+=(:aulo:linkAuloReleaseExecutableLinuxArm64 :aulo:linkAulodReleaseExecutableLinuxArm64 :aulo:linkDebugTestLinuxArm64)
+          fi
+          ./gradlew "${tasks[@]}" --console=plain
 
       - if: env.RUN == 'true'
         name: Smoke test
@@ -163,11 +171,6 @@ jobs:
             echo "$out"
             printf '%s\n' "$out" | grep -q "^$exe " || { echo "$exe did not print its version" >&2; exit 1; }
           done
-
-      # linuxArm64 is cross-linked here and run by the linux-arm64 job.
-      - if: env.RUN == 'true' && matrix.target == 'linuxX64'
-        name: Cross-link linuxArm64
-        run: ./gradlew :aulo:linkAuloReleaseExecutableLinuxArm64 :aulo:linkAulodReleaseExecutableLinuxArm64 :aulo:linkDebugTestLinuxArm64 --console=plain
 
       - if: env.RUN == 'true' && matrix.target == 'linuxX64'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
