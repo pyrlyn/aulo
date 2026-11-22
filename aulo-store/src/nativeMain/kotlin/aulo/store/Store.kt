@@ -41,6 +41,8 @@ class Store private constructor(
     private val messages = database.messagesQueries
     private val toolCalls = database.toolCallsQueries
     private val usage = database.usageQueries
+    private val grants = database.grantsQueries
+    private val audit = database.auditQueries
 
     internal lateinit var migrator: Migrator
         private set
@@ -232,6 +234,63 @@ class Store private constructor(
         }
 
     fun listUsage(chatId: String): List<Usage> = io("cannot list usage") { usage.ofChat(chatId, ::Usage).executeAsList() }
+
+    // Grants and the audit log only persist here: aulo-policy writes them, computes the audit
+    // hashes and verifies the chain (T5.3, T5.9).
+
+    /** Records a grant. A repeated subject and scope adds a row rather than replacing one, so the history stays listable. */
+    fun putGrant(
+        subject: String,
+        scope: String,
+        decision: String,
+        expiresAt: Long?,
+    ): Grant =
+        io("cannot record grant") {
+            Grant(nextId(), subject, scope, decision, expiresAt, now()).also {
+                grants.insert(it.id, subject, scope, decision, expiresAt, it.createdAt)
+            }
+        }
+
+    /** Every grant, expired ones included, oldest first. */
+    fun listGrants(): List<Grant> = io("cannot list grants") { grants.all(::Grant).executeAsList() }
+
+    /** Keyset page of [listGrants]: grants after [after], the last id of the previous page. */
+    fun listGrantsPage(
+        after: String?,
+        limit: Int,
+    ): List<Grant> {
+        require(limit >= 0) { "limit must not be negative" }
+        return io("cannot list grants") { grants.page(after, limit.toLong(), ::Grant).executeAsList() }
+    }
+
+    /** Grants of [subject] that have not expired by the store's clock, oldest first. */
+    fun listActiveGrants(subject: String): List<Grant> = io("cannot list grants") { grants.active(subject, now(), ::Grant).executeAsList() }
+
+    /** Returns false when no grant has that id. */
+    fun revokeGrant(id: String): Boolean = io("cannot revoke grant") { grants.delete(id).value > 0 }
+
+    /**
+     * Appends one audit row. A [prevHash] already used by another row fails: two writers that
+     * read the same chain head cannot both extend it.
+     */
+    fun appendAudit(
+        prevHash: String,
+        hash: String,
+        kind: String,
+        payload: String,
+    ): AuditRow = io("cannot append audit row") { audit.append(prevHash, hash, kind, payload, now(), ::AuditRow).executeAsOne() }
+
+    /** The chain head, which the caller needs to compute the next `prevHash`. */
+    fun lastAudit(): AuditRow? = io("cannot read audit log") { audit.head(::AuditRow).executeAsOneOrNull() }
+
+    /** Rows with `seq` greater than [after], in order; `0` starts from the beginning. */
+    fun listAuditAfter(
+        after: Long,
+        limit: Int,
+    ): List<AuditRow> {
+        require(limit >= 0) { "limit must not be negative" }
+        return io("cannot read audit log") { audit.after(after, limit.toLong(), ::AuditRow).executeAsList() }
+    }
 }
 
 private inline fun <T> io(

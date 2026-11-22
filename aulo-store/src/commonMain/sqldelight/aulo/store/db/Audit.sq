@@ -1,0 +1,19 @@
+CREATE TABLE audit (
+    seq INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    prev_hash TEXT NOT NULL UNIQUE,
+    hash TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    payload TEXT NOT NULL,
+    created_at INTEGER NOT NULL
+);
+
+-- Append-only: there is deliberately no update or delete.
+append:
+INSERT INTO audit (prev_hash, hash, kind, payload, created_at) VALUES (?, ?, ?, ?, ?)
+RETURNING *;
+
+head:
+SELECT * FROM audit ORDER BY seq DESC LIMIT 1;
+
+after:
+SELECT * FROM audit WHERE seq > :after ORDER BY seq LIMIT :limit;
