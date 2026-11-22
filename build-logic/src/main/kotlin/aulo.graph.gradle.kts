@@ -16,3 +16,9 @@ tasks.register("test") {
     description = "Checks the module graph and runs the build-logic tests."
     dependsOn(checkModuleGraph, gradle.includedBuild("build-logic").task(":test"))
 }
+
+tasks.register("ktlintCheck") {
+    group = "verification"
+    description = "Runs ktlint on build-logic; every module runs its own."
+    dependsOn(gradle.includedBuild("build-logic").task(":ktlintCheck"))
+}
