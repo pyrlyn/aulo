@@ -18,6 +18,11 @@ The module graph is checked on every `./gradlew test`:
 - `:aulo` is a `SURFACE`. ktlint now covers `build-logic` too; `.editorconfig` switches its
   rules off below `build/`, where kotlin-dsl generates accessors.
 
+Written in-tree: modules-graph-assert (https://github.com/jraska/modules-graph-assert, 2.9.1,
+checked 2026-11-22) supports KMP configurations but only checks project-to-project
+dependencies, not external libraries or cinterop, which the done criterion and the one-owner
+rule need.
+
 Pull request: https://github.com/pyrlyn/aulo/pull/84 (branch `t2.2-dependency-graph`, stacked
 on #83).
 
