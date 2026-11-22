@@ -20,3 +20,5 @@ How it was checked:
   - Maven Central returned 429 to the Linux job.
 - Second run (https://github.com/pyrlyn/aulo/actions/runs/45072136180) was green on all four targets.
 - After the T2.4 run hit 429 again in a second Gradle pass, test, lint and both links became one Gradle invocation per job.
+
+Correction: the pyrlyn organisation sets the Actions variable `SKIP_CI_TESTS=true`. So the green runs above built and linked the executables and ran their `--version` smoke test on every target, but ran no unit tests and no ktlint. Tests and ktlint passed locally on macOS arm64. The linuxArm64 test binaries were also run in an Ubuntu 24.04 container on Colima, and all passed. Windows test binaries cross-link, but no Windows test run has happened.
