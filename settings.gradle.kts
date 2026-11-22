@@ -10,6 +10,11 @@ dependencyResolutionManagement {
     repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
     repositories {
         mavenCentral()
+        // androidx.sqlite (kotlin-kit's db-room) is published only to Google's repository; nothing
+        // else is taken from it.
+        google {
+            content { includeGroupByRegex("androidx\\..*") }
+        }
     }
 }
 
@@ -28,4 +33,4 @@ val kotlinKitDir: String =
 includeBuild(kotlinKitDir)
 
 // Modules are named aulo-<role> (AGENTS.md, Layout); S2+ tasks add them here.
-include(":aulo", ":aulo-types", ":aulo-telemetry", ":aulo-config")
+include(":aulo", ":aulo-types", ":aulo-telemetry", ":aulo-config", ":aulo-store")

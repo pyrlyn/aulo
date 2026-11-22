@@ -1,0 +1,17 @@
+CREATE TABLE usage (
+    id TEXT NOT NULL PRIMARY KEY,
+    chat_id TEXT NOT NULL REFERENCES chats (id) ON DELETE CASCADE,
+    provider TEXT NOT NULL,
+    model TEXT NOT NULL,
+    input_tokens INTEGER NOT NULL,
+    output_tokens INTEGER NOT NULL,
+    created_at INTEGER NOT NULL
+);
+
+CREATE INDEX usage_chat_id ON usage (chat_id);
+
+insert:
+INSERT INTO usage (id, chat_id, provider, model, input_tokens, output_tokens, created_at) VALUES (?, ?, ?, ?, ?, ?, ?);
+
+ofChat:
+SELECT * FROM usage WHERE chat_id = ? ORDER BY id;
