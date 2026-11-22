@@ -17,7 +17,7 @@ redone in Kotlin/Native.
 Every task is a folder `plan/<id>/`:
 
 - `task.md` — the task: front matter (`status`, `priority`, `complexity`, `readiness`, `agent`) on active tasks, then `# <id>. Title`, the `Stage · Area · Depends on · Blocks` line, why it exists and what done means.
-- `done.md` — the closing report. A folder with `done.md` is a closed task; one without it is active. After the reset, no folder has a `done.md`.
+- `done.md` — the closing report. A folder with `done.md` is a closed task; one without it is active. After the reset, only the S0 decisions already settled in `spec.md` §17 (T0.1–T0.4, T0.7) were closed again.
 
 Task ids are `T<stage>.<n>`; the stages are listed below and described in `spec.md` §16. List the active tasks:
 
