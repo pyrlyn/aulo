@@ -9,25 +9,34 @@ Talk to aulo and it talks back. It runs shell commands, opens and drives apps, w
 
 aulo runs as a daemon, `aulod`, with a gRPC API. Use it from the native desktop apps with chats (macOS, Windows), from the `aulo` CLI, or run it headless on a server and connect remotely.
 
-**Status:** early development, no release yet. The Rust workspace in [`crates/`](crates/)
-holds the first crates of the daemon (audio, speech engines, models, plugins, the gRPC
-protocol, realtime, store, telemetry); the desktop apps are not in the repository yet.
-Progress is tracked in [plan/](plan/README.md).
+**Status:** early development, no release yet. aulo is being rewritten in **Kotlin/Native**
+(Gradle KMP, native targets). The first modules of the daemon (audio, speech engines, models,
+plugins, the gRPC protocol, realtime, store, telemetry) will land in the Gradle project; the
+desktop apps are not in the repository yet. The plan has been reset to the start: every task
+in [plan/](plan/README.md) is open again.
 
 - [Specification](spec.md)
 - [Research and sources](research.md)
 - [Plan](plan/README.md) · [Roadmap](roadmap.md)
 - [Documentation](docs/README.md): [gRPC API reference](docs/api/aulo.v1.md), [spike reports](docs/spikes/)
 
-## How to test
+## Build
 
-Rust is pinned with mise. From the repository root:
+The Gradle Kotlin/Native workspace arrives with the first S2 task. Until then, pin the JDK
+and the lint tools with mise:
 
 ```bash
-mise exec -- just test
+mise install               # JDK 21 and the lint tools from mise.toml
 ```
 
-`just test` runs `cargo test --workspace`.
+When the workspace exists:
+
+```bash
+./gradlew test             # host-target tests
+./gradlew ktlintCheck      # style
+```
+
+`just api-docs` regenerates [docs/api](docs/api/aulo.v1.md) from `proto/`.
 
 ## License
 

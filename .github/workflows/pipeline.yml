@@ -1,8 +1,8 @@
 # Scans from pyrlyn-archive/ci-old's config-driven ci.yml (.github/infra.yml): CodeQL and Semgrep in
-# parallel behind `pipeline / gate`, plus actionlint over the workflows. Rust CI is not
-# repeated here: ci.yml runs it. Draft pull requests skip every job, the gate included, until
-# marked ready. Secrets are passed explicitly (the disabled Snyk and SonarCloud checks still
-# declare them).
+# parallel behind `pipeline / gate`, plus actionlint over the workflows. The Kotlin/Native
+# Gradle build is not here: it will land in ci.yml with plan S2. Draft pull requests skip
+# every job, the gate included, until marked ready. Secrets are passed explicitly (the
+# disabled Snyk and SonarCloud checks still declare them).
 # Shared workflows: https://github.com/pyrlyn-archive/ci-old/blob/main/docs/reusable-workflows.md
 name: pipeline
 

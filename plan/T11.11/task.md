@@ -10,7 +10,7 @@ agent:
 
 Stage: S11 · Area: plugins · Depends on: T11.10 · Blocks: 0 task(s)
 
-A plugin index with minisign signatures (the package manager trust.rs pattern) for discovery and install by name.
+A plugin index with minisign signatures (the package manager trust pattern) for discovery and install by name.
 
 Done when:
 

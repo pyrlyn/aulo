@@ -1,10 +1,9 @@
-# T3.2. aulo-proto: code generation and breaking-change check
+# T3.2. aulo-proto: generated gRPC code
 
-Stage: S3 · Area: api · Depends on: T3.1 · Blocks: 3 task(s)
+Stage: S3 · Area: api · Depends on: T3.1, T2.1 · Blocks: 5 task(s)
 
-tonic-build/prost code generation; CI runs buf breaking against main.
-
+gRPC/protobuf code generation from `proto/aulo/v1`; CI runs `buf breaking` against main.
 
 Done when:
 
-- generated crate builds; CI fails on a breaking field change
+- generated module builds; CI fails on a breaking field change

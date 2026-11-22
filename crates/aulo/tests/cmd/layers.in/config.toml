@@ -1,6 +1,0 @@
-[voice]
-listen = "wake-word"
-
-[providers.endpoints.proxy]
-kind = "openai-compatible"
-base_url = "https://user:hunter2@proxy.example/v1?api_key=abc123"

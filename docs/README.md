@@ -10,5 +10,8 @@ aulo is in early development; user-facing guides arrive with the first release.
 | [spikes/sherpa-onnx.md](spikes/sherpa-onnx.md) | Spike report: sherpa-onnx speech engines |
 | [threat-model.md](threat-model.md) | Trust boundaries, STRIDE, and the guard for each threat |
 
+The spike reports were written against the retired Rust workspace; they stay as
+research and must be re-verified on Kotlin/Native (see T0.6 and the other spike tasks).
+
 Planned here: the user guide (T15.4) and the API guide (T15.5) — see
 [plan/](../plan/README.md). The full specification is [spec.md](../spec.md).

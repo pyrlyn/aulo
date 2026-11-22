@@ -10,7 +10,7 @@ agent:
 
 Stage: S4 · Area: providers · Depends on: T1.6, T2.5 · Blocks: 4 task(s)
 
-Assembly crate that builds llm-wire providers from [providers.*]: OpenAI (chat/responses), Anthropic, and OpenAI-compatible sections without per-vendor code (Ollama, LM Studio, vLLM, OpenRouter, DeepSeek, Gemini compat, xAI, the local model runner, custom). Fail open: a broken provider becomes a warning.
+Assembly module that builds llm-wire providers from [providers.*]: OpenAI (chat/responses), Anthropic, and OpenAI-compatible sections without per-vendor code (Ollama, LM Studio, vLLM, OpenRouter, DeepSeek, Gemini compat, xAI, the local model runner, custom). Fail open: a broken provider becomes a warning.
 
 Done when:
 

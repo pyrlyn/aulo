@@ -2,7 +2,7 @@
 
 Stage: S0 · Area: decision · Depends on: none · Blocks: 1 task(s)
 
-Candidates: Slint (in rust.md, Rust-only, one codebase, gRPC client in-process; recommended), native SwiftUI/WinUI over UniFFI (the package manager and the coding agent pattern, best platform feel, two codebases), Tauri (web UI, heavier). Record the choice and the reason.
+Candidates: native SwiftUI/WinUI over a C ABI exported from the Kotlin/Native core (the package manager and the coding agent pattern, best platform feel, two codebases), Compose Multiplatform (one Kotlin codebase), Tauri or a web UI (heavier). Record the choice and the reason. D2 currently records SwiftUI and WinUI 3; confirm or change that on the Kotlin/Native stack.
 
 Done when:
 

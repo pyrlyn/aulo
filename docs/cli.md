@@ -2,7 +2,7 @@
 
 aulo is in early development, so the CLI covers configuration, provider keys and the speech
 benchmark; chats go through the desktop apps. The commands marked *run* below were executed on a
-build of `main` (`cargo build -p aulo`, binaries `target/debug/aulo` and `aulod`) with
+build of the CLI (Kotlin/Native `aulo` and `aulod` executables) with
 `AULO_HOME` pointing at an empty scratch directory; the ones marked *help only* were checked
 against `--help` and not started.
 

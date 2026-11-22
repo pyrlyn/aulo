@@ -1,10 +1,12 @@
 # Configuration for pyrlyn-archive/ci-old's ci.yml, called from pipeline.yml (docs/config.md in
-# pyrlyn-archive/ci-old). Rust CI stays in ci.yml (infra's ci-rust.yml); this file turns on the scans.
+# pyrlyn-archive/ci-old). The Kotlin/Native Gradle build will live in ci.yml once plan S2
+# adds the workspace; this file turns on the scans.
 version: 1
 
 codeql:
-  # Every language in the repository that supports `build-mode: none`.
-  languages: [actions, python, rust]
+  # Python covers scripts/; Actions covers the workflows. Kotlin/Native is not extracted
+  # by CodeQL's java-kotlin mode (that extractor traces a JVM compilation).
+  languages: [actions, python]
 
 # Snyk is switched off (flag), as in the other pyrlyn repositories: the snyk job is skipped and
 # the gate counts it as passed. `enabled: true` turns it back on.

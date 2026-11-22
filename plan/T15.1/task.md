@@ -10,7 +10,7 @@ agent:
 
 Stage: S15 · Area: release · Depends on: T3.7 · Blocks: 0 task(s)
 
-cargo-dist for macOS aarch64, Linux x86_64/aarch64, Windows x86_64; Homebrew tap; git-cliff changelog; bump workflow from pyrlyn/infra.
+the Gradle/Native distribution tooling for macOS aarch64, Linux x86_64/aarch64, Windows x86_64; Homebrew tap; git-cliff changelog; bump workflow from pyrlyn/infra.
 
 Done when:
 

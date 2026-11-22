@@ -10,7 +10,7 @@ agent:
 
 Stage: S9 · Area: control · Depends on: T5.1 · Blocks: 0 task(s)
 
-Launch, quit, focus apps and list running apps and windows (NSWorkspace via objc2). Subject App(bundle id) for policy.
+Launch, quit, focus apps and list running apps and windows (NSWorkspace). Subject App(bundle id) for policy.
 
 Done when:
 
