@@ -19,6 +19,12 @@ concurrency:
 permissions:
   contents: read
 
+# Shared Kotlin/Native libraries (kotlin-kit) and the build settings they need, from a checkout of
+# pyrlyn/packages next to the repository (settings.gradle.kts reads these variables).
+env:
+  KOTLIN_KIT_DIR: ${{ github.workspace }}/packages/kotlin-kit
+  SHARED_SETTINGS_DIR: ${{ github.workspace }}/packages/shared-settings
+
 jobs:
   # A pull request's commit subjects must be Conventional Commits (workspace rule). Pushes to
   # main skip this: every commit there arrived through a pull request that passed it.
@@ -121,6 +127,15 @@ jobs:
       - if: env.RUN == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
+
+      # Pinned to a commit; bump it (and the tag in the comment) when aulo needs newer shared code.
+      - if: env.RUN == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: pyrlyn/packages
+          ref: 52e941b40603391f6f74de0ff8958b24da42ecd0 # 0.0.5
+          path: packages
           persist-credentials: false
 
       # Only the JDK: the lint and agent tools in mise.toml are not needed to build.
