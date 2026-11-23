@@ -12,7 +12,9 @@ aulo {
 }
 
 conan {
-    cinterop("nghttp2", pkg = "libnghttp2", staticLibrary = "libnghttp2.a")
+    cinterop("nghttp2", pkg = "libnghttp2", "libnghttp2.a")
+    // TLS for TCP listeners and clients (T3.8); the shim in mbedtls.def is the only caller.
+    cinterop("mbedtls", pkg = "mbedtls", "libmbedtls.a", "libmbedx509.a", "libmbedcrypto.a")
 }
 
 kotlin {
