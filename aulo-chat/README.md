@@ -135,10 +135,11 @@ Android and iOS.
 
 ## Design
 
-Figma: [Pyrlyn UIkit, page "aulo-chat · Screens"](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=49-227)
+Figma: [Aulo, page "UI"](https://www.figma.com/design/ZC7LyO9Op91vXWL3M7riF5/Aulo?node-id=0-1)
 
 The page has one section per platform (iOS, Android, macOS, Windows 11, Linux, Web), built
-from that platform's kit in the same file, once dark and once light (`design/themes.md`).
+from that platform's kit in the [Pyrlyn UIkit](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit)
+library, once dark and once light (`design/themes.md`).
 iOS, Android and Web hold the twelve chat-list screens below. macOS, Windows 11 and Linux
 hold sixteen bot-based screens: a bot sidebar, chat with tool calls and approvals, voice,
 quick talk, the screen viewer and a settings window with seven tabs

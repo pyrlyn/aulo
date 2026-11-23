@@ -1,7 +1,7 @@
 # Themes
 
 Every screen exists in a dark and a light theme. The screens in the other files are drawn
-dark; the frames named "<Platform> / <Screen> · Light" on the page "aulo-chat · Screens" are
+dark; the frames named "<Platform> / <Screen> · Light" in the Aulo Figma file are
 the same layers with each kit's colour collection switched to its Light mode.
 
 ## Rules
@@ -27,7 +27,7 @@ the same layers with each kit's colour collection switched to its Light mode.
 | Linux | "Linux · Color" and "Linux · Color (Pyrlyn)", Light (values from libadwaita's light palette) |
 | iOS, Android | "iOS · Color", "Android · Color", Light |
 
-In the iOS, Android and Web sections of "aulo-chat · Screens" the light frames sit to the
+In the iOS, Android and Web sections the light frames sit to the
 right of the dark ones, in the same order. In the macOS, Windows 11 and Linux sections the
 light frames form the row under the dark ones (`desktop.md`). Frames that show the desktop
 itself (Quick talk) also swap the wallpaper for the platform's light one where the kit has it.

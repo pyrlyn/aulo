@@ -5,11 +5,12 @@ How aulo's client looks, where the design lives, and how it maps to the code.
 ## Where
 
 All screens are in the Figma file
-[Pyrlyn UIkit](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit), on the page
-[aulo-chat · Screens](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=49-227).
-The same file holds the UI kits the screens are built from: one page per platform (macOS,
-Windows 11, Linux, iOS, Android, Web), each with its own variables, text styles and
-components. aulo's own components sit in an `aulo-chat` section of each kit page.
+[Aulo](https://www.figma.com/design/ZC7LyO9Op91vXWL3M7riF5/Aulo?node-id=0-1), page "UI", one
+section per platform. They are built only from instances of the published library
+[Pyrlyn UIkit](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit), which holds
+the UI kits: one page per platform (macOS, Windows 11, Linux, iOS, Android, Web), each with
+its own variables, text styles and components. aulo's own components sit in an `aulo-chat`
+section of each kit page.
 
 Every screen is also described in Markdown in [aulo-chat/design/](../aulo-chat/design/README.md):
 layout, components, states, behaviour, what the code has, and links to its frames. Agents
@@ -19,8 +20,8 @@ work from those files; the frames are the picture.
 
 | Platforms | Design | Screens |
 | --- | --- | --- |
-| [macOS](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=49-230), [Windows 11](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=49-231), [Linux](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=49-232) | Bot-based window ([desktop.md](../aulo-chat/design/desktop.md)) | 16, each dark and light |
-| [iOS](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=49-228), [Android](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=49-229), [Web](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=49-233) | Chat list and chat | 12 and their flows, each dark and light |
+| [macOS](https://www.figma.com/design/ZC7LyO9Op91vXWL3M7riF5/Aulo?node-id=11-19258), [Windows 11](https://www.figma.com/design/ZC7LyO9Op91vXWL3M7riF5/Aulo?node-id=11-21517), [Linux](https://www.figma.com/design/ZC7LyO9Op91vXWL3M7riF5/Aulo?node-id=11-23860) | Bot-based window ([desktop.md](../aulo-chat/design/desktop.md)) | 16, each dark and light |
+| [iOS](https://www.figma.com/design/ZC7LyO9Op91vXWL3M7riF5/Aulo?node-id=11-18376), [Android](https://www.figma.com/design/ZC7LyO9Op91vXWL3M7riF5/Aulo?node-id=11-18855), [Web](https://www.figma.com/design/ZC7LyO9Op91vXWL3M7riF5/Aulo?node-id=11-26211) | Chat list and chat | 12 and their flows, each dark and light |
 
 Each platform keeps its own look: macOS glass and traffic lights, Windows 11 Mica, title bar
 and cards, Linux (GNOME) header bars and grouped lists. Layout and copy are the same across

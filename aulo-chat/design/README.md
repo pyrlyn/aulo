@@ -4,8 +4,9 @@ Markdown descriptions of every screen of the chat client, with links to the Figm
 Read the file of a screen before building or changing it; the frame is the picture, the file
 is the contract (layout, components, states, behaviour, what the code has).
 
-Figma: [Pyrlyn UIkit](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit),
-page [aulo-chat · Screens](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=49-227).
+Figma: screens in [Aulo](https://www.figma.com/design/ZC7LyO9Op91vXWL3M7riF5/Aulo?node-id=0-1),
+page "UI"; components in the [Pyrlyn UIkit](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit)
+library.
 The human-facing overview is [docs/design.md](../../docs/design.md).
 
 ## Two designs
@@ -40,16 +41,17 @@ The human-facing overview is [docs/design.md](../../docs/design.md).
 
 ## Working with the frames
 
-- **Links.** A link is `https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=<id>`
-  with the node id's colon written as a hyphen (`118:16430` → `118-16430`). The second line
-  of each screen file links its frames.
+- **Links.** A frame link is `https://www.figma.com/design/ZC7LyO9Op91vXWL3M7riF5/Aulo?node-id=<id>`
+  with the node id's colon written as a hyphen (`11:19259` → `11-19259`). The second line
+  of each screen file links its frames. Component links point at Pyrlyn UIkit.
 - **Names.** Frames are named `<Platform> / <Screen>` and `<Platform> / <Screen> · Light`.
   Platforms: `iOS`, `Android`, `macOS`, `Windows 11`, `Linux`, `Web`.
 - **Grid.** One section per platform. Desktop sections: dark row at y 120, light row at
   y 1060, columns every 1440 in the order of `desktop.md`.
-- **Components.** Screens use only components from the kit pages (the `aulo-chat` section of
-  each platform's kit page plus the kit's own components). A missing component is added to
-  that kit page, rebuilt natively per platform, never drawn locally in a screen and never
+- **Components.** Screens use only instances of the published Pyrlyn UIkit library (the
+  `aulo-chat` section of each platform's kit page plus the kit's own components), never
+  local components. A missing component is added to that kit page in Pyrlyn UIkit and
+  published, rebuilt natively per platform, never drawn locally in a screen and never
   instanced from another platform's kit.
 - **Tokens.** Fills, strokes, radii and text styles are bound to the kit's variables and
   styles. A light frame differs from its dark frame only in explicit variable modes
