@@ -1,0 +1,10 @@
+The aulo daemon: serves the aulo.v1 API to the local socket and, when configured, TCP
+
+Usage: aulod <COMMAND>
+
+Commands:
+  run  Run in the foreground until SIGINT or SIGTERM (Ctrl+C on Windows)
+
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
