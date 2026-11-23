@@ -46,12 +46,21 @@ it in `a9247ec`. Commits: `63f5b70`, `0c92742`, `b1dc145`, `20f4ba5`, `f76afb5`,
   - `SearchTest` on the server.
 - The desktop app ran on macOS in light mode: connect screen, Connect, then the sidebar and
   empty state.
+- The desktop app ran on Windows 11 and on Linux, each against the development server on the
+  Mac, and showed the two-pane window, the empty state and "Online" in that system's tokens:
+  - Windows 11 on ARM in Parallels, with an x64 JDK under emulation and the
+    `skiko-awt-runtime-windows-x64` runtime.
+  - Ubuntu arm64 in Lima under Xvfb, with `skiko-awt-runtime-linux-arm64`. A minimal Ubuntu
+    needs Mesa (`libegl1`, `libgl1`) before Skiko loads; without a GPU Skiko reports that it
+    cannot create a GL context and draws in software.
+  - Both runs showed the header's status and menu stopping well short of the right edge. The
+    header now keeps them at the edge, and `ChatWindowTest` checks it.
 
 ## Not done
 
-- **Desktop beyond macOS.** The desktop app was not run on Windows or Linux, and the running
-  app was not compared frame by frame with the Figma screens. Only the macOS run above was
-  checked.
+- **Desktop runs.** The running app was not compared frame by frame with the Figma screens.
+  Windows and Linux ran on ARM machines only (Windows through x64 emulation), not on x64
+  hardware, and the Linux window had no window manager around it.
 - **Figma, still to bind or add:**
   - The Web kit has no radius variables.
   - The radii of the Android and iOS kit components are not bound.
