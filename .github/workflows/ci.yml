@@ -153,7 +153,6 @@ jobs:
 
       - if: env.RUN == 'true'
         name: Cache the Kotlin/Native toolchain
-        id: konan
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.konan
@@ -163,12 +162,28 @@ jobs:
           # change that leaves the Kotlin version alone.
           restore-keys: konan-${{ runner.os }}-${{ runner.arch }}-
 
-      # Without a cached toolchain (a catalog change, or the cache was evicted), download it first:
-      # kotlin-kit's conan script reads konan.properties when Gradle creates its task, which fails
-      # on a runner that has never had this Kotlin/Native.
-      - if: env.RUN == 'true' && steps.konan.outputs.cache-hit != 'true'
-        name: Download the Kotlin/Native toolchain
-        run: ./gradlew :aulo-types:downloadKotlinNativeDistribution --console=plain
+      # kotlin-kit's conan script reads konan.properties while Gradle creates the Windows task, and
+      # Gradle downloads Kotlin/Native only later, so a run without a warm cache always failed there.
+      # The archive comes from Maven Central, where the Kotlin Gradle plugin fetches it too.
+      - if: env.RUN == 'true' && runner.os == 'Windows'
+        name: Fetch Kotlin/Native on a cold cache
+        shell: pwsh
+        run: |
+          $version = (Select-String -Path gradle/libs.versions.toml -Pattern '^kotlin = "(.+)"$').Matches[0].Groups[1].Value
+          $konan = Join-Path $HOME '.konan'
+          $dist = Join-Path $konan "kotlin-native-prebuilt-windows-x86_64-$version"
+          if (Test-Path (Join-Path $dist 'konan/konan.properties')) { exit 0 }
+          $url = "https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-native-prebuilt/$version/kotlin-native-prebuilt-$version-windows-x86_64.zip"
+          $zip = Join-Path $env:RUNNER_TEMP 'kotlin-native.zip'
+          Invoke-WebRequest -Uri $url -OutFile $zip
+          # Maven Central may serve the checksum as bytes, so it is read from a file, not .Content.
+          Invoke-WebRequest -Uri "$url.sha1" -OutFile "$zip.sha1"
+          $expected = (Get-Content -Raw "$zip.sha1").Trim().Split()[0]
+          $actual = (Get-FileHash -Algorithm SHA1 $zip).Hash
+          if ($actual -ne $expected) { throw "Kotlin/Native $version checksum mismatch: $actual, expected $expected" }
+          New-Item -ItemType Directory -Force $konan | Out-Null
+          Expand-Archive -Path $zip -DestinationPath $konan
+          if (-not (Test-Path (Join-Path $dist 'konan/konan.properties'))) { throw "konan.properties is not in $dist" }
 
       # One Gradle invocation: each extra one re-resolves the build classpath, and Maven Central
       # answers GitHub's Linux runners with 429 often enough to fail a second pass.
