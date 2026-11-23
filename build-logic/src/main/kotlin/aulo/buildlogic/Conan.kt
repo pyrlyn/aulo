@@ -187,7 +187,9 @@ abstract class ConanExtension
                     compilations.getByName("main").cinterops.create(name) {
                         definitionFile.set(project.layout.projectDirectory.file("src/nativeInterop/cinterop/$name.def"))
                         includeDirs(root.resolve("include"))
-                        extraOpts(listOf("-libraryPath", root.resolve("lib").path) + staticLibraries.flatMap { listOf("-staticLibrary", it) })
+                        extraOpts(
+                            listOf("-libraryPath", root.resolve("lib").path) + staticLibraries.flatMap { listOf("-staticLibrary", it) },
+                        )
                     }
                 project.tasks.named(interop.interopProcessingTaskName) {
                     // The options above carry paths only: this makes the binding wait for Conan and
