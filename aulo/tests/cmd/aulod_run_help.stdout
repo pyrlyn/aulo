@@ -7,4 +7,5 @@ Options:
                        is
       --listen <ADDR>  TCP address for remote clients (host:port), overriding daemon.listen; needs
                        TLS
+      --home <DIR>     The aulo home, ahead of AULO_HOME and ~/.aulo
   -h, --help           Print help

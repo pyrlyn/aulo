@@ -583,6 +583,23 @@ Checked 2026-11-23. The creator chose Mbed TLS (T3.8) for TLS 1.3 on all four ta
   - The TLS 1.3 ticket leak (CVE-2026-115491) needs a valid ticket; aulo's server issues none. The rest concern TLS 1.2, renegotiation, CRLs, SAN matching, PKCS5/12 or EC J-PAKE, which aulo does not use, or local side channels (Spectre-PHT, AES table reads) that need an attacker's code on the same machine.
   - So 3.6.7 is usable for T3.8; 3.6.8 replaces it once Conan Center publishes it (a version bump needs the creator's permission).
 
+### 4.13 Running aulod as a user service (T3.9)
+
+Checked 2026-11-23. The design follows cofre's `owner-listener` service module (`apps/cofre/packages/crates/rust/owner-listener/src/service/`, Rust): every backend talks to a fake-able `ServiceManager`.
+
+- **Task Scheduler** (Microsoft Learn):
+  - `schtasks /Create` takes `/XML`; `/TR` "must not exceed 262 characters"; `/F` replaces an existing task — https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/schtasks-create (updated 2025-10-22). The encoding `/XML` accepts is not documented (**unverified**); aulo writes UTF-16LE with a BOM and declares it, as Task Scheduler's own exports do.
+  - "By default, a task will be stopped 72 hours after it starts"; `PT0S` lets it run indefinitely — https://learn.microsoft.com/en-us/windows/win32/api/taskschd/nf-taskschd-itasksettings-put_executiontimelimit.
+  - `DisallowStartIfOnBatteries` and `StopIfGoingOnBatteries` default to true; `MultipleInstancesPolicy` defaults to `IgnoreNew` — https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-settingstype-complextype.
+  - `RestartOnFailure` needs `Interval` (`PT1M` to `P31D`) and `Count` (unsignedByte) — https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-interval-restarttype-element.
+  - A user without administrator rights can register a task for their own account with `InteractiveToken` and `LeastPrivilege`, without a password — https://learn.microsoft.com/en-us/windows/win32/taskschd/security-contexts-for-running-tasks (updated 2025-05-12). A `LogonTrigger` with a `UserId` starts it when that user logs on — https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-logontrigger-triggergroup-element.
+  - `/Run` starts a task now; `/End` stops the instances it started; `/Delete` does not stop a running program — https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/schtasks-run, …/schtasks-end, …/schtasks-delete. The `Status` text of `/Query` is localised in practice (**unverified**), so aulo reads "Running" only as a hint.
+- **launchd** (`man launchctl` and `man launchd.plist`, macOS 27.0.1): `bootstrap`/`bootout` take `gui/<uid>` and `gui/<uid>/<label>`; the output of `print` is "NOT API"; `KeepAlive` with `SuccessfulExit` false restarts the job only after a non-zero exit.
+- **systemd** (systemd 262 man pages):
+  - `systemctl --user enable --now`, `daemon-reload`, `is-active`, `is-enabled` and their exit codes — https://www.freedesktop.org/software/systemd/man/latest/systemctl.html.
+  - `StandardOutput=append:` exists since systemd 240 — https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html and https://github.com/systemd/systemd/blob/main/NEWS.
+  - Without lingering the user manager stops after the last session ends; `loginctl enable-linger` keeps it — https://www.freedesktop.org/software/systemd/man/latest/loginctl.html, https://www.freedesktop.org/software/systemd/man/latest/logind.conf.html.
+
 ## Part 5. Conclusions and ideas to borrow (for a Rust voice computer-control agent)
 
 1. **Two-brain voice design.** Front: cheap full-duplex/realtime voice (GPT-Live 1, Gemini 3.8 Live, xAI Voice
