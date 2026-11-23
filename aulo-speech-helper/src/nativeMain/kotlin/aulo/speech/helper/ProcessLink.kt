@@ -26,7 +26,7 @@ private const val PIPE_CHUNK = 64 * 1024
 /** Between a helper closing its stdout and the system reporting how it ended. */
 private val EXIT_GRACE = 500.milliseconds
 
-/** A helper running as a child process, spoken to over its stdin and stdout (kotlin-kit `spawnPipes`). */
+/** A helper running as a child process, spoken to over its stdin and stdout (pyrlyn-kit `spawnPipes`). */
 class ProcessLink private constructor(
     private val child: PipedChild,
 ) : HelperLink {

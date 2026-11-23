@@ -21,7 +21,7 @@ kotlin {
         }
         nativeMain.dependencies {
             // The engines register in aulo-voice's registry (part of registerSherpa's signature) and start their
-            // helper with kotlin-kit's process pipes.
+            // helper with pyrlyn-kit's process pipes.
             api(project(":aulo-voice"))
             implementation("pyrlyn.kit:process")
         }
