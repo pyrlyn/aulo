@@ -43,6 +43,7 @@ class Store private constructor(
     private val usage = database.usageQueries
     private val grants = database.grantsQueries
     private val audit = database.auditQueries
+    private val messageSearch = database.messageSearchQueries
 
     internal lateinit var migrator: Migrator
         private set
@@ -234,6 +235,29 @@ class Store private constructor(
         }
 
     fun listUsage(chatId: String): List<Usage> = io("cannot list usage") { usage.ofChat(chatId, ::Usage).executeAsList() }
+
+    /**
+     * Messages containing every word of [query], best matches first, optionally in one chat.
+     * Keyset pages in `(rank, id)` order: pass the last hit as [after]. Ranks depend on corpus
+     * statistics, so a message written between two pages can shift a hit across the boundary;
+     * acceptable for search, unlike for history. A query with no searchable word matches nothing.
+     */
+    fun searchMessages(
+        query: String,
+        chatId: String?,
+        after: SearchCursor?,
+        limit: Int,
+    ): List<SearchHit> {
+        require(limit >= 0) { "limit must not be negative" }
+        val expr = matchExpression(query) ?: return emptyList()
+        return io("cannot search messages") {
+            // Without a cursor the query never reads afterId: a null afterRank short-circuits it.
+            messageSearch
+                .search(expr, chatId, after?.rank, after?.id.orEmpty(), limit.toLong()) { id, chat, role, content, createdAt, rank ->
+                    SearchHit(Message(id, chat, role, content, createdAt), rank)
+                }.executeAsList()
+        }
+    }
 
     // Grants and the audit log only persist here: aulo-policy writes them, computes the audit
     // hashes and verifies the chain (T5.3, T5.9).
