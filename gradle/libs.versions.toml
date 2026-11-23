@@ -19,6 +19,8 @@ ktlint-gradle-plugin = { module = "org.jlleitschuh.gradle:ktlint-gradle", versio
 kotlin-serialization-plugin = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
 sqldelight-gradle-plugin = { module = "app.cash.sqldelight:gradle-plugin", version.ref = "sqldelight" }
 wire-gradle-plugin = { module = "com.squareup.wire:wire-gradle-plugin", version.ref = "wire" }
+# The schema API for the build-logic handler that writes the gRPC method tables (T3.3).
+wire-schema = { module = "com.squareup.wire:wire-schema", version.ref = "wire" }
 
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "serialization" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }

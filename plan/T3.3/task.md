@@ -2,7 +2,7 @@
 status: in progress
 priority: P0
 complexity: 5
-readiness: 60%
+readiness: 85%
 agent: Claude Code / claude-fable-5-2
 ---
 
@@ -38,4 +38,4 @@ The work lands in three pull requests, each stacked on the one before.
    - Listeners from config, graceful shutdown.
    - Verify: an integration test connects over a Unix socket and calls health; `grpcurl` lists the services and calls health.
 
-Open: the Windows named pipe. It cannot be run on this machine or in CI while `SKIP_CI_TESTS` is on. Ask the creator before writing it.
+Windows local listener: the creator chose AF_UNIX through ktor-network, the same `Endpoint.Unix` as on macOS and Linux, over a named pipe (2026-11-23). It cannot be run on this machine or in CI while `SKIP_CI_TESTS` is on, so on Windows it is compiled and linked only.
