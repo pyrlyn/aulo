@@ -9,7 +9,8 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 | Program | How to install | Why here | Source |
 | --- | --- | --- | --- |
 | java (JDK 21, Temurin) | mise (`mise.toml`, `temurin-21`) | Runs Gradle and the Kotlin/Native compiler | https://adoptium.net/ |
-| Gradle | Gradle wrapper: `aulo-chat/gradlew` (9.9.2) today; the root wrapper lands with plan S2 | Builds `aulo-chat`; later the KMP project, tests and ktlint | https://gradle.org/ |
+| Gradle (9.9.2) | Gradle wrapper (`gradlew`, `gradle/wrapper/`); `aulo-chat/gradlew` for the chat client's own build | Builds the KMP project, runs tests and ktlint; builds `aulo-chat` | https://github.com/gradle/gradle |
+| Kotlin/Native (2.4.21) | Kotlin Gradle plugin (`gradle/libs.versions.toml`), downloads its own toolchain | Compiles the `aulo` and `aulod` executables for macOS arm64, Linux x86_64/aarch64 and Windows x86_64 | https://github.com/JetBrains/kotlin |
 | Android SDK (platform 37.1, build tools) | Android Studio or `sdkmanager`; found through `ANDROID_HOME` | Builds the `aulo-chat` Android app | https://developer.android.com/studio |
 | Xcode | Mac App Store | Builds the `aulo-chat` iOS app and links its Kotlin framework | https://developer.apple.com/xcode/ |
 | XcodeGen (2.48.0) | mise (`aulo-chat/mise.toml`, `aqua:yonaskolb/XcodeGen`) | Generates `aulo-chat/iosApp/iosApp.xcodeproj` from `project.yml`, so no Xcode project is kept in git | https://github.com/yonaskolb/XcodeGen |
@@ -23,6 +24,20 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 | protoc | brew (`PROTOC` or `PATH`) | Compiles `proto/aulo/v1` where a build step needs the compiler on `PATH` | https://github.com/protocolbuffers/protobuf |
 | mise | brew | Pins the JDK, just, jactionlint, hk, shellcheck, Python and the agent CLIs | https://github.com/jdx/mise |
 | protoc-gen-doc (v1.5.1) | buf remote plugin `buf.build/community/pseudomuto-doc` (`buf.gen.yaml`), nothing to install | Generates the Markdown gRPC API reference in `docs/api/` (`just api-docs`) | https://github.com/pseudomuto/protoc-gen-doc |
+
+## Gradle
+
+| Package | Where | Source | Why here |
+| --- | --- | --- | --- |
+| org.jetbrains.kotlin:kotlin-gradle-plugin | local (`build-logic`) | https://github.com/JetBrains/kotlin | Kotlin Multiplatform with the native targets |
+| org.jlleitschuh.gradle:ktlint-gradle | local (`build-logic`) | https://github.com/JLLeitschuh/ktlint-gradle | `ktlintCheck` / `ktlintFormat` on every module |
+| com.pinterest.ktlint (1.8.0) | local (run by ktlint-gradle) | https://github.com/pinterest/ktlint | Kotlin style rules |
+| org.jetbrains.kotlin:kotlin-serialization | local (`build-logic`) | https://github.com/JetBrains/kotlin | Serialization compiler plugin for `@Serializable` types |
+| org.jetbrains.kotlinx:kotlinx-serialization-core (1.13.0) | local (`aulo-types`) | https://github.com/Kotlin/kotlinx.serialization | `@Serializable` ids and events (spec §17 D4: the equivalent of serde) |
+| org.jetbrains.kotlinx:kotlinx-serialization-json (1.13.0) | local (`aulo-types` tests) | https://github.com/Kotlin/kotlinx.serialization | JSON round-trip tests of the contract types |
+| org.jetbrains.kotlin:kotlin-test | local (`commonTest`) | https://github.com/JetBrains/kotlin | Unit tests |
+| org.jetbrains.kotlin:kotlin-test-junit5 | local (`build-logic` tests) | https://github.com/JetBrains/kotlin | Tests of the module-graph rules on the JVM |
+| org.junit.platform:junit-platform-launcher | local (`build-logic` tests) | https://github.com/junit-team/junit-framework | Gradle 9 needs it on the test runtime classpath |
 
 Native libraries used by the speech and audio modules (sherpa-onnx, whisper.cpp, libopus,
 and so on) are chosen and recorded here by the task that first wires each of them, including

@@ -1,0 +1,15 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+
+[*.{kt,kts}]
+indent_size = 4
+indent_style = space
+
+# kotlin-dsl adds its generated accessors under build/ as source roots, and ktlint-gradle keeps
+# linting them whatever the source filter says; switch the rules off there instead.
+[**/build/**.{kt,kts}]
+ktlint_standard = disabled

@@ -23,18 +23,14 @@ in [plan/](plan/README.md) is open again.
 
 ## Build
 
-The Gradle Kotlin/Native workspace arrives with the first S2 task. Until then, pin the JDK
-and the lint tools with mise:
+The Gradle wrapper brings Gradle and the Kotlin/Native toolchain; mise pins the JDK that runs
+it and the lint tools:
 
 ```bash
 mise install               # JDK 21 and the lint tools from mise.toml
-```
-
-When the workspace exists:
-
-```bash
 ./gradlew test             # host-target tests
 ./gradlew ktlintCheck      # style
+./gradlew assemble         # aulo and aulod executables in aulo/build/bin/
 ```
 
 `just api-docs` regenerates [docs/api](docs/api/aulo.v1.md) from `proto/`.

@@ -27,7 +27,8 @@ If an `AGENTS.md` or `CLAUDE.md` exists higher in the tree, follow it too; on co
 
 ## Layout
 
-- Gradle KMP modules (`aulo-<role>`), created by S2+ tasks, hold the Kotlin/Native daemon and CLI.
+- Gradle KMP modules (`aulo-<role>`), created by S2+ tasks, hold the Kotlin/Native daemon and CLI. Every module applies the `aulo.kmp` convention plugin from `build-logic/` (targets per spec §17 D3, warnings as errors, ktlint). `:aulo` is the surface module that links the `aulo` and `aulod` executables.
+- Every module declares its role in its build file, `aulo { role = ModuleRole.X }`: `CONTRACT` (types only: no I/O, HTTP, storage or native library; depends only on contracts), `LIBRARY`, or `SURFACE` (links an executable; the only place for the CLI libraries; nothing depends on it). SQLite, the gRPC stack, sherpa-onnx and a WASM runtime each have one owner module. `./gradlew test` runs `checkModuleGraph`, which enforces this (T2.2); the library lists live in `build-logic/src/main/kotlin/aulo/buildlogic/ModuleGraph.kt` — extend them when a task wires a new library of one of those kinds.
 - `desktop/macos` (SwiftUI) and `desktop/windows` (WinUI 3) — native apps over `aulo-ffi` (T12.3, T12.15).
 - `aulo-chat/` — the Compose Multiplatform chat client and its development server (D10, T12.22); its own Gradle build, commands in `aulo-chat/README.md`, screens described in `aulo-chat/design/`.
 - `proto/aulo/v1/` — gRPC service definitions (T3.1).
@@ -42,6 +43,8 @@ baseline `.github/jactionlint-baseline.json`. `hk.pkl` runs jactionlint as a pre
 
 ```bash
 mise install                               # JDK 21 and the lint tools
+mise x -- ./gradlew test                   # host-target tests (just test)
+mise x -- ./gradlew ktlintCheck            # style (just lint)
 mise x -- jactionlint                      # lint workflows, composite actions, dependabot.yml
 mise x -- jactionlint --baseline-write     # refresh the baseline after fixing findings
 mise x -- hk install --mise                # install the pre-push hook once per clone
