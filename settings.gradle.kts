@@ -45,6 +45,7 @@ include(
     ":aulo-server",
     ":aulo-models",
     ":aulo-speech",
+    ":aulo-speech-helper",
     ":aulo-testkit",
     ":aulo-voice",
 )
