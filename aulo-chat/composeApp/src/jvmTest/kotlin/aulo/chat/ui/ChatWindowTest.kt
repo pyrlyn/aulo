@@ -14,9 +14,11 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performTextReplacement
@@ -24,6 +26,7 @@ import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.use
 import aulo.chat.domain.Appearance
 import aulo.chat.domain.ChatMessage
@@ -135,6 +138,15 @@ class ChatWindowTest {
         onNodeWithContentDescription("Chat actions").performClick()
         onNodeWithText("Delete").performClick()
         assertEquals("lisbon", asked?.id)
+    }
+
+    @Test
+    fun `the status and the chat menu sit at the right edge of the header`() = runComposeUiTest {
+        setContent { AuloTheme(UiPlatform.Linux) { Window(window()) } }
+
+        val window = onRoot().getUnclippedBoundsInRoot()
+        val menu = onNodeWithContentDescription("Chat actions").getUnclippedBoundsInRoot()
+        assertTrue(window.right - menu.right < 16.dp, "menu ends ${window.right - menu.right} before the edge")
     }
 
     @Test

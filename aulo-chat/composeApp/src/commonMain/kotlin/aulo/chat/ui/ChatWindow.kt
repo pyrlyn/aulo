@@ -89,15 +89,22 @@ private fun ChatHeader(state: ChatUiState, actions: ChatActions, list: ChatListA
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(
-            text = chatTitle(state.chat?.title),
-            style = MaterialTheme.typography.titleMedium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f, fill = false),
-        )
-        ModelPicker(state.chat?.model, state.models, enabled = state.online, onSelect = actions.onSelectModel)
-        Box(Modifier.weight(1f))
+        // One weighted group, not a weighted title beside a weighted spacer: a title that does not
+        // fill its share would leave that share empty, and the status would stop short of the edge.
+        Row(
+            Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = chatTitle(state.chat?.title),
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            ModelPicker(state.chat?.model, state.models, enabled = state.online, onSelect = actions.onSelectModel)
+        }
         ConnectionLabel(state.connection)
         val chat = state.chat
         Box {
