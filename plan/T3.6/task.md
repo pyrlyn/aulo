@@ -2,7 +2,7 @@
 status: in progress
 priority: P0
 complexity: 3
-readiness: 90%
+readiness: 100%
 agent: Claude Code / claude-opus-5-5
 ---
 
@@ -29,9 +29,11 @@ Reading of the flags: `--config <FILE>` replaces `<home>/config.toml` and must e
    store, the first token, `AuloServer` with `ChatService`; graceful shutdown, pidfile removed,
    lock released.
 3. `aulo/app/daemon`: the `aulod` clap tree (`run`, `--config`, `--listen`), `runDaemonCli` that
-   maps every operator error to `error: …` and exit 1; `ShutdownSignals` — Unix blocks
-   SIGINT/SIGTERM and takes them with `sigwait` on a thread of its own, Windows uses
-   `SetConsoleCtrlHandler`; `main` wires them with the system secret store.
+   maps every operator error to `error: …` and exit 1; shutdown signals — Unix routes
+   SIGINT/SIGTERM through a self-pipe (a cinterop C shim) to a thread of its own, Windows uses
+   `SetConsoleCtrlHandler`; `main` wires them with the system secret store. (First tried:
+   `pthread_sigmask` + `sigwait`, which cannot cover the threads Kotlin/Native starts before
+   `main`.)
 4. Tests: `aulod` command fixtures in `aulo/tests/cmd` (help, version, a missing `--config`,
    `--listen` on TCP without TLS, a second instance while the lock is held); an in-process
    lifecycle test (health and `CreateChat` over the socket, pidfile written and removed, lock
