@@ -135,17 +135,6 @@ class ServerTest {
     fun built_in_methods_cannot_be_replaced() {
         assertFailsWith<IllegalArgumentException> { AuloServer(mapOf(CHECK to echo)) }
     }
-
-    @Test
-    fun a_tcp_listener_is_refused_until_tls_is_supported() =
-        transport {
-            TempDir.create("aulo-server").use { home ->
-                val config = DaemonConfig(listen = "127.0.0.1:7878", tlsCert = "c.pem", tlsKey = "k.pem")
-                val server = AuloServer(emptyMap())
-                assertFailsWith<ListenerConfigException> { server.start(Listeners.from(config, home.path.toString())) }
-                server.shutdown(1.seconds)
-            }
-        }
 }
 
 class LocalSocketTest {
@@ -324,12 +313,16 @@ class ListenersTest {
     }
 
     @Test
-    fun listen_needs_both_tls_files() {
-        val e = assertFailsWith<ListenerConfigException> { Listeners.from(DaemonConfig(listen = "127.0.0.1:7878"), "/h") }
-        assertContains(e.message!!, "tls_cert")
-        assertFailsWith<ListenerConfigException> { Listeners.from(DaemonConfig(listen = "127.0.0.1:7878", tlsCert = "c"), "/h") }
+    fun listen_takes_both_tls_files_or_neither() {
+        val e = assertFailsWith<ListenerConfigException> { Listeners.from(DaemonConfig(listen = "127.0.0.1:7878", tlsCert = "c"), "/h") }
+        assertEquals("daemon.tls_cert and daemon.tls_key go together: set both, or neither for a self-signed certificate", e.message)
+        assertFailsWith<ListenerConfigException> { Listeners.from(DaemonConfig(listen = "127.0.0.1:7878", tlsKey = "k"), "/h") }
         val remote = Listeners.from(DaemonConfig(listen = "[::1]:7878", tlsCert = "c", tlsKey = "k"), "/h").remote
-        assertEquals(RemoteListener(Endpoint.Tcp("::1", 7878), "c", "k"), remote)
+        assertEquals(RemoteListener(Endpoint.Tcp("::1", 7878), TlsFiles("c", "k")), remote)
+        assertEquals(
+            RemoteListener(Endpoint.Tcp("127.0.0.1", 7878), null),
+            Listeners.from(DaemonConfig(listen = "127.0.0.1:7878"), "/h").remote,
+        )
     }
 
     @Test
@@ -375,7 +368,7 @@ private fun serving(block: suspend (GrpcClient, Endpoint.Unix) -> Unit) =
         }
     }
 
-private suspend fun GrpcClient.check(
+internal suspend fun GrpcClient.check(
     service: String,
     metadata: List<Pair<String, String>> = emptyList(),
 ): ServingStatus = HealthCheckResponse.ADAPTER.decode(unary(CHECK, HealthCheckRequest(service = service).encode(), metadata)).status

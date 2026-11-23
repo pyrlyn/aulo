@@ -3,6 +3,7 @@ package aulo.server
 import aulo.config.Config
 import aulo.grpc.Endpoint
 import aulo.grpc.ServerHandler
+import aulo.grpc.Tls
 import aulo.secrets.OwnerOnlyException
 import aulo.secrets.SecretStore
 import aulo.secrets.ensureOwnerOnlyDir
@@ -57,8 +58,9 @@ fun serviceHandlers(
  * Runs aulod for [home] until [stop] returns, then shuts down gracefully, giving open calls
  * [grace]. Only one aulod runs per home: the lock in [RunFiles] is held for the whole run, and
  * a second one fails with [AlreadyRunningException] before it touches anything else. Problems
- * a person can fix (listeners, the run directory) fail with [ListenerConfigException] before the
- * lock is taken.
+ * a person can fix (listeners, the run directory, TLS files) fail with [ListenerConfigException];
+ * the TLS ones come under the lock, because the first run of a TCP listener writes aulod's
+ * self-signed certificate into the home.
  */
 suspend fun runDaemon(
     home: String,
@@ -87,7 +89,9 @@ suspend fun runDaemon(
             val tokens = ensureFirstToken(store, secrets)
             val main = config.providers.tiers.main
             val server = AuloServer(serviceHandlers(SharedStore(store)) { main?.let { ModelRef(it.provider, it.model) } }, tokens)
-            val endpoints = server.start(listeners)
+            val tls = listeners.remote?.let { serverTls(it.tls, home) }
+            if (tls != null) log("aulod TLS certificate SHA-256 ${Tls.formatPin(tls.fingerprint)}")
+            val endpoints = server.start(listeners, tls)
             try {
                 log("aulod listening on ${endpoints.joinToString { it.display() }}")
                 stop()

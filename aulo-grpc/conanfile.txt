@@ -1,6 +1,7 @@
-# The HTTP/2 library :aulo-grpc links statically. The version here, the recipe revision in conan.lock.
+# The C libraries :aulo-grpc links statically. The versions here, the recipe revisions in conan.lock.
 [requires]
 libnghttp2/1.68.1
+mbedtls/3.6.7
 
 [options]
 *:shared=False

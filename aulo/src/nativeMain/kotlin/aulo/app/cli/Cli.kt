@@ -10,6 +10,7 @@ import cli.Parsed
 import cli.Settings
 import cli.command
 import cli.parse
+import kotlinx.coroutines.runBlocking
 
 private val tree =
     command("aulo") {
@@ -26,6 +27,24 @@ private val tree =
             }
             subcommand("default") {
                 doc("Print every key with its default, commented out, to copy from.")
+            }
+        }
+        subcommand("connect") {
+            doc(
+                "Check that a remote aulod answers with the pinned certificate\n\n" +
+                    "A TLS handshake that accepts only the certificate with --pin, then a health check with the " +
+                    "bearer token from $TOKEN_ENV when it is set. Nothing is saved.",
+            )
+            positional("addr") {
+                required = true
+                valueName = "ADDR"
+                doc("The aulod's daemon.listen address: host:port or [ipv6]:port")
+            }
+            option("pin") {
+                long = "pin"
+                valueName = "SHA256"
+                required = true
+                doc("The certificate's SHA-256, as aulod logs it at start; colons optional")
             }
         }
     }
@@ -47,6 +66,11 @@ fun runCli(
         }
     // subcommandRequired makes clap's parser answer an empty level itself, so both are set.
     val config = matches.subcommand ?: error("no subcommand")
+    if (config.name == "connect") {
+        val addr = config.matches.value("addr") ?: error("no ADDR")
+        val pin = config.matches.value("pin") ?: error("no --pin")
+        return runBlocking { connect(addr, pin, env) }
+    }
     val action = config.matches.subcommand ?: error("no config subcommand")
     return when (action.name) {
         "show" -> {

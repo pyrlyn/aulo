@@ -5,7 +5,6 @@ import aulo.grpc.nghttp2.NGHTTP2_HCAT_REQUEST
 import aulo.grpc.nghttp2.NGHTTP2_NO_ERROR
 import aulo.grpc.nghttp2.nghttp2_submit_response2
 import aulo.grpc.nghttp2.nghttp2_submit_rst_stream
-import io.ktor.network.sockets.Socket
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.convert
 import kotlinx.coroutines.CancellationException
@@ -44,12 +43,12 @@ internal class StreamServerCall(
 /** The server side of one HTTP/2 connection: one handler coroutine per request stream. */
 @OptIn(ExperimentalForeignApi::class)
 internal class ServerConnection(
-    socket: Socket,
+    stream: ByteStream,
     private val endpoint: Endpoint,
     limits: GrpcLimits,
     parent: Job,
     private val handlers: Map<String, ServerHandler>,
-) : Http2Connection(socket, limits, parent, server = true) {
+) : Http2Connection(stream, limits, parent, server = true) {
     internal class Stream(
         val id: Int,
         maxMessageBytes: Int,

@@ -1,0 +1,384 @@
+# TLS 1.3 for the gRPC transport over mbedTLS 3.6 (T3.8). The shim keeps every mbedTLS type on the
+# C side: Kotlin holds an opaque handle, feeds in the bytes it read from the socket and takes out
+# the bytes to write (a memory BIO), so C never touches a socket and Kotlin never a TLS state.
+headers = stddef.h
+# Only the aulo_tls_* functions below are bound, and of those only the ones Kotlin calls.
+headerFilter = aulo-none
+excludedFunctions = aulo_tls_mutex aulo_tls_lock aulo_tls_unlock aulo_tls_send aulo_tls_recv aulo_tls_status \
+    aulo_tls_release aulo_tls_psa aulo_tls_terminated aulo_tls_new aulo_tls_start
+package = aulo.grpc.tls
+# mbedTLS's entropy source on Windows is BCryptGenRandom.
+linkerOpts.mingw = -lbcrypt
+---
+#include <stdlib.h>
+#include <string.h>
+#include <mbedtls/ctr_drbg.h>
+#include <mbedtls/entropy.h>
+#include <mbedtls/error.h>
+#include <mbedtls/pk.h>
+#include <mbedtls/platform_util.h>
+#include <mbedtls/sha256.h>
+#include <mbedtls/ssl.h>
+#include <mbedtls/x509_crt.h>
+#include <psa/crypto.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <pthread.h>
+#endif
+
+/*
+ * Conan's mbedTLS is built without MBEDTLS_THREADING_C, and PSA keeps its keys in one process-wide
+ * store, so every entry point below runs under this one lock. Each call only moves bytes in
+ * memory, so connections wait on each other for microseconds, never on the network.
+ */
+#ifdef _WIN32
+static SRWLOCK *aulo_tls_mutex(void) {
+    static SRWLOCK lock = SRWLOCK_INIT;
+    return &lock;
+}
+static void aulo_tls_lock(void) { AcquireSRWLockExclusive(aulo_tls_mutex()); }
+static void aulo_tls_unlock(void) { ReleaseSRWLockExclusive(aulo_tls_mutex()); }
+#else
+static pthread_mutex_t *aulo_tls_mutex(void) {
+    static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+    return &lock;
+}
+static void aulo_tls_lock(void) { pthread_mutex_lock(aulo_tls_mutex()); }
+static void aulo_tls_unlock(void) { pthread_mutex_unlock(aulo_tls_mutex()); }
+#endif
+
+/* Results besides byte counts and mbedTLS's own negative codes, which all stay above -0x8000. */
+#define AULO_TLS_WANT_READ (-0x10001)
+#define AULO_TLS_WANT_WRITE (-0x10002)
+#define AULO_TLS_ERR_PIN (-0x10003)
+#define AULO_TLS_ERR_ALPN (-0x10004)
+#define AULO_TLS_ERR_OVERFLOW (-0x10005)
+#define AULO_TLS_ERR_MEMORY (-0x10006)
+#define AULO_TLS_ERR_PSA (-0x10007)
+#define AULO_TLS_PIN_BYTES 32
+/* A record is at most 16 KiB plus overhead; Kotlin feeds only when mbedTLS asks for more. */
+#define AULO_TLS_IN_MAX (64 * 1024)
+/* Kotlin drains after every call, so this holds one handshake flight or a few records. */
+#define AULO_TLS_OUT_MAX (256 * 1024)
+
+struct aulo_tls_state {
+    mbedtls_ssl_context ssl;
+    mbedtls_ssl_config conf;
+    mbedtls_ctr_drbg_context drbg;
+    mbedtls_entropy_context entropy;
+    mbedtls_x509_crt cert;
+    mbedtls_pk_context key;
+    int client;
+    unsigned char pin[AULO_TLS_PIN_BYTES];
+    unsigned char in[AULO_TLS_IN_MAX];
+    size_t in_start, in_end;
+    unsigned char *out;
+    size_t out_len, out_cap;
+};
+
+static int aulo_tls_send(void *ctx, const unsigned char *buf, size_t len) {
+    struct aulo_tls_state *t = ctx;
+    if (len > AULO_TLS_OUT_MAX - t->out_len) {
+        if (t->out_len > 0) return MBEDTLS_ERR_SSL_WANT_WRITE;
+        len = AULO_TLS_OUT_MAX;
+    }
+    if (t->out_len + len > t->out_cap) {
+        size_t cap = t->out_cap ? t->out_cap : 16 * 1024;
+        while (cap < t->out_len + len) cap *= 2;
+        if (cap > AULO_TLS_OUT_MAX) cap = AULO_TLS_OUT_MAX;
+        unsigned char *grown = realloc(t->out, cap);
+        if (grown == NULL) return MBEDTLS_ERR_SSL_ALLOC_FAILED;
+        t->out = grown;
+        t->out_cap = cap;
+    }
+    memcpy(t->out + t->out_len, buf, len);
+    t->out_len += len;
+    return (int) len;
+}
+
+static int aulo_tls_recv(void *ctx, unsigned char *buf, size_t len) {
+    struct aulo_tls_state *t = ctx;
+    size_t available = t->in_end - t->in_start;
+    if (available == 0) return MBEDTLS_ERR_SSL_WANT_READ;
+    if (len > available) len = available;
+    memcpy(buf, t->in + t->in_start, len);
+    t->in_start += len;
+    if (t->in_start == t->in_end) t->in_start = t->in_end = 0;
+    return (int) len;
+}
+
+static int aulo_tls_status(int ret) {
+    if (ret == MBEDTLS_ERR_SSL_WANT_READ) return AULO_TLS_WANT_READ;
+    if (ret == MBEDTLS_ERR_SSL_WANT_WRITE) return AULO_TLS_WANT_WRITE;
+    return ret;
+}
+
+static void aulo_tls_release(struct aulo_tls_state *t) {
+    mbedtls_ssl_free(&t->ssl);
+    mbedtls_ssl_config_free(&t->conf);
+    mbedtls_x509_crt_free(&t->cert);
+    mbedtls_pk_free(&t->key);
+    mbedtls_ctr_drbg_free(&t->drbg);
+    mbedtls_entropy_free(&t->entropy);
+    free(t->out);
+    free(t);
+}
+
+static int aulo_tls_psa(void) {
+    static int ready = 0;
+    if (!ready) {
+        if (psa_crypto_init() != PSA_SUCCESS) return AULO_TLS_ERR_PSA;
+        ready = 1;
+    }
+    return 0;
+}
+
+/* The PEM parsers want the terminating NUL counted in the length. */
+static unsigned char *aulo_tls_terminated(const unsigned char *pem, size_t len) {
+    unsigned char *copy = malloc(len + 1);
+    if (copy == NULL) return NULL;
+    memcpy(copy, pem, len);
+    copy[len] = 0;
+    return copy;
+}
+
+static struct aulo_tls_state *aulo_tls_new(int endpoint, int *error) {
+    static const char *alpn[] = {"h2", NULL};
+    struct aulo_tls_state *t = calloc(1, sizeof *t);
+    if (t == NULL) {
+        *error = AULO_TLS_ERR_MEMORY;
+        return NULL;
+    }
+    mbedtls_ssl_init(&t->ssl);
+    mbedtls_ssl_config_init(&t->conf);
+    mbedtls_x509_crt_init(&t->cert);
+    mbedtls_pk_init(&t->key);
+    mbedtls_ctr_drbg_init(&t->drbg);
+    mbedtls_entropy_init(&t->entropy);
+    int ret = aulo_tls_psa();
+    if (ret == 0) ret = mbedtls_ctr_drbg_seed(&t->drbg, mbedtls_entropy_func, &t->entropy, (const unsigned char *) "aulo-tls", 8);
+    if (ret == 0) ret = mbedtls_ssl_config_defaults(&t->conf, endpoint, MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT);
+    if (ret != 0) {
+        aulo_tls_release(t);
+        *error = ret;
+        return NULL;
+    }
+    mbedtls_ssl_conf_rng(&t->conf, mbedtls_ctr_drbg_random, &t->drbg);
+    mbedtls_ssl_conf_min_tls_version(&t->conf, MBEDTLS_SSL_VERSION_TLS1_3);
+    mbedtls_ssl_conf_max_tls_version(&t->conf, MBEDTLS_SSL_VERSION_TLS1_3);
+    mbedtls_ssl_conf_alpn_protocols(&t->conf, alpn);
+    return t;
+}
+
+static int aulo_tls_start(struct aulo_tls_state *t) {
+    int ret = mbedtls_ssl_setup(&t->ssl, &t->conf);
+    if (ret == 0) mbedtls_ssl_set_bio(&t->ssl, t, aulo_tls_send, aulo_tls_recv, NULL);
+    return ret;
+}
+
+/* A server session for a PEM certificate chain and key; NULL with *error set when they do not parse. */
+static inline void *aulo_tls_server(const unsigned char *cert, size_t cert_len, const unsigned char *key, size_t key_len, int *error) {
+    aulo_tls_lock();
+    struct aulo_tls_state *t = aulo_tls_new(MBEDTLS_SSL_IS_SERVER, error);
+    if (t != NULL) {
+        unsigned char *cert_z = aulo_tls_terminated(cert, cert_len);
+        unsigned char *key_z = aulo_tls_terminated(key, key_len);
+        int ret = cert_z == NULL || key_z == NULL ? AULO_TLS_ERR_MEMORY : 0;
+        if (ret == 0) ret = mbedtls_x509_crt_parse(&t->cert, cert_z, cert_len + 1);
+        if (ret == 0) ret = mbedtls_pk_parse_key(&t->key, key_z, key_len + 1, NULL, 0, mbedtls_ctr_drbg_random, &t->drbg);
+        /* A key from another certificate would only fail later, in every client's handshake. */
+        if (ret == 0) ret = mbedtls_pk_check_pair(&t->cert.pk, &t->key, mbedtls_ctr_drbg_random, &t->drbg);
+        if (ret == 0) ret = mbedtls_ssl_conf_own_cert(&t->conf, &t->cert, &t->key);
+        if (key_z != NULL) mbedtls_platform_zeroize(key_z, key_len + 1);
+        free(cert_z);
+        free(key_z);
+        if (ret == 0) {
+            /* Clients prove themselves with bearer tokens, not certificates. */
+            mbedtls_ssl_conf_authmode(&t->conf, MBEDTLS_SSL_VERIFY_NONE);
+            ret = aulo_tls_start(t);
+        }
+        if (ret != 0) {
+            aulo_tls_release(t);
+            t = NULL;
+            *error = ret;
+        }
+    }
+    aulo_tls_unlock();
+    return t;
+}
+
+/*
+ * A client session that accepts only the server certificate whose DER has the SHA-256 [pin]
+ * (AULO_TLS_PIN_BYTES). No CA is consulted: the pin is the whole trust decision, checked once
+ * the handshake has proven that the server holds the certificate's key.
+ */
+static inline void *aulo_tls_client(const unsigned char *pin, int *error) {
+    aulo_tls_lock();
+    struct aulo_tls_state *t = aulo_tls_new(MBEDTLS_SSL_IS_CLIENT, error);
+    if (t != NULL) {
+        t->client = 1;
+        memcpy(t->pin, pin, sizeof t->pin);
+        mbedtls_ssl_conf_authmode(&t->conf, MBEDTLS_SSL_VERIFY_NONE);
+        int ret = aulo_tls_start(t);
+        if (ret != 0) {
+            aulo_tls_release(t);
+            t = NULL;
+            *error = ret;
+        }
+    }
+    aulo_tls_unlock();
+    return t;
+}
+
+static inline void aulo_tls_free(void *handle) {
+    aulo_tls_lock();
+    aulo_tls_release(handle);
+    aulo_tls_unlock();
+}
+
+/* Bytes read from the socket; AULO_TLS_ERR_OVERFLOW when more are fed than mbedTLS has taken. */
+static inline int aulo_tls_feed(void *handle, const unsigned char *data, size_t len) {
+    struct aulo_tls_state *t = handle;
+    aulo_tls_lock();
+    int ret = 0;
+    if (len > AULO_TLS_IN_MAX - t->in_end) {
+        memmove(t->in, t->in + t->in_start, t->in_end - t->in_start);
+        t->in_end -= t->in_start;
+        t->in_start = 0;
+    }
+    if (len > AULO_TLS_IN_MAX - t->in_end) {
+        ret = AULO_TLS_ERR_OVERFLOW;
+    } else {
+        memcpy(t->in + t->in_end, data, len);
+        t->in_end += len;
+    }
+    aulo_tls_unlock();
+    return ret;
+}
+
+/* Moves up to [cap] bytes waiting for the socket into [buf]; returns how many. */
+static inline int aulo_tls_take(void *handle, unsigned char *buf, size_t cap) {
+    struct aulo_tls_state *t = handle;
+    aulo_tls_lock();
+    size_t n = t->out_len < cap ? t->out_len : cap;
+    memcpy(buf, t->out, n);
+    memmove(t->out, t->out + n, t->out_len - n);
+    t->out_len -= n;
+    aulo_tls_unlock();
+    return (int) n;
+}
+
+/* 0 once the handshake is done and checked, AULO_TLS_WANT_READ or _WANT_WRITE, or an error. */
+static inline int aulo_tls_handshake(void *handle) {
+    struct aulo_tls_state *t = handle;
+    aulo_tls_lock();
+    int ret = aulo_tls_status(mbedtls_ssl_handshake(&t->ssl));
+    if (ret == 0) {
+        /* gRPC is HTTP/2 only; a peer that did not agree on h2 cannot speak it. */
+        const char *protocol = mbedtls_ssl_get_alpn_protocol(&t->ssl);
+        if (protocol == NULL || strcmp(protocol, "h2") != 0) {
+            mbedtls_ssl_send_alert_message(&t->ssl, MBEDTLS_SSL_ALERT_LEVEL_FATAL, MBEDTLS_SSL_ALERT_MSG_NO_APPLICATION_PROTOCOL);
+            ret = AULO_TLS_ERR_ALPN;
+        }
+    }
+    if (ret == 0 && t->client) {
+        const mbedtls_x509_crt *peer = mbedtls_ssl_get_peer_cert(&t->ssl);
+        unsigned char digest[AULO_TLS_PIN_BYTES];
+        if (peer == NULL || mbedtls_sha256(peer->raw.p, peer->raw.len, digest, 0) != 0 || memcmp(digest, t->pin, sizeof digest) != 0) {
+            mbedtls_ssl_send_alert_message(&t->ssl, MBEDTLS_SSL_ALERT_LEVEL_FATAL, MBEDTLS_SSL_ALERT_MSG_BAD_CERT);
+            ret = AULO_TLS_ERR_PIN;
+        }
+    }
+    aulo_tls_unlock();
+    return ret;
+}
+
+/* Plaintext into [buf]: a byte count, 0 once the peer closed, AULO_TLS_WANT_*, or an error. */
+static inline int aulo_tls_read(void *handle, unsigned char *buf, size_t cap) {
+    struct aulo_tls_state *t = handle;
+    aulo_tls_lock();
+    int ret;
+    do {
+        ret = mbedtls_ssl_read(&t->ssl, buf, cap);
+        /* A TLS 1.3 server may send tickets at any time; aulo never resumes sessions. */
+    } while (ret == MBEDTLS_ERR_SSL_RECEIVED_NEW_SESSION_TICKET);
+    if (ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) ret = 0;
+    aulo_tls_unlock();
+    return aulo_tls_status(ret);
+}
+
+/* Encrypts up to [len] bytes of [data]; returns how many it took, AULO_TLS_WANT_*, or an error. */
+static inline int aulo_tls_write(void *handle, const unsigned char *data, size_t len) {
+    struct aulo_tls_state *t = handle;
+    aulo_tls_lock();
+    int ret = mbedtls_ssl_write(&t->ssl, data, len);
+    aulo_tls_unlock();
+    return aulo_tls_status(ret);
+}
+
+/* The SHA-256 of the DER of the first certificate in [pem] into [out]; 0 or an error. */
+static inline int aulo_tls_fingerprint(const unsigned char *pem, size_t len, unsigned char *out) {
+    aulo_tls_lock();
+    mbedtls_x509_crt crt;
+    mbedtls_x509_crt_init(&crt);
+    unsigned char *pem_z = aulo_tls_terminated(pem, len);
+    int ret = pem_z == NULL ? AULO_TLS_ERR_MEMORY : aulo_tls_psa();
+    if (ret == 0) ret = mbedtls_x509_crt_parse(&crt, pem_z, len + 1);
+    if (ret == 0) ret = mbedtls_sha256(crt.raw.p, crt.raw.len, out, 0);
+    free(pem_z);
+    mbedtls_x509_crt_free(&crt);
+    aulo_tls_unlock();
+    return ret;
+}
+
+/*
+ * A self-signed ECDSA P-256 certificate for [subject] (`CN=…`), valid from [not_before] to
+ * [not_after] (`YYYYMMDDhhmmss`, UTC), and its key, as PEM into the two buffers; 0 or an error.
+ */
+static inline int aulo_tls_self_signed(const char *subject, const char *not_before, const char *not_after, unsigned char *cert_pem, size_t cert_cap, unsigned char *key_pem, size_t key_cap) {
+    aulo_tls_lock();
+    mbedtls_entropy_context entropy;
+    mbedtls_ctr_drbg_context drbg;
+    mbedtls_pk_context key;
+    mbedtls_x509write_cert crt;
+    mbedtls_entropy_init(&entropy);
+    mbedtls_ctr_drbg_init(&drbg);
+    mbedtls_pk_init(&key);
+    mbedtls_x509write_crt_init(&crt);
+    unsigned char serial[16];
+    int ret = aulo_tls_psa();
+    if (ret == 0) ret = mbedtls_ctr_drbg_seed(&drbg, mbedtls_entropy_func, &entropy, (const unsigned char *) "aulo-cert", 9);
+    if (ret == 0) ret = mbedtls_pk_setup(&key, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY));
+    if (ret == 0) ret = mbedtls_ecp_gen_key(MBEDTLS_ECP_DP_SECP256R1, mbedtls_pk_ec(key), mbedtls_ctr_drbg_random, &drbg);
+    if (ret == 0) ret = mbedtls_ctr_drbg_random(&drbg, serial, sizeof serial);
+    if (ret == 0) {
+        /* A positive serial: the top bit clear, and never zero. */
+        serial[0] = (unsigned char) ((serial[0] & 0x7f) | 0x01);
+        mbedtls_x509write_crt_set_version(&crt, MBEDTLS_X509_CRT_VERSION_3);
+        mbedtls_x509write_crt_set_md_alg(&crt, MBEDTLS_MD_SHA256);
+        mbedtls_x509write_crt_set_subject_key(&crt, &key);
+        mbedtls_x509write_crt_set_issuer_key(&crt, &key);
+        ret = mbedtls_x509write_crt_set_subject_name(&crt, subject);
+    }
+    if (ret == 0) ret = mbedtls_x509write_crt_set_issuer_name(&crt, subject);
+    if (ret == 0) ret = mbedtls_x509write_crt_set_serial_raw(&crt, serial, sizeof serial);
+    if (ret == 0) ret = mbedtls_x509write_crt_set_validity(&crt, not_before, not_after);
+    if (ret == 0) ret = mbedtls_x509write_crt_set_basic_constraints(&crt, 0, -1);
+    if (ret == 0) ret = mbedtls_x509write_crt_set_key_usage(&crt, MBEDTLS_X509_KU_DIGITAL_SIGNATURE);
+    if (ret == 0) ret = mbedtls_x509write_crt_pem(&crt, cert_pem, cert_cap, mbedtls_ctr_drbg_random, &drbg);
+    if (ret == 0) ret = mbedtls_pk_write_key_pem(&key, key_pem, key_cap);
+    mbedtls_x509write_crt_free(&crt);
+    mbedtls_pk_free(&key);
+    mbedtls_ctr_drbg_free(&drbg);
+    mbedtls_entropy_free(&entropy);
+    aulo_tls_unlock();
+    return ret;
+}
+
+/* mbedTLS's words for its own [code]; the shim's codes are named on the Kotlin side. */
+static inline void aulo_tls_strerror(int code, char *buf, size_t cap) {
+    aulo_tls_lock();
+    mbedtls_strerror(code, buf, cap);
+    aulo_tls_unlock();
+}

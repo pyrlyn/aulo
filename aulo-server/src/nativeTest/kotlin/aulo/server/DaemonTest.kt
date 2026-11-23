@@ -5,7 +5,11 @@ import aulo.config.DaemonConfig
 import aulo.config.ProvidersConfig
 import aulo.config.TierConfig
 import aulo.config.TiersConfig
+import aulo.grpc.Endpoint
 import aulo.grpc.GrpcClient
+import aulo.grpc.GrpcServer
+import aulo.grpc.Tls
+import aulo.grpc.TlsClient
 import aulo.secrets.FileSecretStore
 import aulo.v1.CreateChatRequest
 import aulo.v1.CreateChatResponse
@@ -13,17 +17,21 @@ import aulo.v1.ModelRef
 import fs.FileLock
 import fs.TempDir
 import fs.WriteOptions
+import io.grpc.health.v1.HealthCheckResponse.ServingStatus
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import platform.posix.getpid
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 class DaemonTest {
@@ -74,6 +82,42 @@ class DaemonTest {
         }
 
     @Test
+    fun a_tcp_listener_serves_the_logged_self_signed_pin_and_wants_the_first_token() =
+        transport {
+            TempDir.create("aulo-daemon").use { tmp ->
+                val home = tmp.path.toString()
+                val port = freePort()
+                val config = Config(daemon = DaemonConfig(listen = "127.0.0.1:$port"))
+                val secrets = FileSecretStore(Path(home, "secrets").toString())
+                val listening = CompletableDeferred<Unit>()
+                val stop = CompletableDeferred<Unit>()
+                val lines = mutableListOf<String>()
+                val log = { line: String ->
+                    lines += line
+                    if (line.startsWith("aulod listening")) listening.complete(Unit)
+                }
+                val daemon = launch { runDaemon(home, config, secrets, log, { stop.await() }, grace = 1.seconds) }
+                listening.await()
+
+                val pinLine = lines.first()
+                assertTrue(pinLine.startsWith("aulod TLS certificate SHA-256 "), pinLine)
+                val pin = assertNotNull(Tls.parsePin(pinLine.substringAfterLast(' ')))
+                assertContentEquals(serverTls(null, home).fingerprint, pin, "the logged pin is the stored certificate's")
+                assertTrue(lines[1].endsWith(", 127.0.0.1:$port"), lines[1])
+
+                val client = GrpcClient.connect(Endpoint.Tcp("127.0.0.1", port), tls = TlsClient(pin))
+                try {
+                    val token = assertNotNull(secrets.load(FIRST_TOKEN))
+                    assertEquals(ServingStatus.SERVING, client.check("", listOf("authorization" to "Bearer $token")))
+                } finally {
+                    client.close()
+                }
+                stop.complete(Unit)
+                daemon.join()
+            }
+        }
+
+    @Test
     fun a_stale_pidfile_is_named_and_a_corrupt_one_is_not() =
         TempDir.create("aulo-daemon").use { tmp ->
             val home = tmp.path.toString()
@@ -93,13 +137,24 @@ class DaemonTest {
         transport {
             TempDir.create("aulo-daemon").use { tmp ->
                 val home = Path(tmp.path, "home").toString()
-                val config = Config(daemon = DaemonConfig(listen = "127.0.0.1:7777"))
+                val config = Config(daemon = DaemonConfig(listen = "127.0.0.1:7777", tlsKey = "key.pem"))
                 val e =
                     assertFailsWith<ListenerConfigException> {
                         runDaemon(home, config, FileSecretStore(Path(home, "secrets").toString()), {}, {})
                     }
-                assertEquals("daemon.listen needs daemon.tls_cert: TLS is required on TCP", e.message)
+                assertEquals(
+                    "daemon.tls_cert and daemon.tls_key go together: set both, or neither for a self-signed certificate",
+                    e.message,
+                )
                 assertFalse(SystemFileSystem.exists(Path(home)))
             }
         }
+}
+
+/** A TCP port nothing listens on right now; another process could take it before the test does. */
+private suspend fun freePort(): Int {
+    val server = GrpcServer(emptyMap())
+    val bound = server.bind(Endpoint.Tcp("127.0.0.1", 0)) as Endpoint.Tcp
+    server.shutdown(Duration.ZERO)
+    return bound.port
 }
