@@ -81,9 +81,15 @@ sealed interface LanguageSupport {
             tags.forEach { requireLanguageTag("language", it) }
         }
 
-        override fun supports(tag: String) = tags.any { primarySubtag(it).equals(primarySubtag(tag), ignoreCase = true) }
+        override fun supports(tag: String) = tags.any { sameLanguage(it, tag) }
     }
 }
+
+/** Whether two BCP 47 tags name one language: their primary subtags match, ignoring case. */
+fun sameLanguage(
+    a: String,
+    b: String,
+): Boolean = primarySubtag(a).equals(primarySubtag(b), ignoreCase = true)
 
 private fun primarySubtag(tag: String) = tag.substringBefore('-')
 
