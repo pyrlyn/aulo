@@ -33,4 +33,4 @@ val kotlinKitDir: String =
 includeBuild(kotlinKitDir)
 
 // Modules are named aulo-<role> (AGENTS.md, Layout); S2+ tasks add them here.
-include(":aulo", ":aulo-types", ":aulo-speech", ":aulo-telemetry", ":aulo-config", ":aulo-store", ":aulo-proto", ":aulo-grpc")
+include(":aulo", ":aulo-types", ":aulo-speech", ":aulo-telemetry", ":aulo-config", ":aulo-store", ":aulo-proto", ":aulo-grpc", ":aulo-server")
