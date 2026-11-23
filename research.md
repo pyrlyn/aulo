@@ -515,6 +515,26 @@ from the GitHub REST API, and crate contents from the published `.crate` files, 
 
 ---
 
+### 4.9 Protobuf and gRPC for Kotlin/Native (T3.2)
+
+Checked 2026-11-23. aulo builds for macosArm64, linuxX64, linuxArm64 and mingwX64 (spec §17 D3); no library offers a gRPC transport on all four.
+
+| Block | Repo | Latest | Licence | Native targets | Notes |
+|---|---|---|---|---|---|
+| **Wire** (chosen, D10) | https://github.com/square/wire | 7.2.2, 2026-11-17 | Apache-2.0 | `wire-runtime`: all four | Its own proto parser (no `protoc`); generates messages and service interfaces |
+| kotlinx-rpc gRPC | https://github.com/Kotlin/kotlinx-rpc | pre-release `0.11.0-grpc-190`, 2026-09-18 | Apache-2.0 | Apple and Linux, no mingwX64 | Client and server on gRPC core |
+| pbandk | https://github.com/streem/pbandk | 0.16.0, 2024-09-03 | MIT | all four | Messages only; no release in two years, so not used |
+
+Sources:
+
+- **Wire artifacts per target.** Maven Central, https://repo1.maven.org/maven2/com/squareup/wire/:
+  - `wire-runtime-{macosarm64,linuxx64,linuxarm64,mingwx64}/7.2.2/` exist;
+  - `wire-grpc-client-linuxarm64/` does not exist, so the generated client role cannot build for linuxArm64.
+- **Wire has no native gRPC transport.** Outside the JVM `GrpcClient` is an abstract class with no implementation: https://github.com/square/wire/blob/7.2.2/wire-grpc-client/src/nonJvmMain/kotlin/com/squareup/wire/GrpcClient.kt. Wire has no server runtime for native either. The transport is T3.3's.
+- **kotlinx-rpc gRPC targets.** "Jvm, Android, Apple, Linux": https://github.com/Kotlin/kotlinx-rpc/blob/0.11.0-grpc-190/docs/pages/kotlinx-rpc/topics/platforms.topic. The module table there lists no `mingwX64` for any `grpc-*` module.
+- **kotlinx-rpc gRPC is pre-release only.** Every gRPC build on https://github.com/Kotlin/kotlinx-rpc/releases is tagged `-grpc-<n>` and marked pre-release; the stable line (0.10.4) has no gRPC.
+- **pbandk.** `lastUpdated` 2024-09-03 in https://repo1.maven.org/maven2/pro/streem/pbandk/pbandk-runtime/maven-metadata.xml.
+
 ## Part 5. Conclusions and ideas to borrow (for a Rust voice computer-control agent)
 
 1. **Two-brain voice design.** Front: cheap full-duplex/realtime voice (GPT-Live 1, Gemini 3.8 Live, xAI Voice
