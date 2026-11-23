@@ -32,6 +32,8 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             // Config exposes LogLevel.
             api(project(":aulo-telemetry"))
+            // EngineConfig.choice returns the speech contract's EngineChoice.
+            api(project(":aulo-speech"))
             implementation("pyrlyn.kit:toml")
             implementation("pyrlyn.kit:fs")
         }
