@@ -4,6 +4,7 @@ Usage: aulo <COMMAND>
 
 Commands:
   config   Inspect the configuration
+  models   Download, list and remove speech models
   connect  Check that a remote aulod answers with the pinned certificate
 
 Options:

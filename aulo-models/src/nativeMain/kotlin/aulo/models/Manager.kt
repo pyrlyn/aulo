@@ -37,11 +37,10 @@ data class Progress(
     val totalBytes: Long,
 )
 
-/** Installs, lists and removes catalog models under `<aulo home>/models`. */
+/** Installs, lists and removes catalog models under `<aulo home>/models`; only [pull] needs a network. */
 class ModelManager(
     home: Path,
     val catalog: Catalog,
-    private val http: HttpClient,
 ) {
     val modelsDir: Path = joinPath(home, "models")
 
@@ -59,10 +58,11 @@ class ModelManager(
 
     /**
      * Downloads every missing file of [id], verifying each against its pinned SHA-256, and returns the model
-     * directory. Files already installed are kept: they only reach their final name after a hash check.
+     * directory through [http]. Files already installed are kept: they only reach their final name after a hash check.
      */
     suspend fun pull(
         id: String,
+        http: HttpClient,
         onProgress: (Progress) -> Unit = {},
     ): Path {
         val model = known(id)
