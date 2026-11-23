@@ -8,3 +8,7 @@ ktlint = "1.8.0"
 # build-logic puts these Gradle plugins on the classpath of every module.
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 ktlint-gradle-plugin = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlint-gradle" }
+
+[plugins]
+# build-logic formats itself with the same ktlint as the modules.
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint-gradle" }

@@ -1,3 +1,8 @@
+import aulo.buildlogic.AuloModuleExtension
+import aulo.buildlogic.ModuleManifestTask
+import org.gradle.api.artifacts.ProjectDependency
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+
 // Applied by every module, so targets, warnings and style cannot drift between modules.
 plugins {
     id("org.jetbrains.kotlin.multiplatform")
@@ -42,4 +47,36 @@ ktlint {
         // Generated sources (BuildInfo.kt) are not ours to format.
         exclude { it.file.path.contains("/build/generated/") }
     }
+}
+
+val aulo = extensions.create<AuloModuleExtension>("aulo")
+
+// Declared dependencies of production source sets; tests may use anything.
+val productionDependencies =
+    provider {
+        configurations
+            .filter { c -> listOf("Api", "Implementation", "CompileOnly").any { c.name.endsWith(it) } }
+            .filterNot { it.name.contains("Test") }
+            .flatMap { it.dependencies }
+    }
+
+tasks.register<ModuleManifestTask>("moduleManifest") {
+    modulePath.set(project.path)
+    role.set(aulo.role)
+    externals.set(
+        productionDependencies.map { deps ->
+            deps.filterNot { it is ProjectDependency }.map { "${it.group}:${it.name}" }.distinct()
+        },
+    )
+    projects.set(productionDependencies.map { deps -> deps.filterIsInstance<ProjectDependency>().map { it.path }.distinct() })
+    cinterops.set(
+        provider {
+            kotlin.targets
+                .withType<KotlinNativeTarget>()
+                .flatMap { it.compilations.getByName("main").cinterops }
+                .map { it.name }
+                .distinct()
+        },
+    )
+    manifest.set(layout.buildDirectory.file("aulo/module-manifest.txt"))
 }
