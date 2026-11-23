@@ -1,0 +1,3 @@
+program = "aulod"
+args = ["run", "--config", "missing.toml"]
+status = 1
