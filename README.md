@@ -19,6 +19,7 @@ in [plan/](plan/README.md) is open again.
 - [Research and sources](research.md)
 - [Plan](plan/README.md) · [Roadmap](roadmap.md)
 - [Documentation](docs/README.md): [gRPC API reference](docs/api/aulo.v1.md), [spike reports](docs/spikes/)
+- [aulo-chat](aulo-chat/README.md): the Compose Multiplatform chat client (Android, iOS, desktop) with a development server; it builds and runs today
 
 ## Build
 

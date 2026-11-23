@@ -8,9 +8,10 @@ The name comes from the Greek *aulos*, a reed pipe: breath turned into voice.
 
 aulo is a local-first voice agent that controls the computer it runs on. It is implemented in Kotlin/Native (Gradle KMP, native targets). You talk to it, and it talks back. It runs shell commands, launches and drives programs, and works in a browser. It can use MCP servers and act as one for other agents. It loads plugins, and it runs on local or remote language models that you can switch at any time.
 
-It ships as one daemon, `aulod`, that owns the agent, the voice pipeline, the tools and the data. Three kinds of client reach it over gRPC:
+It ships as one daemon, `aulod`, that owns the agent, the voice pipeline, the tools and the data. Four kinds of client reach it over gRPC:
 
 - **Desktop apps.** Native SwiftUI (macOS) and WinUI 3 (Windows) apps with chats, voice, approvals and settings.
+- **Chat client (`aulo-chat`).** A Compose Multiplatform app for Android, iOS and desktop: text chat with streamed answers (D10, §12.1).
 - **CLI (`aulo`).** Text chat, administration and the MCP server entry point.
 - **Remote clients.** Any gRPC client, when aulod runs as a server on another machine.
 
@@ -36,7 +37,7 @@ It ships as one daemon, `aulod`, that owns the agent, the voice pipeline, the to
 ### 1.2 Non-goals for v1
 
 - A hosted cloud service. aulo runs on the user's machine or the user's server.
-- Mobile apps. The gRPC API makes them possible later; see `ideas.md`.
+- aulod on a phone. The mobile apps of D10 are chat clients of a daemon that runs on a desktop or a server; voice from a phone is in `ideas.md`.
 - Training models.
 - Native in-process plugins. Plugins are processes or WASM, never dylibs.
 
@@ -468,6 +469,18 @@ Both apps offer:
 - Connections to the local daemon and to remote servers.
 - English and Russian UI.
 
+### 12.1 Chat client (`aulo-chat`)
+
+A Compose Multiplatform app (D10) in `aulo-chat/`, its own Gradle build, so the Android Gradle Plugin and Compose stay out of the daemon's Kotlin/Native build.
+
+- **Targets.** Android, iOS, and desktop on the JVM (macOS arm64, Windows x86_64, Linux). No web target yet (§17, open).
+- **API.** `aulo.v1` over gRPC as it is (D6), through kotlinx-rpc: `ChatService` for chats and history, `SessionService.Converse` for turns, token deltas, interrupts and model switches, `ConfigService.ListModels` for the model list.
+- **Structure.** Clean architecture: domain (models, use cases), data (gRPC gateway, SQLDelight cache, repository), presentation (a view model exposing one `StateFlow`), Compose UI; Koin wires it.
+- **Offline.** The 20 most recent chats are cached on the device and shown read-only when aulod cannot be reached.
+- **Untrusted text.** Model output is drawn as plain text and capped per message.
+- **Design.** Screens for every platform are in the Pyrlyn UIkit Figma file; `aulo-chat/design/` describes each screen in Markdown.
+- **Development server.** `aulo-chat/server` serves the same contract with a stub model, a bounded request queue, retries and a per-chat rate limit, until aulod does (S3, S4). It is not a deployment shape.
+
 ## 13. Server mode
 
 - **Start.** `aulod run --headless --listen 0.0.0.0:7443`.
@@ -577,10 +590,14 @@ Settled by the creator on 2026-10-07 (details in `plan/T0.*/`):
 - **D7** There are two deployment shapes: a desktop app with chats, and a server with an API. Creator, 2026-10-07.
 - **D8** The repository is the public `pyrlyn/aulo`. Creator, 2026-10-07.
 - **D9** sherpa-onnx links espeak-ng (GPL-3.0) in-process; the GPL is accepted. A build that contains sherpa-onnx TTS is distributed under GPL-3.0-or-later only, so the royalty-free and commercial options of D1 do not cover it. Other GPL engines (Piper) still run as separate plugin processes. Creator, 2026-10-07 (sherpa-onnx spike, risk R1).
+- **D10** A Compose Multiplatform chat client, `aulo-chat`, for Android, iOS and desktop (macOS arm64, Windows x86_64, Linux), over the same gRPC API. D6 stands: tokens stream over `SessionService.Converse`, not SSE or WebSocket. Mobile is in scope as a client of aulod. Creator, 2026-11-22 (T12.22).
 
 Open:
 
-- **Native desktop app for Linux.** Linux runs the daemon and the CLI; whether it gets a desktop app (and with which toolkit) is not decided.
+- **Native desktop app for Linux.** Linux runs the daemon and the CLI; whether it gets a native desktop app (and with which toolkit) is not decided. `aulo-chat` (D10) runs on Linux as a chat client.
+- **D10 and the native apps of D2.** Whether `aulo-chat` replaces the SwiftUI and WinUI 3 apps, or stays a chat client beside them, is not decided.
+- **Web target for `aulo-chat`.** A browser needs gRPC-Web (in aulod or a proxy, see `ideas.md`) and a Kotlin gRPC client for JavaScript or WebAssembly; kotlinx-rpc 0.11.0-grpc-190 has neither. Not decided.
+- **Attachments in a turn.** `UserTurn` carries text only, so `aulo-chat` sends text files inside the message and does not send images or voice notes. How attachments enter `aulo.v1` is not decided.
 
 ## 18. Risks
 

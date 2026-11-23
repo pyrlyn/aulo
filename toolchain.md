@@ -9,7 +9,10 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 | Program | How to install | Why here | Source |
 | --- | --- | --- | --- |
 | java (JDK 21, Temurin) | mise (`mise.toml`, `temurin-21`) | Runs Gradle and the Kotlin/Native compiler | https://adoptium.net/ |
-| Gradle | Gradle wrapper (lands with plan S2) | Builds the KMP project, runs tests and ktlint | https://gradle.org/ |
+| Gradle | Gradle wrapper: `aulo-chat/gradlew` (9.9.2) today; the root wrapper lands with plan S2 | Builds `aulo-chat`; later the KMP project, tests and ktlint | https://gradle.org/ |
+| Android SDK (platform 37.1, build tools) | Android Studio or `sdkmanager`; found through `ANDROID_HOME` | Builds the `aulo-chat` Android app | https://developer.android.com/studio |
+| Xcode | Mac App Store | Builds the `aulo-chat` iOS app and links its Kotlin framework | https://developer.apple.com/xcode/ |
+| XcodeGen (2.48.0) | mise (`aulo-chat/mise.toml`, `aqua:yonaskolb/XcodeGen`) | Generates `aulo-chat/iosApp/iosApp.xcodeproj` from `project.yml`, so no Xcode project is kept in git | https://github.com/yonaskolb/XcodeGen |
 | python3 | system / mise (`mise.toml`) | Runs `scripts/sync-issues.py` (stdlib only) | https://github.com/python/cpython |
 | gh | brew / mise | Creates labels, milestones and issues from `plan/` | https://github.com/cli/cli |
 | just | mise (`mise.toml`) | Task runner (`justfile`) | https://github.com/casey/just |
@@ -24,3 +27,22 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 Native libraries used by the speech and audio modules (sherpa-onnx, whisper.cpp, libopus,
 and so on) are chosen and recorded here by the task that first wires each of them, including
 any cinterop or CMake dependency.
+
+## Gradle (`aulo-chat/gradle/libs.versions.toml`)
+
+Everything here is local to the `aulo-chat` build (T12.22).
+
+| Package | Where | Source | Why here |
+| --- | --- | --- | --- |
+| Kotlin Gradle plugins 2.4.21 (multiplatform, jvm, compose compiler) | local | https://github.com/JetBrains/kotlin | Compile the client for Android, iOS and the JVM, and the server |
+| Compose Multiplatform 1.12.2 (plugin; runtime, foundation, ui, ui-test) | local | https://github.com/JetBrains/compose-multiplatform | The UI toolkit of the client on every target, and its UI tests |
+| Compose Material 3 1.9.0 (`org.jetbrains.compose.material3`) | local | https://github.com/JetBrains/compose-multiplatform | The widgets of the chat screen |
+| Android Gradle Plugin 9.5.2 (application, KMP library) | local | https://developer.android.com/build | Builds the Android app and the Android side of the shared modules |
+| kotlinx-rpc 0.11.0-grpc-190 (plugin; grpc-core, grpc-client, grpc-server, protobuf) | local, from `redirector.kotlinlang.org/maven/kxrpc-grpc` | https://github.com/Kotlin/kotlinx-rpc | Generates Kotlin from `proto/aulo/v1` and runs gRPC on the JVM, Android and Kotlin/Native; a pre-release, the first with gRPC on Native |
+| grpc-java 1.81.0 (`grpc-netty-shaded`, `grpc-okhttp`) | local | https://github.com/grpc/grpc-java | The gRPC transports under kotlinx-rpc: Netty on desktop and in the server, OkHttp on Android |
+| kotlinx-coroutines 1.11.0 (core, swing, test) | local | https://github.com/Kotlin/kotlinx.coroutines | Flows and `StateFlow`, the desktop main dispatcher, tests |
+| Koin 4.2.2 (core, core-viewmodel, compose, compose-viewmodel) | local | https://github.com/InsertKoinIO/koin | Dependency injection |
+| SQLDelight 2.4.1 (plugin; runtime, coroutines-extensions, sqlite, android and native drivers) | local | https://github.com/sqldelight/sqldelight | The offline cache of recent chats |
+| JetBrains Lifecycle 2.11.0 (viewmodel, viewmodel-compose, runtime-compose) | local | https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-lifecycle.html | `ViewModel` and lifecycle-aware state collection on every target |
+| androidx.activity:activity-compose 1.13.0 | local | https://developer.android.com/jetpack/androidx/releases/activity | Hosts Compose in the Android activity |
+| kotlin-test | local | https://github.com/JetBrains/kotlin | Test assertions |

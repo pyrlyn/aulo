@@ -11,7 +11,7 @@ If an `AGENTS.md` or `CLAUDE.md` exists higher in the tree, follow it too; on co
 
 - `spec.md` — the specification. Section numbers are stable; tasks cite them.
 - `research.md` — sources for every external fact and the reuse map of the workspace (Part 6).
-- `plan/` — one folder per task (`plan/<id>/task.md`, closed ones also `done.md`); `plan/README.md` says how to read it. Settled decisions D1–D9 are recorded in `spec.md` §17. Never decide an open question in `spec.md` §17 yourself; ask the creator.
+- `plan/` — one folder per task (`plan/<id>/task.md`, closed ones also `done.md`); `plan/README.md` says how to read it. Settled decisions D1–D10 are recorded in `spec.md` §17. Never decide an open question in `spec.md` §17 yourself; ask the creator.
 
 ## Hard rules
 
@@ -29,6 +29,7 @@ If an `AGENTS.md` or `CLAUDE.md` exists higher in the tree, follow it too; on co
 
 - Gradle KMP modules (`aulo-<role>`), created by S2+ tasks, hold the Kotlin/Native daemon and CLI.
 - `desktop/macos` (SwiftUI) and `desktop/windows` (WinUI 3) — native apps over `aulo-ffi` (T12.3, T12.15).
+- `aulo-chat/` — the Compose Multiplatform chat client and its development server (D10, T12.22); its own Gradle build, commands in `aulo-chat/README.md`, screens described in `aulo-chat/design/`.
 - `proto/aulo/v1/` — gRPC service definitions (T3.1).
 - `plugins/` — plugin SDK examples (T11.5).
 - `docs/` — guides, threat model, spike reports (`docs/spikes/`). Historical spike reports may describe the retired Rust workspace; new work follows this file and `spec.md`.
