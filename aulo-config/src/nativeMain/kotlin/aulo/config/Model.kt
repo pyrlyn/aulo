@@ -1,5 +1,6 @@
 package aulo.config
 
+import aulo.telemetry.LogLevel
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -17,6 +18,7 @@ data class Config(
     val mcp: McpConfig = McpConfig(),
     val plugins: PluginsConfig = PluginsConfig(),
     val policy: PolicyConfig = PolicyConfig(),
+    val log: LogConfig = LogConfig(),
 )
 
 @Serializable
@@ -199,3 +201,10 @@ data class PolicyConfig(
         require(approvalTimeoutSecs >= 1) { "policy.approval_timeout_secs must be at least 1" }
     }
 }
+
+@Serializable
+@Doc("Log files in `\$AULO_HOME/logs`. Secrets are masked before any line is written.")
+data class LogConfig(
+    @Doc("Least severe level written: trace, debug, info, warn or error.")
+    val level: LogLevel = LogLevel.INFO,
+)
