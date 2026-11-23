@@ -135,7 +135,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: pyrlyn/packages
-          ref: 52e941b40603391f6f74de0ff8958b24da42ecd0 # 0.0.5
+          ref: cc286918bf40a71aa09dd5cfcf6497fc173d36de
           path: packages
           persist-credentials: false
 
