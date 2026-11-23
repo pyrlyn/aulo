@@ -62,5 +62,6 @@ After review (SonarQube rated the security of the new code C, on four findings):
 - No test runs the release build, so the keep rules are checked by hand only.
 - The channel to the development server is still plaintext on Android: gRPC over OkHttp does
   not consult the cleartext setting. TLS comes with aulod's own transport (spec §11).
-- The lock files are written on macOS, where the iOS configurations exist. Whether Renovate
+- The lock files and checksums are written on macOS, where the iOS frameworks link and the
+  macOS Kotlin/Native bundle resolves. Whether Renovate
   regenerates them completely was not checked.

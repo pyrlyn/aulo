@@ -30,10 +30,11 @@ state; start the server and press Retry.
 
 Dependency versions are locked: `gradle.lockfile` in each module and
 `buildscript-gradle.lockfile` for the plugins. `gradle/verification-metadata.xml` holds the
-SHA-256 of every file the build downloads. A build fails when it resolves a version the lock
-does not name or a file whose checksum is not listed, so after changing a dependency or a
-plugin regenerate both in one run on macOS (the iOS configurations exist only there; run
-apart, relocking fails on the checksums of what it resolves for the first time):
+SHA-256 of every file the build downloads. The lock wins over the catalog, so a changed
+version takes no effect until the locks are rewritten, and a build fails on a file whose
+checksum is not listed. After changing a dependency or a plugin, regenerate both in one run
+on macOS (only there do the iOS frameworks link and the macOS Kotlin/Native bundle resolve;
+run apart, relocking fails on the checksums of what it resolves for the first time):
 
 ```bash
 ./gradlew --write-locks --write-verification-metadata sha256 resolveAndLockAll build \

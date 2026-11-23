@@ -19,8 +19,9 @@ plugins {
 
 // The catalog pins what the build asks for; the lock files pin what it gets, transitive modules
 // included, so a build does not change under an unchanged catalog; gradle/verification-metadata.xml
-// pins the checksum of every file it downloads. After changing a dependency, on macOS (the iOS
-// configurations exist only there), in one run, since relocking alone fails verification:
+// pins the checksum of every file it downloads. A lock entry is a strict constraint, so a changed
+// catalog version takes no effect until the locks are rewritten. After changing a dependency, on
+// macOS (where the iOS frameworks link), in one run, since relocking alone fails verification:
 // ./gradlew --write-locks --write-verification-metadata sha256 resolveAndLockAll build <tasks>
 // (the task list is in README.md)
 allprojects {
