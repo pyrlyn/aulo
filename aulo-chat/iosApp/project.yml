@@ -1,0 +1,59 @@
+# The Xcode project is generated from this file, so the repository holds no .xcodeproj:
+#   mise x -- xcodegen generate --spec iosApp/project.yml
+name: iosApp
+options:
+  bundleIdPrefix: aulo
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+targets:
+  iosApp:
+    type: application
+    platform: iOS
+    sources:
+      - path: iosApp
+        excludes: [Info.plist]
+    info:
+      path: iosApp/Info.plist
+      properties:
+        CFBundleDisplayName: aulo chat
+        UILaunchScreen: {}
+        UIUserInterfaceStyle: Dark
+        # Compose refuses to start without it: it lets the UI run at the display's full rate.
+        CADisableMinimumFrameDurationOnPhone: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        # Asked for when the app is pointed at a server on the local network (a real device).
+        NSLocalNetworkUsageDescription: aulo chat connects to the aulo server on your network.
+        # Read by MainViewController.kt; empty values mean 127.0.0.1:50051.
+        AuloChatHost: $(AULO_CHAT_HOST)
+        AuloChatPort: $(AULO_CHAT_PORT)
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: aulo.chat
+        PRODUCT_NAME: aulo chat
+        MARKETING_VERSION: 1.0.0
+        CURRENT_PROJECT_VERSION: 1
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        AULO_CHAT_HOST: ""
+        AULO_CHAT_PORT: ""
+        FRAMEWORK_SEARCH_PATHS: $(SRCROOT)/../composeApp/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)
+        # The Kotlin framework is static, so SQLite, which its cache driver calls, is linked here.
+        OTHER_LDFLAGS: $(inherited) -framework AuloChat -lsqlite3
+        # The Gradle step below writes outside the sandbox Xcode gives run scripts.
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+    preBuildScripts:
+      - name: Build the Kotlin framework
+        basedOnDependencyAnalysis: false
+        script: |
+          # Xcode starts scripts with a bare PATH; mise, when present, supplies the JDK.
+          export PATH="$HOME/.local/bin:/opt/homebrew/bin:$PATH"
+          cd "$SRCROOT/.."
+          if command -v mise >/dev/null 2>&1; then
+            mise x -- ./gradlew :composeApp:embedAndSignAppleFrameworkForXcode
+          else
+            ./gradlew :composeApp:embedAndSignAppleFrameworkForXcode
+          fi

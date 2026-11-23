@@ -4,7 +4,12 @@ Not approved. Nothing here moves to `roadmap.md` or `plan/` without the creator'
 
 - **grpc-web for browsers.** gRPC-web in aulod so a web client can connect without a proxy.
 - **OpenAI-compatible HTTP facade.** `/v1/chat/completions` on top of the agent, for tools that only speak that API.
-- **Mobile clients.** iOS and Android apps on the gRPC API (voice over `VoiceService`).
+- **Voice on mobile.** `aulo-chat` (D12) is text chat on iOS and Android; voice over `VoiceService` from a phone is not planned yet.
+- **Attachments in `UserTurn`.** A repeated attachment field (kind, name, bytes or a reference) in `aulo.v1`, so `aulo-chat` can send images and voice notes instead of only staging them (T12.22; open in spec §17).
+- **Real attachment pickers in aulo-chat.** A file and image picker per platform (for example FileKit) and a voice recorder behind `AttachmentPicker`; today it returns sample files (T12.22).
+- **aulo-chat screens beyond the chat.** The conversation list, the model sheet and the attachments sheet are designed (`aulo-chat/design/`) but not built (T12.22).
+- **Platform widgets in aulo-chat.** The UI is Material 3 with each platform's colours and radii; the workspace's glass, fluent and adwaita Compose packages target JVM and wasmJs only, so they cannot serve Android and iOS yet (T12.22).
+- **aulo-chat reconnects by itself.** Backoff reconnect instead of only the Retry button; a light theme; Russian UI (T12.22).
 - **Owner voice only.** Speaker identification (sherpa-onnx speaker embeddings) so aulo answers only its owner's voice, or treats other voices as untrusted.
 - **Harness emulation per model family.** Prompt and tool formats tuned per local model family, as Open Interpreter does.
 - **Remote nodes.** A desktop install acts as a node that a remote aulod controls, under the node's own local policy (OpenClaw nodes).
