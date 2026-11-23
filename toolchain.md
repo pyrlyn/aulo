@@ -61,6 +61,7 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 | io.ktor:ktor-network (3.6.1) | local (`aulo-grpc`) | https://github.com/ktorio/ktor | TCP and Unix sockets under the gRPC transport on every target; HTTP/2 itself is nghttp2 (spec §17 D11; Apache-2.0) |
 | io.ktor:ktor-io, io.ktor:ktor-utils (3.6.1) | local (via `ktor-network`) | https://github.com/ktorio/ktor | The socket byte channels (Apache-2.0) |
 | org.jetbrains.kotlinx:kotlinx-io-core | local (via `ktor-io`) | https://github.com/Kotlin/kotlinx-io | Removes a Unix socket file when the gRPC server shuts down (Apache-2.0) |
+| org.jetbrains:markdown (0.7.18) | local (`aulo-voice`) | https://github.com/JetBrains/markdown | CommonMark and GFM parser of the speakable-text normalizer: markdown is stripped from replies before TTS (Apache-2.0) |
 | org.kotlincrypto.random:crypto-rand (0.6.0) | local (`aulo-server`) | https://github.com/KotlinCrypto/random | The OS's random bytes (`getrandom`, `CCRandomGenerateBytes`, `BCryptGenRandom`) for bearer tokens on every target (Apache-2.0) |
 | org.jetbrains.kotlin:kotlin-test | local (`commonTest`) | https://github.com/JetBrains/kotlin | Unit tests |
 | org.jetbrains.kotlin:kotlin-test-junit5 | local (`build-logic` tests) | https://github.com/JetBrains/kotlin | Tests of the module-graph rules on the JVM |
