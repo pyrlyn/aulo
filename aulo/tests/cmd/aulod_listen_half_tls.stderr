@@ -1,0 +1,1 @@
+error: daemon.tls_cert and daemon.tls_key go together: set both, or neither for a self-signed certificate

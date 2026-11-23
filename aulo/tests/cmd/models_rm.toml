@@ -1,0 +1,5 @@
+# Partial downloads go too.
+args = ["models", "rm", "parakeet-tdt-0.6b-v3-int8"]
+
+[home]
+"models/parakeet-tdt-0.6b-v3-int8/encoder.int8.onnx.part" = "partial"

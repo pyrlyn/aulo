@@ -1,0 +1,57 @@
+# SIGINT and SIGTERM for aulod on Unix, as the self-pipe trick: the handler only writes the
+# signal number to a pipe, which is async-signal-safe, and a thread reads it. Blocking the
+# signals and taking them with sigwait does not work here: the Kotlin/Native runtime starts its
+# own threads before main, so their masks cannot be set, and a signal sent to the process kills
+# it through one of them. A handler written in Kotlin would enter the runtime in signal context.
+headers = signal.h
+# Only the aulo_* helpers below are bound; the header is there for them.
+headerFilter = aulo-none
+package = aulo.app.daemon.signals
+---
+#include <errno.h>
+#include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
+
+static int aulo_signal_pipe[2] = {-1, -1};
+
+static void aulo_on_signal(int signal) {
+    int saved = errno;
+    unsigned char number = (unsigned char) signal;
+    /* Non-blocking: a pipe full of unread signals drops this one instead of hanging the handler. */
+    (void) write(aulo_signal_pipe[1], &number, 1);
+    errno = saved;
+}
+
+static int aulo_close_on_exec(int fd, int extra) {
+    int flags = fcntl(fd, F_GETFL);
+    if (flags < 0 || fcntl(fd, F_SETFL, flags | extra) != 0) return -1;
+    return fcntl(fd, F_SETFD, FD_CLOEXEC);
+}
+
+/*
+ * Routes SIGINT and SIGTERM to the pipe; returns 0 or an errno. A signal the parent set to be
+ * ignored (a shell does that for SIGINT of background jobs) is taken too, so aulod always stops
+ * on request.
+ */
+static inline int aulo_signals_install(void) {
+    if (pipe(aulo_signal_pipe) != 0) return errno;
+    if (aulo_close_on_exec(aulo_signal_pipe[0], 0) != 0 || aulo_close_on_exec(aulo_signal_pipe[1], O_NONBLOCK) != 0) return errno;
+    struct sigaction action;
+    memset(&action, 0, sizeof action);
+    action.sa_handler = aulo_on_signal;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = SA_RESTART;
+    if (sigaction(SIGINT, &action, NULL) != 0 || sigaction(SIGTERM, &action, NULL) != 0) return errno;
+    return 0;
+}
+
+/* Waits for the next signal and returns its number, or -1 with errno set. */
+static inline int aulo_signals_wait(void) {
+    unsigned char number;
+    ssize_t read_bytes;
+    do {
+        read_bytes = read(aulo_signal_pipe[0], &number, 1);
+    } while (read_bytes < 0 && errno == EINTR);
+    return read_bytes == 1 ? number : -1;
+}

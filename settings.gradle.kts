@@ -36,12 +36,15 @@ includeBuild(kotlinKitDir)
 include(
     ":aulo",
     ":aulo-types",
-    ":aulo-speech",
-    ":aulo-testkit",
-    ":aulo-voice",
     ":aulo-telemetry",
     ":aulo-config",
     ":aulo-store",
     ":aulo-proto",
     ":aulo-grpc",
+    ":aulo-secrets",
+    ":aulo-server",
+    ":aulo-models",
+    ":aulo-speech",
+    ":aulo-testkit",
+    ":aulo-voice",
 )

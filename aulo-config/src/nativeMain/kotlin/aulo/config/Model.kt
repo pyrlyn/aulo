@@ -26,10 +26,13 @@ data class Config(
 data class DaemonConfig(
     @Doc("TCP address for remote clients. Unset: the owner-only local socket only.")
     val listen: String? = null,
-    @Doc("Certificate for `listen`. TLS is required whenever `listen` is set.")
+    @Doc(
+        "PEM certificate chain for `listen`; a relative path is in the aulo home. `listen` always serves TLS: " +
+            "with neither this nor `tls_key` set, aulod makes a self-signed certificate once and logs its SHA-256 to pin.",
+    )
     @SerialName("tls_cert")
     val tlsCert: String? = null,
-    @Doc("Private key for `tls_cert`.")
+    @Doc("PEM private key for `tls_cert`; set both or neither.")
     @SerialName("tls_key")
     val tlsKey: String? = null,
 )

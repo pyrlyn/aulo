@@ -13,6 +13,11 @@ wire = "7.2.2"
 ktor = "3.6.1"
 # CommonMark and GFM parser for the speakable-text normalizer (T7.15).
 markdown = "0.7.18"
+# Streaming SHA-256 of model downloads (T7.3); the version Wire already brings, so the build
+# keeps one okio.
+okio = "3.18.2"
+# OS randomness (getrandom, CCRandomGenerateBytes, BCryptGenRandom) for bearer tokens (T3.4).
+crypto-rand = "0.6.0"
 
 [libraries]
 # build-logic puts these Gradle plugins on the classpath of every module.
@@ -21,6 +26,8 @@ ktlint-gradle-plugin = { module = "org.jlleitschuh.gradle:ktlint-gradle", versio
 kotlin-serialization-plugin = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
 sqldelight-gradle-plugin = { module = "app.cash.sqldelight:gradle-plugin", version.ref = "sqldelight" }
 wire-gradle-plugin = { module = "com.squareup.wire:wire-gradle-plugin", version.ref = "wire" }
+# The schema API for the build-logic handler that writes the gRPC method tables (T3.3).
+wire-schema = { module = "com.squareup.wire:wire-schema", version.ref = "wire" }
 
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "serialization" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
@@ -28,6 +35,8 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 wire-runtime = { module = "com.squareup.wire:wire-runtime", version.ref = "wire" }
 ktor-network = { module = "io.ktor:ktor-network", version.ref = "ktor" }
 jetbrains-markdown = { module = "org.jetbrains:markdown", version.ref = "markdown" }
+okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
+crypto-rand = { module = "org.kotlincrypto.random:crypto-rand", version.ref = "crypto-rand" }
 
 [plugins]
 # build-logic formats itself with the same ktlint as the modules.

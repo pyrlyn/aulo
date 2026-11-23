@@ -1,0 +1,2 @@
+program = "aulod"
+args = ["service", "--help"]

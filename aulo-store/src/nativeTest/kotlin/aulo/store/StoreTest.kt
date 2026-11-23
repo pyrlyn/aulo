@@ -216,4 +216,13 @@ class StoreTest {
             assertTrue(e.isMissingReference, e.message)
             assertTrue(s.chatHistory("missing").isEmpty())
         }
+
+    @Test
+    fun apiTokensKeepTheirHashAndRefuseADuplicate() =
+        withStore { s, _ ->
+            val token = s.putApiToken("first", "admin", "ab".repeat(32))
+            assertEquals(listOf(token), s.listApiTokens())
+            assertFailsWith<StoreException> { s.putApiToken("again", "read", token.hash) }
+            assertEquals(1, s.listApiTokens().size)
+        }
 }

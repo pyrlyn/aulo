@@ -1,0 +1,5 @@
+# Another aulod with pid 4242 holds the home.
+program = "aulod"
+args = ["run"]
+status = 1
+running = 4242
