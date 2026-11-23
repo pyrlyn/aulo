@@ -167,10 +167,33 @@ fun BufferedSink.writeText(
 internal fun String.utf8Prefix(maxBytes: Int): ByteArray {
     val bytes = encodeToByteArray()
     if (bytes.size <= maxBytes) return bytes
-    var end = maxBytes
+    return bytes.copyOf(bytes.utf8Cut(0, maxBytes))
+}
+
+/** The text in pieces of at most [maxBytes] of UTF-8 each, cut on character boundaries. */
+internal fun String.utf8Chunks(maxBytes: Int): List<String> {
+    val bytes = encodeToByteArray()
+    val chunks = mutableListOf<String>()
+    var from = 0
+    while (from < bytes.size) {
+        val end = bytes.utf8Cut(from, maxBytes)
+        chunks += bytes.decodeToString(from, end)
+        from = end
+    }
+    return chunks
+}
+
+/** Where a piece of at most [maxBytes] that starts at [from] ends without splitting a character. */
+private fun ByteArray.utf8Cut(
+    from: Int,
+    maxBytes: Int,
+): Int {
+    require(maxBytes >= 4) { "a piece must hold any character" }
+    var end = from + maxBytes
+    if (end >= size) return size
     // Back off continuation bytes (10xxxxxx) so the cut never splits a character.
-    while (end > 0 && (bytes[end].toInt() and 0xC0) == 0x80) end--
-    return bytes.copyOf(end)
+    while (end > from && (this[end].toInt() and 0xC0) == 0x80) end--
+    return end
 }
 
 private val EMPTY = ByteArray(0)
