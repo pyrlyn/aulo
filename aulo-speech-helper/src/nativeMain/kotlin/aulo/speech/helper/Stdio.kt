@@ -1,4 +1,4 @@
-package aulo.speech.sherpa
+package aulo.speech.helper
 
 import okio.Buffer
 import okio.IOException
@@ -21,10 +21,10 @@ internal expect fun writeStdout(
 )
 
 /** Makes stdin and stdout byte streams: Windows would otherwise translate line ends in the frames. */
-internal expect fun binaryStdio()
+expect fun binaryStdio()
 
 /** stdin as an okio source: the frames from aulod. */
-internal class StdinSource : Source {
+class StdinSource : Source {
     private val chunk = ByteArray(CHUNK)
 
     override fun read(
@@ -43,7 +43,7 @@ internal class StdinSource : Source {
 }
 
 /** stdout as an okio sink: the replies to aulod. */
-internal class StdoutSink : Sink {
+class StdoutSink : Sink {
     private val chunk = ByteArray(CHUNK)
 
     override fun write(
