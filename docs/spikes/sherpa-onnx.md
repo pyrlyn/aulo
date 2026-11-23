@@ -164,5 +164,6 @@ empty outputs as errors. The threshold awaits the creator's confirmation.
    `settings.gradle.kts`, and create its lock with the command in AGENTS.md.
 2. `./gradlew :<module>:linkSpikeReleaseExecutable<Target>`.
 3. `sherpa-spike.kexe stt parakeet <model dir> 4 @<list of wavs>`; then
-   `python3 -I wer.py <fleurs dev.tsv> <output tsv>`. Also `vad`, `kws` and `tts`; run the binary with
+   `python3 -I wer.py <fleurs dev.tsv> <output tsv>`, run in the directory that holds both files
+   (it reads nothing outside it). Also `vad`, `kws` and `tts`; run the binary with
    no arguments for usage.
