@@ -156,6 +156,10 @@ jobs:
         with:
           path: ~/.konan
           key: konan-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('gradle/libs.versions.toml') }}
+          # kotlin-kit's conan script reads konan.properties when Gradle creates its task, before
+          # Kotlin/Native is downloaded; an older cache still holds the toolchain after a catalog
+          # change that leaves the Kotlin version alone.
+          restore-keys: konan-${{ runner.os }}-${{ runner.arch }}-
 
       # One Gradle invocation: each extra one re-resolves the build classpath, and Maven Central
       # answers GitHub's Linux runners with 429 often enough to fail a second pass.
