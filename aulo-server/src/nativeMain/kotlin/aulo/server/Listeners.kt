@@ -8,11 +8,13 @@ class ListenerConfigException(
     message: String,
 ) : Exception(message)
 
-/** A TCP listener for remote clients and the TLS files it must serve with (spec §11). */
+/**
+ * A TCP listener for remote clients; it always serves TLS (spec §11): [tls] names the files, or
+ * is null for aulod's own self-signed certificate ([SelfSignedTls]).
+ */
 data class RemoteListener(
     val endpoint: Endpoint.Tcp,
-    val tlsCert: String,
-    val tlsKey: String,
+    val tls: TlsFiles?,
 )
 
 /** Where aulod listens: always the owner-only local socket, and TCP when `daemon.listen` is set. */
@@ -43,10 +45,21 @@ data class Listeners(
             }
             val listen = config.listen ?: return Listeners(Endpoint.Unix(socket))
             val endpoint = parseListen(listen)
-            // TLS is required on every TCP listener, loopback included (spec §11, §13).
-            val cert = config.tlsCert ?: throw ListenerConfigException("daemon.listen needs daemon.tls_cert: TLS is required on TCP")
-            val key = config.tlsKey ?: throw ListenerConfigException("daemon.listen needs daemon.tls_key: TLS is required on TCP")
-            return Listeners(Endpoint.Unix(socket), RemoteListener(endpoint, cert, key))
+            // TLS is served on every TCP listener, loopback included (spec §11, §13); without
+            // files of its own the listener uses aulod's self-signed certificate.
+            val cert = config.tlsCert
+            val key = config.tlsKey
+            val files =
+                when {
+                    cert != null && key != null -> TlsFiles(cert, key)
+
+                    cert == null && key == null -> null
+
+                    else -> throw ListenerConfigException(
+                        "daemon.tls_cert and daemon.tls_key go together: set both, or neither for a self-signed certificate",
+                    )
+                }
+            return Listeners(Endpoint.Unix(socket), RemoteListener(endpoint, files))
         }
 
         /** `host:port` or `[ipv6]:port`, port 1 to 65535. */
