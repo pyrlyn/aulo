@@ -43,27 +43,7 @@ data class OpenAiEndpoint(
     val isLoopback: Boolean
 
     init {
-        if (baseUrl.encodeToByteArray().size > MAX_BASE_URL_BYTES) {
-            throw SpeechException.Invalid("base URL", "is longer than $MAX_BASE_URL_BYTES bytes")
-        }
-        val scheme = baseUrl.substringBefore("://", "")
-        if (scheme != "https" && scheme != "http") throw SpeechException.Invalid("base URL", "must start with https:// or http://")
-        // A key or token in the URL itself would end up in errors and logs; it belongs in the secret store.
-        if (baseUrl.any { it.isWhitespace() || it.isISOControl() || it in "?#@" }) {
-            throw SpeechException.Invalid("base URL", "takes no spaces, query, fragment or user name")
-        }
-        val authority = baseUrl.substringAfter("://").substringBefore('/')
-        if (authority.isEmpty()) throw SpeechException.Invalid("base URL", "has no host")
-        isLoopback = isLoopbackHost(hostOf(authority))
-        if (apiKeySecret != null) {
-            try {
-                SecretStore.checkName(apiKeySecret)
-            } catch (e: SecretException) {
-                throw SpeechException.Invalid("API key secret", e.message ?: "bad name")
-            }
-            // Plain HTTP to another machine would hand the key to anyone on the path.
-            if (scheme == "http" && !isLoopback) throw SpeechException.Invalid("base URL", "sends the API key only over https")
-        }
+        isLoopback = checkServer(baseUrl, apiKeySecret)
         // Validated like any engine label, so the spec built from it cannot fail later.
         aulo.speech.EngineSpec(engine, model = defaultModel)
     }
@@ -121,6 +101,38 @@ fun SttRegistry.registerOpenAi(
     options: OpenAiSttOptions = OpenAiSttOptions(),
 ) {
     register(endpoint.engine) { spec -> OpenAiStt(endpoint, spec.model ?: endpoint.defaultModel, http, secrets, options) }
+}
+
+/**
+ * Checks the API root and the key's secret name every endpoint shares; returns whether the server
+ * is on this machine.
+ */
+internal fun checkServer(
+    baseUrl: String,
+    apiKeySecret: String?,
+): Boolean {
+    if (baseUrl.encodeToByteArray().size > MAX_BASE_URL_BYTES) {
+        throw SpeechException.Invalid("base URL", "is longer than $MAX_BASE_URL_BYTES bytes")
+    }
+    val scheme = baseUrl.substringBefore("://", "")
+    if (scheme != "https" && scheme != "http") throw SpeechException.Invalid("base URL", "must start with https:// or http://")
+    // A key or token in the URL itself would end up in errors and logs; it belongs in the secret store.
+    if (baseUrl.any { it.isWhitespace() || it.isISOControl() || it in "?#@" }) {
+        throw SpeechException.Invalid("base URL", "takes no spaces, query, fragment or user name")
+    }
+    val authority = baseUrl.substringAfter("://").substringBefore('/')
+    if (authority.isEmpty()) throw SpeechException.Invalid("base URL", "has no host")
+    val loopback = isLoopbackHost(hostOf(authority))
+    if (apiKeySecret != null) {
+        try {
+            SecretStore.checkName(apiKeySecret)
+        } catch (e: SecretException) {
+            throw SpeechException.Invalid("API key secret", e.message ?: "bad name")
+        }
+        // Plain HTTP to another machine would hand the key to anyone on the path.
+        if (scheme == "http" && !loopback) throw SpeechException.Invalid("base URL", "sends the API key only over https")
+    }
+    return loopback
 }
 
 /** The host of `host[:port]` or `[v6]:port`. */

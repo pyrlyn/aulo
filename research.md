@@ -650,6 +650,21 @@ Checked 2026-11-23. The pages carry no version or date. Sources:
 - **Errors**: neither page documents the error body. aulo reads the `{"error": {"message": ...}}` shape of OpenAI's other endpoints when it is there (**unverified** for this endpoint) and the raw text otherwise.
 - **The local model runner**: at pyrlyn/runa `b86ede9` (2026-11-22), `git grep -i transcri` finds nothing. The Kotlin rewrite has no transcription endpoint yet; the `serve.rs` row in 6.2 describes the retired Rust workspace.
 
+### 4.17 OpenAI-compatible speech (T7.13)
+
+Checked 2026-11-23. Sources:
+- Spec (S): `openapi.yaml` in https://github.com/openai/openai-openapi at `2a24dea` (2026-11-21), `createSpeech` and `CreateSpeechRequest`.
+- Guide (G): https://developers.openai.com/api/docs/guides/text-to-speech (no version or date on the page).
+
+- **Request**: `POST /v1/audio/speech` with a JSON body; `model`, `input` and `voice` are required (S).
+  - `input` is at most 4096 characters (S). aulo cuts longer text at whitespace into several requests.
+  - `voice`: a built-in name (`alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `onyx`, `nova`, `sage`, `shimmer`, `verse`, `marin`, `cedar`) or a custom `{ "id": ... }` (S). There is no call that lists voices, so aulo takes its voice list from config and sends a name.
+  - `response_format`: `mp3` (default), `opus`, `aac`, `flac`, `wav`, `pcm` (S). `pcm` is "the raw samples in 24kHz (16-bit signed, low-endian), without the header" (G). The Java example plays it as 24 000 Hz, 16-bit, mono (G).
+  - `speed`: 0.25 to 4.0, default 1.0 (S). aulo's `SpeechRate` (0.5 to 2.0) fits inside and is sent only when it is not 1.0.
+  - `instructions` (not for `tts-1` and `tts-1-hd`) and `stream_format` (`audio`, the default, or `sse`) exist (S); aulo sends neither and reads the default raw audio stream.
+- **Answer**: the audio file content, sent chunked; the listed types include `audio/pcm` and `application/octet-stream` (S). Which of them a `pcm` answer carries is **unverified**, so aulo takes either, or none. The error body is not documented for this endpoint; aulo reads the `{"error": {"message": ...}}` shape when it is there (**unverified**), as for transcription.
+- **Models and their end**: `tts-1`, `tts-1-hd`, `gpt-4o-mini-tts`, `gpt-4o-mini-tts-2025-03-20` and `gpt-4o-mini-tts-2025-12-15` are deprecated and shut down on 2027-01-06 (S, G). The guide says to migrate to `gpt-realtime-2.1-mini` through the Realtime API, which "isn't a supported model for /v1/audio/speech" (G). After that date the endpoint matters for OpenAI-compatible local and third-party servers only; speaking through OpenAI itself needs a Realtime API engine.
+
 ### 4.18 macOS system voices (T7.10)
 
 Sources: the macOS 27.2 SDK header `AVFAudio.framework/Headers/AVSpeechSynthesis.h` (Xcode command line tools, checked 2026-11-23) and spikes on macOS 27.0 (Darwin 27.0.0, Apple silicon, 2026-11-23; Swift scripts, not kept).

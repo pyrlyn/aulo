@@ -2,7 +2,6 @@
 
 package aulo.speech.openai
 
-import aulo.secrets.SecretException
 import aulo.secrets.SecretStore
 import aulo.speech.AudioFormat
 import aulo.speech.AudioFrame
@@ -15,7 +14,6 @@ import aulo.speech.Transcript
 import aulo.types.TranscriptKind
 import aulo.types.TurnId
 import http.HttpClient
-import http.HttpException
 import http.HttpRequest
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -191,10 +189,8 @@ class OpenAiStt internal constructor(
         hint: String?,
     ) {
         try {
-            val headers = mutableListOf<Pair<String, String>>()
-            apiKey()?.let { headers += "Authorization" to "Bearer $it" }
             val form = transcriptionForm(model, hint, endpoint.stream, audio, size, AudioFormat.PIPELINE.sampleRateHz)
-            headers += "Content-Type" to form.contentType
+            val headers = requestHeaders(secrets, endpoint.apiKeySecret, form.contentType)
             if (endpoint.stream) headers += "Accept" to "text/event-stream, application/json"
             val answer =
                 http.streamPost(HttpRequest(endpoint.url, headers, form.body)) { head, body ->
@@ -203,26 +199,9 @@ class OpenAiStt internal constructor(
             publish(Result(mine, final = true, text = answer.text, language = answer.language))
         } catch (e: CancellationException) {
             throw e
-        } catch (e: SpeechException) {
-            newest(failure, Failure(mine, e), Failure::seq)
-        } catch (e: HttpException) {
-            newest(failure, Failure(mine, SpeechException.Failed("${e.kind}: ${e.message}")), Failure::seq)
         } catch (e: Exception) {
-            // The transport is the caller's code; anything else it throws is still this engine failing.
-            newest(failure, Failure(mine, SpeechException.Failed(e.message ?: e::class.simpleName ?: "request failed")), Failure::seq)
+            newest(failure, Failure(mine, requestFailure(e)), Failure::seq)
         }
-    }
-
-    /** The key, read for this request only; its value never goes into a message. */
-    private fun apiKey(): String? {
-        val name = endpoint.apiKeySecret ?: return null
-        val key =
-            try {
-                secrets.load(name)
-            } catch (e: SecretException) {
-                throw SpeechException.Unavailable("API key `$name` cannot be read: ${e.message}")
-            }
-        return key ?: throw SpeechException.Unavailable("API key `$name` is not in ${secrets.description}")
     }
 
     private fun publish(result: Result) = newest(latest, result, Result::seq)
