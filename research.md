@@ -650,6 +650,17 @@ Checked 2026-11-23. The pages carry no version or date. Sources:
 - **Errors**: neither page documents the error body. aulo reads the `{"error": {"message": ...}}` shape of OpenAI's other endpoints when it is there (**unverified** for this endpoint) and the raw text otherwise.
 - **The local model runner**: at pyrlyn/runa `b86ede9` (2026-11-22), `git grep -i transcri` finds nothing. The Kotlin rewrite has no transcription endpoint yet; the `serve.rs` row in 6.2 describes the retired Rust workspace.
 
+### 4.18 macOS system voices (T7.10)
+
+Sources: the macOS 27.2 SDK header `AVFAudio.framework/Headers/AVSpeechSynthesis.h` (Xcode command line tools, checked 2026-11-23) and spikes on macOS 27.0 (Darwin 27.0.0, Apple silicon, 2026-11-23; Swift scripts, not kept).
+
+- `-[AVSpeechSynthesizer writeUtterance:toBufferCallback:]` (macOS 10.15+) hands synthesized audio to a callback instead of the speaker; the header says it is for storing or further processing speech. This is what lets aulod play the audio itself, so barge-in and echo cancellation see it.
+- The header: the buffers come in the format of the voice's `audioFileSettings` (macOS 10.15+). Spike: `AVSampleRateKey` there matched the rate of every buffer written (16 000, 22 050 or 48 000 Hz), and the buffers were mono `Float32`, non-interleaved. The voice list therefore carries each voice's rate, and nothing is resampled.
+- `AVSpeechUtterance.rate` is pinned between `AVSpeechUtteranceMinimumSpeechRate` and `AVSpeechUtteranceMaximumSpeechRate` (header); at run time they are 0.0 and 1.0, and `AVSpeechUtteranceDefaultSpeechRate` is 0.5. The header gives no pace for a rate. Spike, one 13-word sentence: Samantha (en-US) lasted 7.25, 6.04, 5.24, 4.43, 4.04, 2.97, 2.35, 1.62, 1.29 and 1.00 s at rates 0, 0.1, 0.25, 0.375, 0.5, 0.5625, 0.625, 0.75, 0.875 and 1; Milena (ru-RU) gave the same pace ratios within 2%. `appleRate` in `aulo-speech-system` interpolates between these points.
+- Spike: with no run loop on the main thread no buffer ever arrives. With the main thread in `CFRunLoopRun`, `writeUtterance` may be called from another thread and the callbacks arrive on the main thread; a zero-length buffer ends the utterance. A first sentence took 1.1 s to synthesize 4.8 s of speech, later ones 0.07–0.8 s.
+- Spike: `stopSpeakingAtBoundary:` returns false and does not stop a `writeUtterance`; the helper therefore drops a cancelled reply's late audio instead of stopping the synthesizer.
+- `AVSpeechSynthesisVoice.speechVoices` listed 180 voices on the spike machine; `voiceWithLanguage:` with nil gave the voice of the system's language (Samantha), and per language it gives that language's default (49 defaults).
+
 ## Part 5. Conclusions and ideas to borrow (for a Rust voice computer-control agent)
 
 1. **Two-brain voice design.** Front: cheap full-duplex/realtime voice (GPT-Live 1, Gemini 3.8 Live, xAI Voice
