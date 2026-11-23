@@ -32,12 +32,12 @@ Dependency versions are locked: `gradle.lockfile` in each module and
 `buildscript-gradle.lockfile` for the plugins. `gradle/verification-metadata.xml` holds the
 SHA-256 of every file the build downloads. A build fails when it resolves a version the lock
 does not name or a file whose checksum is not listed, so after changing a dependency or a
-plugin regenerate both on macOS (the iOS configurations exist only there):
+plugin regenerate both in one run on macOS (the iOS configurations exist only there; run
+apart, relocking fails on the checksums of what it resolves for the first time):
 
 ```bash
-./gradlew resolveAndLockAll --write-locks
-./gradlew --write-verification-metadata sha256 help :composeApp:jvmTest :shared:jvmTest :server:test \
-  :server:installDist :androidApp:assembleDebug :androidApp:assembleRelease \
+./gradlew --write-locks --write-verification-metadata sha256 resolveAndLockAll build \
+  :server:installDist :androidApp:assembleRelease \
   :composeApp:linkDebugFrameworkIosSimulatorArm64 :composeApp:packageDistributionForCurrentOS
 ```
 
