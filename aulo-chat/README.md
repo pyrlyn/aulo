@@ -28,6 +28,15 @@ and use a shell with mise activated. All commands run from this directory (`aulo
 Start the server first, then a client. A client started without a server shows the offline
 state; start the server and press Retry.
 
+Dependency versions are locked: `gradle.lockfile` in each module and
+`buildscript-gradle.lockfile` for the plugins. A build fails when it resolves a version the
+lock does not name, so after changing a dependency or a plugin regenerate them on macOS (the
+iOS configurations exist only there):
+
+```bash
+./gradlew resolveAndLockAll --write-locks
+```
+
 ### Desktop
 
 `./gradlew :composeApp:run` connects to `127.0.0.1:50051`. Another server:
