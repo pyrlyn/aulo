@@ -16,6 +16,9 @@ interface ServerCall {
     /** The method, `/package.Service/Method`. */
     val path: String
 
+    /** The listener the call arrived on, as bound: what a server's authentication depends on. */
+    val endpoint: Endpoint
+
     /** The client's custom metadata: untrusted, already capped by [GrpcLimits.maxHeaderListBytes]. */
     val metadata: List<Pair<String, String>>
 

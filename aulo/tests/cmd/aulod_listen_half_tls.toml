@@ -1,0 +1,10 @@
+# A certificate without its key is a mistake, not a request for a self-signed one.
+program = "aulod"
+args = ["run", "--listen", "127.0.0.1:7777"]
+status = 1
+
+[home]
+"config.toml" = """
+[daemon]
+tls_cert = "cert.pem"
+"""

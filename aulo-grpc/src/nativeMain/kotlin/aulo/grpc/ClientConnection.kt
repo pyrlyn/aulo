@@ -7,7 +7,6 @@ import aulo.grpc.nghttp2.NGHTTP2_REFUSED_STREAM
 import aulo.grpc.nghttp2.nghttp2_strerror
 import aulo.grpc.nghttp2.nghttp2_submit_request2
 import aulo.grpc.nghttp2.nghttp2_submit_rst_stream
-import io.ktor.network.sockets.Socket
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.convert
 import kotlinx.cinterop.toKString
@@ -78,10 +77,10 @@ class ClientCall internal constructor(
 /** The client side of one HTTP/2 connection. */
 @OptIn(ExperimentalForeignApi::class)
 internal class ClientConnection(
-    socket: Socket,
+    stream: ByteStream,
     limits: GrpcLimits,
     parent: Job,
-) : Http2Connection(socket, limits, parent, server = false) {
+) : Http2Connection(stream, limits, parent, server = false) {
     internal class Stream(
         maxMessageBytes: Int,
     ) {

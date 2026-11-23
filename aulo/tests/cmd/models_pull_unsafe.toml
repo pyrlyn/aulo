@@ -1,0 +1,3 @@
+# An id that is not a plain directory name is refused without being echoed.
+args = ["models", "pull", "../../etc"]
+status = 1

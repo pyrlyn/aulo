@@ -1,0 +1,10 @@
+# Build output and caches
+build/
+.gradle/
+.kotlin/
+local.properties
+
+# Generated from iosApp/project.yml by XcodeGen
+iosApp/iosApp.xcodeproj/
+iosApp/iosApp/Info.plist
+xcuserdata/

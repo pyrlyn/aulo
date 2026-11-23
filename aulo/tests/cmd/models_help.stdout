@@ -1,0 +1,9 @@
+Download a model and check every file against its pinned SHA-256
+
+Usage: aulo models pull <ID>
+
+Arguments:
+  <ID>  The model id, as `aulo models ls` shows it
+
+Options:
+  -h, --help  Print help

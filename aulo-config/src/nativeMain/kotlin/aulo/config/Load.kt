@@ -3,6 +3,7 @@ package aulo.config
 import fs.FsException
 import fs.textOrEmpty
 import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.SerialKind
@@ -53,6 +54,8 @@ class LoadOptions(
     // Directory holding the project's .aulo.toml.
     val projectDir: String? = null,
     val overrides: JsonObject? = null,
+    // A config file named on the command line, read instead of `<home>/config.toml`; it must exist.
+    val configFile: String? = null,
 )
 
 internal val configJson =
@@ -78,7 +81,14 @@ fun auloHome(env: Map<String, String>): String? =
 fun loadConfig(options: LoadOptions): Loaded {
     val layers = mutableListOf<Pair<Origin, JsonObject>>()
     layers += Origin.Default to (configJson.encodeToJsonElement(Config.serializer(), Config()) as JsonObject)
-    (options.home ?: auloHome(options.env))?.let { home -> fileLayer(Path(home, "config.toml"))?.let(layers::add) }
+    if (options.configFile != null) {
+        val path = Path(options.configFile)
+        // A file someone named is never silently skipped, as a missing home config.toml is.
+        if (!SystemFileSystem.exists(path)) throw ConfigException(Origin.File(path.toString()), null, "no such file")
+        fileLayer(path)?.let(layers::add)
+    } else {
+        (options.home ?: auloHome(options.env))?.let { home -> fileLayer(Path(home, "config.toml"))?.let(layers::add) }
+    }
     options.projectDir?.let { dir -> fileLayer(Path(dir, ".aulo.toml"))?.let(layers::add) }
     layers += envLayers(options.env)
     options.overrides?.let { layers += Origin.Override to it }

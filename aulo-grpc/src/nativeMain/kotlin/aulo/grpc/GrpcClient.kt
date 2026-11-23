@@ -7,9 +7,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration
 
 /**
@@ -20,6 +22,7 @@ class GrpcClient private constructor(
     private val connection: ClientConnection,
     private val limits: GrpcLimits,
     private val authority: String,
+    private val scheme: String,
     private val job: Job,
     private val selector: SelectorManager,
 ) {
@@ -46,7 +49,7 @@ class GrpcClient private constructor(
         val headers =
             buildList {
                 add(":method" to "POST")
-                add(":scheme" to "http")
+                add(":scheme" to scheme)
                 add(":path" to path)
                 add(":authority" to authority)
                 add("content-type" to "application/grpc")
@@ -96,11 +99,16 @@ class GrpcClient private constructor(
     }
 
     companion object {
-        /** Connects to [endpoint]; a failure is UNAVAILABLE, as for any call on a dead connection. */
+        /**
+         * Connects to [endpoint], through [tls] when given; a failure, a TLS handshake that fails
+         * or a certificate that does not match the pin included, is UNAVAILABLE, as for any call
+         * on a dead connection.
+         */
         suspend fun connect(
             endpoint: Endpoint,
             limits: GrpcLimits = GrpcLimits(),
             authority: String = "localhost",
+            tls: TlsClient? = null,
         ): GrpcClient {
             val selector = SelectorManager(Dispatchers.Default)
             val socket =
@@ -113,8 +121,26 @@ class GrpcClient private constructor(
                     selector.close()
                     throw GrpcException(StatusCode.UNAVAILABLE, "cannot connect to $endpoint: ${e.message}")
                 }
+            val raw = SocketStream(socket)
+            val stream =
+                if (tls == null) {
+                    raw
+                } else {
+                    try {
+                        withTimeout(limits.handshakeTimeout) { TlsStream.connect(raw, tls) }
+                    } catch (e: TimeoutCancellationException) {
+                        selector.close()
+                        throw GrpcException(StatusCode.UNAVAILABLE, "TLS handshake with $endpoint timed out")
+                    } catch (e: CancellationException) {
+                        selector.close()
+                        throw e
+                    } catch (e: Exception) {
+                        selector.close()
+                        throw GrpcException(StatusCode.UNAVAILABLE, "TLS handshake with $endpoint failed: ${e.message}")
+                    }
+                }
             val job = SupervisorJob()
-            val connection = ClientConnection(socket, limits, job)
+            val connection = ClientConnection(stream, limits, job)
             CoroutineScope(job + Dispatchers.Default).launch {
                 try {
                     connection.run()
@@ -124,7 +150,7 @@ class GrpcClient private constructor(
                     // The calls on it have already failed with UNAVAILABLE (onClosed).
                 }
             }
-            return GrpcClient(connection, limits, authority, job, selector)
+            return GrpcClient(connection, limits, authority, if (tls == null) "http" else "https", job, selector)
         }
     }
 }

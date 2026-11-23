@@ -1,0 +1,52 @@
+-- The offline cache: the most recent chats and their messages, mirrored from the server.
+-- SQLDelight is the project's typed query layer; these statements are its input, not raw SQL
+-- scattered through the code.
+
+CREATE TABLE chat (
+    id TEXT NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    model_provider TEXT NOT NULL,
+    model_name TEXT NOT NULL,
+    updated_at_ms INTEGER NOT NULL
+);
+
+CREATE TABLE message (
+    -- Insertion order is display order: server ids sort by time, local ones do not.
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT NOT NULL UNIQUE,
+    chat_id TEXT NOT NULL,
+    role TEXT NOT NULL,
+    content TEXT NOT NULL,
+    state TEXT NOT NULL,
+    error TEXT,
+    attachments TEXT NOT NULL,
+    created_at_ms INTEGER NOT NULL
+);
+
+CREATE INDEX message_chat ON message(chat_id, seq);
+
+selectChats:
+SELECT * FROM chat ORDER BY updated_at_ms DESC;
+
+selectChat:
+SELECT * FROM chat WHERE id = ?;
+
+upsertChat:
+INSERT OR REPLACE INTO chat(id, title, model_provider, model_name, updated_at_ms)
+VALUES (?, ?, ?, ?, ?);
+
+deleteAllChats:
+DELETE FROM chat;
+
+deleteMessagesWithoutChat:
+DELETE FROM message WHERE chat_id NOT IN (SELECT id FROM chat);
+
+selectMessages:
+SELECT * FROM message WHERE chat_id = ? ORDER BY seq;
+
+insertMessage:
+INSERT OR REPLACE INTO message(id, chat_id, role, content, state, error, attachments, created_at_ms)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteMessages:
+DELETE FROM message WHERE chat_id = ?;

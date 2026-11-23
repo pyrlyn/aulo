@@ -1,6 +1,7 @@
 {
     "version": "0.5",
     "requires": [
+        "mbedtls/3.6.7#e9b5ee6d3689f23773c80abff798456e%1784204210.855",
         "libnghttp2/1.68.1#3a79da87678aa68876fd527ac668f52b%1793007549.341"
     ],
     "build_requires": [],
