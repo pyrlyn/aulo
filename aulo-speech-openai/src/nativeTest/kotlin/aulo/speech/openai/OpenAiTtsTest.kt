@@ -331,6 +331,33 @@ class OpenAiTtsTest {
         }
 
     @Test
+    fun waitingForTheNextTextIsNotAStall() =
+        runBlocking {
+            val time = TestTimeSource()
+            val server = FakeTranscriber { _, _ -> audio(pcm(1, 2)) }
+            val tts = engine(server, options = OpenAiTtsOptions(stallTimeout = 1.seconds, time = time))
+            tts.begin(TtsRequest(TurnId.new()))
+            tts.pushText("First.")
+            server.waitFor(1)
+            val out = FloatArray(10)
+            var got = 0
+            val giveUp = TimeSource.Monotonic.markNow() + 10.seconds
+            while (got < 2) {
+                check(!giveUp.hasPassedNow()) { "the first answer never arrived" }
+                val p = tts.poll(out)
+                if (p.isPending) delay(1) else got += p.samples
+            }
+            // The first answer is fully played; the caller takes its time with the next sentence.
+            delay(50)
+            time += 5.seconds
+            assertTrue(tts.poll(out).isPending)
+            tts.pushText("Second.")
+            tts.finish()
+            assertEquals(2, tts.drain().size)
+            assertEquals(listOf("First.", "Second."), server.requests.map { it.input() })
+        }
+
+    @Test
     fun textOutsideAReplyOrPastItsCapIsRefused() {
         val tts = engine(FakeTranscriber { _, _ -> audio(pcm(1)) }, options = OpenAiTtsOptions(maxReplyChars = 10))
         assertFailsWith<SpeechException.OutOfOrder> { tts.pushText("Hi.") }

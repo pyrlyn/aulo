@@ -200,7 +200,11 @@ class OpenAiTts internal constructor(
                 val cut = cutAt(pending, endpoint.maxInputChars)
                 val input = pending.substring(0, cut)
                 pending.deleteRange(0, cut)
-                if (input.isNotBlank()) request(reply, input.trim(), voice, rate, buf, samples)
+                if (input.isNotBlank()) {
+                    request(reply, input.trim(), voice, rate, buf, samples)
+                    // The answer is over: waiting for the caller's next text is not the server stalling.
+                    reply.waiting.store(null)
+                }
             }
             reply.done.store(true)
         } catch (e: CancellationException) {
