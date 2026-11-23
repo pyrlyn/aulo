@@ -28,6 +28,9 @@ If an `AGENTS.md` or `CLAUDE.md` exists higher in the tree, follow it too; on co
 ## Layout
 
 - Gradle KMP modules (`aulo-<role>`), created by S2+ tasks, hold the Kotlin/Native daemon and CLI. Every module applies the `aulo.kmp` convention plugin from `build-logic/` (targets per spec §17 D3, warnings as errors, ktlint). `:aulo` is the surface module that links the `aulo` and `aulod` executables.
+- Shared Kotlin/Native libraries come from `kotlin-kit` in the workspace's `packages/` (pyrlyn/packages), included as a Gradle build: `pyrlyn.kit:<module>` (TOML, files, SQLite, processes, HTTP). Gradle finds it in the first ancestor `packages/` or through `KOTLIN_KIT_DIR` and `SHARED_SETTINGS_DIR`; CI checks it out at a pinned commit. Check it before writing a helper.
+- `:aulo-config` is the only module that reads or writes aulo's TOML config. `schemas/aulo.schema.json` is generated from its types; after changing them run `just schema` (the stale-schema test fails otherwise).
+- Logs go through `:aulo-telemetry`'s `Logger`, which masks every record with `Redact` before writing. Anything else that shows configured or untrusted text to a person masks it with `Redact` too; do not add a second rule set.
 - Every module declares its role in its build file, `aulo { role = ModuleRole.X }`: `CONTRACT` (types only: no I/O, HTTP, storage or native library; depends only on contracts), `LIBRARY`, or `SURFACE` (links an executable; the only place for the CLI libraries; nothing depends on it). SQLite, the gRPC stack, sherpa-onnx and a WASM runtime each have one owner module. `./gradlew test` runs `checkModuleGraph`, which enforces this (T2.2); the library lists live in `build-logic/src/main/kotlin/aulo/buildlogic/ModuleGraph.kt` — extend them when a task wires a new library of one of those kinds.
 - `desktop/macos` (SwiftUI) and `desktop/windows` (WinUI 3) — native apps over `aulo-ffi` (T12.3, T12.15).
 - `proto/aulo/v1/` — gRPC service definitions (T3.1).
