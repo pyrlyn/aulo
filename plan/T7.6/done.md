@@ -21,7 +21,7 @@ Kit: https://github.com/pyrlyn/packages/pull/10, stacked on #9.
   - The key is a `SecretStore` name, read per request into the header only.
   - Base URLs with credentials, a query or a fragment are refused.
   - A key goes over plain HTTP only to loopback.
-- `research.md` 4.15 has the API facts with their sources and the open points marked **unverified**.
+- `research.md` 4.16 has the API facts with their sources and the open points marked **unverified**.
 
 ## How it was checked
 

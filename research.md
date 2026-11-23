@@ -611,7 +611,15 @@ Checked 2026-11-23.
 - **Streaming SHA-256**: okio's `HashingSink.sha256` is in okio's common code, so all four native targets have it — https://github.com/lysine-dev/okio/blob/parent-3.18.2/okio/src/commonMain/kotlin/okio/HashingSink.kt (okio 3.18.2, the version Wire 7.2.2 brings; `github.com/square/okio` now redirects there). It replaces a second hashing library (ketch uses KotlinCrypto `sha2`, `apps/ketch`).
 - **Durability**: kotlin-kit's `appendSink` cannot fsync (`fs/Entries.kt`, pyrlyn/packages 0.0.5), so a verified file is renamed without an fsync. A power loss can leave a short file under the final name; `aulo models` tells it apart by the pinned size and downloads it again.
 
-### 4.15 OpenAI-compatible transcription (T7.6)
+### 4.15 Markdown parsing for speech (T7.15)
+
+The speakable-text normalizer in `aulo-voice` needs a CommonMark parser with GFM tables and strikethrough that runs on every Kotlin/Native target.
+
+- **org.jetbrains:markdown 0.7.18** (JetBrains, the parser behind IntelliJ's Markdown support). Apache-2.0; latest version on Maven Central, published 2026-10-15; native artifacts for `macosArm64`, `linuxX64`, `linuxArm64` and `mingwX64`, none with dependencies of their own. Sources: https://repo1.maven.org/maven2/org/jetbrains/markdown/0.7.18/markdown-0.7.18.pom and https://repo1.maven.org/maven2/org/jetbrains/markdown/maven-metadata.xml (checked 2026-11-23); https://github.com/JetBrains/markdown.
+- API in 0.7.18 (from its sources jar on Maven Central, checked 2026-11-23): `MarkdownParser(flavour, assertionsEnabled, cancellationToken)` and `buildMarkdownTreeFromString(CharSequence)`; the one-argument constructor and the `String` overload are deprecated. `GFMFlavourDescriptor` adds tables, strikethrough, autolinks, math, alerts and highlights. `EntityConverter.replaceEntities` escapes for HTML output (it turns `&` back into `&amp;`), so it cannot decode entities into plain text; `Entities.map` is the public name-to-code-point table.
+- Measured here (`SpeakableTest`, macOS debug build): parse time grows with the square of block-quote nesting depth — 4000 nested `>` take 0.8 s and 64 KiB of `>` take about 3.5 minutes — so the normalizer keeps at most 16 quote and list markers per line before parsing. Other hostile 64 KiB inputs (nested brackets, emphasis, backticks, `<`) parse in about 1 s.
+
+### 4.16 OpenAI-compatible transcription (T7.6)
 
 Checked 2026-11-23. The pages carry no version or date. Sources:
 - Reference (R): https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create
@@ -711,7 +719,7 @@ None of the coding agent crates is on crates.io; internal deps use `path` + `ver
 
 | What | Where | Notes |
 | --- | --- | --- |
-| OpenAI/Anthropic-compatible server (Rust workspace, retired; see 4.15) | `apps/runa/crates/runa/src/serve.rs:143-149` | `/v1/chat/completions`, `/v1/messages`, `/v1/embeddings`, `/v1/audio/transcriptions`; axum 0.8, port 8080 |
+| OpenAI/Anthropic-compatible server (Rust workspace, retired; see 4.16) | `apps/runa/crates/runa/src/serve.rs:143-149` | `/v1/chat/completions`, `/v1/messages`, `/v1/embeddings`, `/v1/audio/transcriptions`; axum 0.8, port 8080 |
 | Streaming caveat | `serve.rs:548` (`generate_events` returns `Vec<GenEvent>`), `serve.rs:330-339` (replayed as SSE) | Time to first token = full generation time (T1.19) |
 | Engine | `apps/runa/crates/runa-engine/src/load.rs:685`, `generate.rs:134,146` | llama-cpp-2 =0.1.133, optional mistralrs =0.8.1 |
 | Fit checker | `apps/runa/crates/runa-fit` (`verdict.rs`, `planner.rs`) | GGUF header reader, hardware probe |
