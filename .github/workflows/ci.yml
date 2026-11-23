@@ -19,6 +19,12 @@ concurrency:
 permissions:
   contents: read
 
+# Shared Kotlin/Native libraries (kotlin-kit) and the build settings they need, from a checkout of
+# pyrlyn/packages next to the repository (settings.gradle.kts reads these variables).
+env:
+  KOTLIN_KIT_DIR: ${{ github.workspace }}/packages/kotlin-kit
+  SHARED_SETTINGS_DIR: ${{ github.workspace }}/packages/shared-settings
+
 jobs:
   # A pull request's commit subjects follow the workspace rule: `<task id>: <title>` (T12.22: …)
   # when the commit belongs to a task, a Conventional Commit otherwise. Pushes to main skip this:
@@ -124,12 +130,23 @@ jobs:
         with:
           persist-credentials: false
 
-      # Only the JDK: the lint and agent tools in mise.toml are not needed to build.
+      # Pinned to a commit; bump it (and the tag in the comment) when aulo needs newer shared code.
       - if: env.RUN == 'true'
-        name: Install the JDK (mise.toml)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: pyrlyn/packages
+          ref: 52e941b40603391f6f74de0ff8958b24da42ecd0 # 0.0.5
+          path: packages
+          persist-credentials: false
+
+      # The JDK and what builds the C libraries with Conan: SQLite for Windows (kotlin-kit's
+      # db-native) and nghttp2 for Linux and Windows (aulo-grpc). mise installs Conan with uv into
+      # its pinned Python; the lint and agent tools in mise.toml are not needed to build.
+      - if: env.RUN == 'true'
+        name: Install the JDK and the C library build tools (mise.toml)
         uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
         with:
-          install_args: java
+          install_args: java python uv conan cmake ninja
 
       - if: env.RUN == 'true'
         uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
@@ -149,7 +166,9 @@ jobs:
           TASK: ${{ matrix.task }}
           TARGET: ${{ matrix.target }}
         run: |
-          tasks=(":aulo:linkAuloReleaseExecutable$TASK" ":aulo:linkAulodReleaseExecutable$TASK")
+          # aulo-grpc's test binary links nghttp2, which Conan builds on this runner; the
+          # executables do not link it until aulo-server does (T3.3).
+          tasks=(":aulo:linkAuloReleaseExecutable$TASK" ":aulo:linkAulodReleaseExecutable$TASK" ":aulo-grpc:linkDebugTest$TASK")
           if [ "$SKIP_TESTS" = true ]; then
             echo "::notice title=SKIP_CI_TESTS::tests skipped by SKIP_CI_TESTS"
           else
@@ -158,6 +177,7 @@ jobs:
           # linuxArm64 is cross-linked here and run by the linux-arm64 job.
           if [ "$TARGET" = linuxX64 ]; then
             tasks+=(:aulo:linkAuloReleaseExecutableLinuxArm64 :aulo:linkAulodReleaseExecutableLinuxArm64 :aulo:linkDebugTestLinuxArm64)
+            tasks+=(:aulo-grpc:linkDebugTestLinuxArm64)
           fi
           ./gradlew "${tasks[@]}" --console=plain
 
@@ -168,10 +188,13 @@ jobs:
           EXT: ${{ matrix.ext }}
         run: |
           for exe in aulo aulod; do
-            out=$("aulo/build/bin/$TARGET/${exe}ReleaseExecutable/$exe.$EXT")
+            out=$("aulo/build/bin/$TARGET/${exe}ReleaseExecutable/$exe.$EXT" --version)
             echo "$out"
             printf '%s\n' "$out" | grep -q "^$exe " || { echo "$exe did not print its version" >&2; exit 1; }
           done
+          out=$("aulo/build/bin/$TARGET/auloReleaseExecutable/aulo.$EXT" config show --origin)
+          echo "$out"
+          printf '%s\n' "$out" | grep -q '^policy.approval_timeout_secs = 60  # built-in defaults' || { echo "aulo config show failed" >&2; exit 1; }
 
       - if: env.RUN == 'true' && matrix.target == 'linuxX64'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -223,7 +246,10 @@ jobs:
         run: |
           for exe in aulo aulod; do
             chmod +x "bin/${exe}ReleaseExecutable/$exe.kexe"
-            out=$("bin/${exe}ReleaseExecutable/$exe.kexe")
+            out=$("bin/${exe}ReleaseExecutable/$exe.kexe" --version)
             echo "$out"
             printf '%s\n' "$out" | grep -q "^$exe " || { echo "$exe did not print its version" >&2; exit 1; }
           done
+          out=$(bin/auloReleaseExecutable/aulo.kexe config show --origin)
+          echo "$out"
+          printf '%s\n' "$out" | grep -q '^policy.approval_timeout_secs = 60  # built-in defaults' || { echo "aulo config show failed" >&2; exit 1; }

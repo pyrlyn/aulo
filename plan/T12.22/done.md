@@ -19,7 +19,7 @@ PR: https://github.com/pyrlyn/aulo/pull/98 (commit `eae2e38`; review follow-ups 
   `aulo-chat · Screens`.
 - `aulo-chat/design/`: one Markdown file per screen with its Figma frames; `aulo-chat/README.md`
   with the build commands, the Figma link and the mockup-to-code map.
-- `spec.md`: D10 and §12.1. `AGENTS.md`, the root `README.md`, `ideas.md` and `toolchain.md`
+- `spec.md`: D12 and §12.1. `AGENTS.md`, the root `README.md`, `ideas.md` and `toolchain.md`
   updated.
 
 After review (SonarQube rated the security of the new code C, on four findings):

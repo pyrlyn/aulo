@@ -1,0 +1,21 @@
+args = ["config", "show", "--origin"]
+
+[env]
+AULO_VOICE__LISTEN = "wake-word"
+
+[home]
+"config.toml" = """
+[policy]
+approval_timeout_secs = 30
+
+[mcp.servers.files]
+transport = "stdio"
+command = "mcp-files"
+args = ["--token=abc123"]
+"""
+
+[project]
+".aulo.toml" = """
+[voice.stt]
+engine = "whisper"
+"""

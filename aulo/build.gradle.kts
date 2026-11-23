@@ -67,5 +67,24 @@ kotlin {
         commonMain {
             kotlin.srcDir(generateBuildInfo)
         }
+        nativeMain.dependencies {
+            implementation(project(":aulo-config"))
+            implementation("pyrlyn.kit:cli")
+            implementation("pyrlyn.kit:fs")
+            implementation("pyrlyn.kit:process")
+        }
+        nativeTest.dependencies {
+            implementation("pyrlyn.kit:toml")
+        }
     }
+}
+
+// CmdTest runs the command fixtures in tests/cmd; AULO_UPDATE_FIXTURES=1 rewrites their expected output.
+val cmdFixtures = layout.projectDirectory.dir("tests/cmd")
+val updateFixtures = providers.environmentVariable("AULO_UPDATE_FIXTURES").orElse("")
+tasks.withType<org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest>().configureEach {
+    inputs.dir(cmdFixtures)
+    inputs.property("updateFixtures", updateFixtures)
+    environment("AULO_CMD_FIXTURES", cmdFixtures.asFile.path)
+    environment("AULO_UPDATE_FIXTURES", updateFixtures.get())
 }

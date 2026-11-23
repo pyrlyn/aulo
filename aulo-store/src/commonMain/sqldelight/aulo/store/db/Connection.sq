@@ -1,0 +1,11 @@
+-- Per-connection settings, run by Store.open before the migrations. busy_timeout goes first so
+-- the WAL switch waits for a concurrent opener; foreign_keys is off by default in SQLite, and the
+-- ON DELETE rules depend on it.
+setBusyTimeout:
+PRAGMA busy_timeout = 5000;
+
+enableForeignKeys:
+PRAGMA foreign_keys = 1;
+
+enableWal:
+PRAGMA journal_mode = "wal";

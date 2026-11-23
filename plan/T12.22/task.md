@@ -11,7 +11,7 @@ agent: Claude Code / claude-fable-5-2
 Stage: S12 · Area: apps · Depends on: T3.1 · Blocks: 0 task(s)
 
 The creator asked for a multiplatform chat client on Kotlin Multiplatform with Compose
-Multiplatform (spec §17 D10): one chat screen with streamed replies, a stop button, chat
+Multiplatform (spec §17 D12): one chat screen with streamed replies, a stop button, chat
 memory, model switching, text/voice/image attachments, a dark theme, message animations and
 an offline cache of recent chats in SQLDelight. It talks to aulod over gRPC only (D6), using
 the `aulo.v1` contract as it is. Until aulod exists (S3, S4), a development server stands in
@@ -33,8 +33,8 @@ Done when:
 
 Execution plan:
 
-1. `spec.md`: record D10 (Compose Multiplatform client, mobile in scope), keep D6; list what
-   stays open (whether D10 replaces the SwiftUI and WinUI apps of D2; the web target).
+1. `spec.md`: record D12 (Compose Multiplatform client, mobile in scope), keep D6; list what
+   stays open (whether D12 replaces the SwiftUI and WinUI apps of D2; the web target).
 2. `aulo-chat/` as its own Gradle build, so the Android Gradle Plugin and Compose stay out of
    the Kotlin/Native daemon build (T2.1): `:proto` (kotlinx-rpc code from `proto/aulo/v1`),
    `:shared` (domain, data, view model), `:composeApp` (UI, desktop entry, iOS framework),

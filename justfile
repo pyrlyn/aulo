@@ -7,6 +7,10 @@ test:
 lint:
     ./gradlew ktlintCheck
 
+# Rewrites schemas/aulo.schema.json from the config types (the stale-schema test checks it).
+schema:
+    AULO_UPDATE_SCHEMA=1 ./gradlew :aulo-config:allTests
+
 # Links the `aulo` and `aulod` executables for every target this host can build.
 build:
     ./gradlew assemble

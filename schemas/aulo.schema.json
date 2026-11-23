@@ -2,18 +2,11 @@
   "$defs": {
     "BargeIn": {
       "description": "What speaking over aulo does to the turn in progress.",
-      "oneOf": [
-        {
-          "const": "interrupt",
-          "description": "Stop playback and cancel the turn.",
-          "type": "string"
-        },
-        {
-          "const": "continue",
-          "description": "Stop playback; the turn keeps running.",
-          "type": "string"
-        }
-      ]
+      "enum": [
+        "interrupt",
+        "continue"
+      ],
+      "type": "string"
     },
     "DaemonConfig": {
       "additionalProperties": false,
@@ -53,7 +46,6 @@
           "type": "string"
         },
         "rate": {
-          "format": "float",
           "type": "number"
         },
         "voice": {
@@ -66,6 +58,28 @@
       "enum": [
         "push-to-talk",
         "wake-word"
+      ],
+      "type": "string"
+    },
+    "LogConfig": {
+      "additionalProperties": false,
+      "description": "Log files in `$AULO_HOME/logs`. Secrets are masked before any line is written.",
+      "properties": {
+        "level": {
+          "$ref": "#/$defs/LogLevel",
+          "default": "info",
+          "description": "Least severe level written: trace, debug, info, warn or error."
+        }
+      },
+      "type": "object"
+    },
+    "LogLevel": {
+      "enum": [
+        "trace",
+        "debug",
+        "info",
+        "warn",
+        "error"
       ],
       "type": "string"
     },
@@ -88,8 +102,24 @@
         {
           "additionalProperties": false,
           "properties": {
+            "transport": {
+              "const": "http",
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "transport",
+            "url"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "args": {
-              "default": [],
               "items": {
                 "type": "string"
               },
@@ -106,23 +136,6 @@
           "required": [
             "transport",
             "command"
-          ],
-          "type": "object"
-        },
-        {
-          "additionalProperties": false,
-          "properties": {
-            "transport": {
-              "const": "http",
-              "type": "string"
-            },
-            "url": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "transport",
-            "url"
           ],
           "type": "object"
         }
@@ -163,7 +176,6 @@
         "approval_timeout_secs": {
           "default": 60,
           "description": "An approval request nobody answers within this time is denied.",
-          "format": "uint64",
           "minimum": 1,
           "type": "integer"
         },
@@ -219,7 +231,7 @@
     },
     "ProvidersConfig": {
       "additionalProperties": false,
-      "description": "Model providers and the tiers that route to them. API keys are not\nconfiguration: they live in the OS keychain.",
+      "description": "Model providers and the tiers that route to them. API keys are not configuration: they live in the OS keychain.",
       "properties": {
         "endpoints": {
           "additionalProperties": {
@@ -310,6 +322,12 @@
     "daemon": {
       "$ref": "#/$defs/DaemonConfig",
       "default": {}
+    },
+    "log": {
+      "$ref": "#/$defs/LogConfig",
+      "default": {
+        "level": "info"
+      }
     },
     "mcp": {
       "$ref": "#/$defs/McpConfig",

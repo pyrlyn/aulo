@@ -1,0 +1,37 @@
+{# Shared by the Linux profiles, which set `arch`, `processor` and `triple` first. The build passes the paths of
+   the Kotlin/Native toolchain in (ConanInstallTask), with forward slashes on every host. #}
+{% set llvm = os.getenv("KONAN_LLVM") %}
+{% set sysroot = os.getenv("KONAN_SYSROOT") %}
+{% set windows = platform.system() == "Windows" %}
+{% set exe = ".exe" if windows else "" %}
+{% set target = ["--target=" + triple, "--sysroot=" + sysroot, "--gcc-toolchain=" + os.getenv("KONAN_GCC_TOOLCHAIN")] %}
+[settings]
+os=Linux
+arch={{ arch }}
+# The ABI of the sysroot's GCC 8.3; the compiler itself is Kotlin/Native's clang.
+compiler=gcc
+compiler.version=8
+compiler.libcxx=libstdc++11
+build_type=Release
+
+[conf]
+tools.build:compiler_executables={"c": "{{ llvm }}/bin/clang{{ exe }}", "cpp": "{{ llvm }}/bin/clang++{{ exe }}"}
+tools.build:cflags={{ target }}
+# A C library's CMake project may enable C++ as well (nghttp2 does), and CMake then checks that compiler too.
+tools.build:cxxflags={{ target }}
+tools.build:sharedlinkflags={{ target + ["-fuse-ld=lld"] }}
+tools.build:exelinkflags={{ target + ["-fuse-ld=lld"] }}
+tools.build:sysroot={{ sysroot }}
+tools.cmake.cmaketoolchain:system_name=Linux
+tools.cmake.cmaketoolchain:system_processor={{ processor }}
+{% if windows %}
+# Windows has no make for CMake's default generator; Ninja comes from PATH, as CMake does.
+tools.cmake.cmaketoolchain:generator=Ninja
+{% else %}
+# llvm-ar writes the symbol index itself. Kotlin/Native ships no llvm-ranlib, and the ranlib CMake finds on PATH
+# instead belongs to the host: the one of macOS does not read an ELF archive.
+tools.cmake.cmaketoolchain:extra_variables={"CMAKE_RANLIB": "true"}
+{% endif %}
+
+[buildenv]
+AR={{ llvm }}/bin/llvm-ar{{ exe }}

@@ -33,8 +33,8 @@ object ModuleGraph {
     /** Heavy dependencies that must live in exactly one owner module. */
     val heavy: Map<String, List<String>> =
         mapOf(
-            "SQLite" to listOf("app.cash.sqldelight", "co.touchlab:sqliter", "cinterop:sqlite"),
-            "the gRPC stack" to listOf("io.grpc", "com.squareup.wire:wire-grpc", "cinterop:grpc"),
+            "SQLite" to listOf("app.cash.sqldelight", "co.touchlab:sqliter", "pyrlyn.kit:db", "cinterop:sqlite"),
+            "the gRPC stack" to listOf("io.grpc", "com.squareup.wire:wire-grpc", "cinterop:grpc", "cinterop:nghttp2"),
             "sherpa-onnx" to listOf("cinterop:sherpa"),
             "a WASM runtime" to listOf("io.github.charlietap.chasm", "cinterop:wasm"),
         )
