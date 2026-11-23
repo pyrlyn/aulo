@@ -19,8 +19,13 @@ PR: https://github.com/pyrlyn/aulo/pull/98 (commit `eae2e38`; review follow-ups 
   `aulo-chat · Screens`.
 - `aulo-chat/design/`: one Markdown file per screen with its Figma frames; `aulo-chat/README.md`
   with the build commands, the Figma link and the mockup-to-code map.
-- `spec.md`: D12 and §12.1. `AGENTS.md`, the root `README.md`, `ideas.md` and `toolchain.md`
-  updated.
+- `spec.md`: D12 and §12; D2 revised so the Compose client replaces the native apps.
+  `AGENTS.md`, the root `README.md`, `ideas.md` and `toolchain.md` updated.
+
+- D2 was revised (2026-11-23): `aulo-chat` (D12) is the official client and replaces the
+  native SwiftUI and WinUI 3 apps; those trees are not added. The Android `ComponentActivity`,
+  the desktop `main()`, and the iOS `ComposeUIViewController` plus its thin Swift host stay,
+  because Compose Multiplatform requires them as entry points.
 
 After review (SonarQube rated the security of the new code C, on four findings):
 

@@ -33,8 +33,8 @@ Done when:
 
 Execution plan:
 
-1. `spec.md`: record D12 (Compose Multiplatform client, mobile in scope), keep D6; list what
-   stays open (whether D12 replaces the SwiftUI and WinUI apps of D2; the web target).
+1. `spec.md`: record D12 (Compose Multiplatform client, mobile in scope), keep D6; D12
+   replaces the native apps of D2 (those apps are not needed). The web target stays open.
 2. `aulo-chat/` as its own Gradle build, so the Android Gradle Plugin and Compose stay out of
    the Kotlin/Native daemon build (T2.1): `:proto` (kotlinx-rpc code from `proto/aulo/v1`),
    `:shared` (domain, data, view model), `:composeApp` (UI, desktop entry, iOS framework),
