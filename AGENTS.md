@@ -36,6 +36,7 @@ If an `AGENTS.md` or `CLAUDE.md` exists higher in the tree, follow it too; on co
 - Every module declares its role in its build file, `aulo { role = ModuleRole.X }`: `CONTRACT` (types only: no I/O, HTTP, storage or native library; depends only on contracts), `LIBRARY`, or `SURFACE` (links an executable; the only place for the CLI libraries; nothing depends on it). SQLite, the gRPC stack, sherpa-onnx and a WASM runtime each have one owner module. `./gradlew test` runs `checkModuleGraph`, which enforces this (T2.2); the library lists live in `build-logic/src/main/kotlin/aulo/buildlogic/ModuleGraph.kt` — extend them when a task wires a new library of one of those kinds.
 - `desktop/macos` (SwiftUI) and `desktop/windows` (WinUI 3) — native apps over `aulo-ffi` (T12.3, T12.15).
 - `proto/aulo/v1/` — gRPC service definitions (T3.1).
+- `:aulo-proto` is that API as Kotlin: Wire generates the messages and one `<Service>Server` interface per service into `build/generated` on every build (spec §17 D10). Nothing generated is committed; change the `.proto` files, never the output. It holds no transport.
 - `plugins/` — plugin SDK examples (T11.5).
 - `docs/` — guides, threat model, spike reports (`docs/spikes/`). Historical spike reports may describe the retired Rust workspace; new work follows this file and `spec.md`.
 - `scripts/sync-issues.py` — creates GitHub issues from the active tasks in `plan/` (dry run by default).

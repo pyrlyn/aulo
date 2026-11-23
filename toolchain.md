@@ -18,7 +18,6 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 | hk | mise (`mise.toml` pins 2.5.0) | Runs jactionlint as a pre-push hook (`hk.pkl`) | https://github.com/jdx/hk |
 | shellcheck | mise (`mise.toml` pins 0.11.0) | Checks `run:` scripts inside jactionlint | https://github.com/koalaman/shellcheck |
 | buf (1.73.0) | brew | Lints and builds the protos, `buf format`, breaking-change check (`proto/buf.yaml`) | https://github.com/bufbuild/buf |
-| protoc | brew (`PROTOC` or `PATH`) | Compiles `proto/aulo/v1` where a build step needs the compiler on `PATH` | https://github.com/protocolbuffers/protobuf |
 | mise | brew | Pins the JDK, just, jactionlint, hk, shellcheck, Python and the agent CLIs | https://github.com/jdx/mise |
 | conan (2.33.0) | mise (`mise.toml`) | Builds the static SQLite that kotlin-kit's `db-native` links into the Windows binaries (`kotlin-kit/db-native/conan.lock`) | https://github.com/conan-io/conan |
 | cmake (3.31.12) | mise (`mise.toml`) | Conan's build of SQLite for Windows | https://github.com/Kitware/CMake |
@@ -47,6 +46,10 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 | pyrlyn.kit:db-native | local (included build `packages/kotlin-kit`, pyrlyn/packages 0.0.5 in CI) | https://github.com/pyrlyn/packages/tree/main/kotlin-kit/db-native | SQLite on Windows, linked statically (`aulo-store`) |
 | androidx.sqlite:sqlite-bundled (2.7.1) | local (via `pyrlyn.kit:db-room`; Google's Maven repository, `androidx.*` only) | https://developer.android.com/jetpack/androidx/releases/sqlite | The bundled SQLite (with FTS5) on macOS and Linux |
 | sqlite3 (3.54.0) | local (via `pyrlyn.kit:db-native`, Conan) | https://sqlite.org/ | The SQLite (with FTS5) on Windows |
+| com.squareup.wire:wire-gradle-plugin (7.2.2) | local (`build-logic`) | https://github.com/square/wire | Generates `aulo-proto` from `proto/aulo/v1` with its own proto parser, so no `protoc` (spec §17 D10; Apache-2.0) |
+| com.squareup.wire:wire-runtime (7.2.2) | local (`aulo-proto`) | https://github.com/square/wire | Runtime of the generated messages: `Message`, `ProtoAdapter`, `Service` (Apache-2.0) |
+| com.squareup.okio:okio (3.18.2) | local (via `wire-runtime`) | https://github.com/square/okio | Byte strings and buffers of the Wire runtime (Apache-2.0) |
+| org.jetbrains.kotlinx:kotlinx-coroutines-core (1.11.0) | local (`aulo-proto`) | https://github.com/Kotlin/kotlinx.coroutines | `suspend` service methods and the channels of streaming RPCs; the version kotlin-kit uses (Apache-2.0) |
 | org.jetbrains.kotlin:kotlin-test | local (`commonTest`) | https://github.com/JetBrains/kotlin | Unit tests |
 | org.jetbrains.kotlin:kotlin-test-junit5 | local (`build-logic` tests) | https://github.com/JetBrains/kotlin | Tests of the module-graph rules on the JVM |
 | org.junit.platform:junit-platform-launcher | local (`build-logic` tests) | https://github.com/junit-team/junit-framework | Gradle 9 needs it on the test runtime classpath |
