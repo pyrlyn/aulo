@@ -168,7 +168,7 @@ jobs:
           # The aulo-grpc and aulo-server test binaries link nghttp2, which Conan builds on this
           # runner; the executables do not link it until aulod serves gRPC (T3.6).
           tasks=(":aulo:linkAuloReleaseExecutable$TASK" ":aulo:linkAulodReleaseExecutable$TASK")
-          tasks+=(":aulo-grpc:linkDebugTest$TASK" ":aulo-server:linkDebugTest$TASK")
+          tasks+=(":aulo-grpc:linkDebugTest$TASK" ":aulo-server:linkDebugTest$TASK" ":aulo-secrets:linkDebugTest$TASK")
           if [ "$SKIP_TESTS" = true ]; then
             echo "::notice title=SKIP_CI_TESTS::tests skipped by SKIP_CI_TESTS"
           else
@@ -177,7 +177,7 @@ jobs:
           # linuxArm64 is cross-linked here and run by the linux-arm64 job.
           if [ "$TARGET" = linuxX64 ]; then
             tasks+=(:aulo:linkAuloReleaseExecutableLinuxArm64 :aulo:linkAulodReleaseExecutableLinuxArm64 :aulo:linkDebugTestLinuxArm64)
-            tasks+=(:aulo-grpc:linkDebugTestLinuxArm64 :aulo-server:linkDebugTestLinuxArm64)
+            tasks+=(:aulo-grpc:linkDebugTestLinuxArm64 :aulo-server:linkDebugTestLinuxArm64 :aulo-secrets:linkDebugTestLinuxArm64)
           fi
           ./gradlew "${tasks[@]}" --console=plain
 
