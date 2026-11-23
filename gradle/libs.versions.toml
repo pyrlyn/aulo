@@ -11,6 +11,8 @@ coroutines = "1.11.0"
 wire = "7.2.2"
 # Sockets (TCP and Unix) under the gRPC transport (spec §17 D11).
 ktor = "3.6.1"
+# CommonMark and GFM parser for the speakable-text normalizer (T7.15).
+markdown = "0.7.18"
 
 [libraries]
 # build-logic puts these Gradle plugins on the classpath of every module.
@@ -25,6 +27,7 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 wire-runtime = { module = "com.squareup.wire:wire-runtime", version.ref = "wire" }
 ktor-network = { module = "io.ktor:ktor-network", version.ref = "ktor" }
+jetbrains-markdown = { module = "org.jetbrains:markdown", version.ref = "markdown" }
 
 [plugins]
 # build-logic formats itself with the same ktlint as the modules.
