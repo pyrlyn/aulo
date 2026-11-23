@@ -16,5 +16,8 @@ kotlin {
             // TurnId and TranscriptKind appear in the engine interfaces.
             api(project(":aulo-types"))
         }
+        commonTest.dependencies {
+            implementation(project(":aulo-testkit"))
+        }
     }
 }
