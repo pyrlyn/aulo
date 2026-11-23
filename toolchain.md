@@ -44,7 +44,7 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 | pyrlyn.kit:fs | local (included build `packages/pyrlyn-kit`, pyrlyn/packages 0.0.5 in CI) | https://github.com/pyrlyn/packages/tree/main/pyrlyn-kit/fs | Reading config files (missing is empty), atomic writes, rotating log files, temporary directories in tests |
 | pyrlyn.kit:cli | local (included build `packages/pyrlyn-kit`, pyrlyn/packages 0.0.5 in CI) | https://github.com/pyrlyn/packages/tree/main/pyrlyn-kit/cli | `aulo` command tree, help and errors with clap semantics |
 | pyrlyn.kit:process | local (included build `packages/pyrlyn-kit`, pyrlyn/packages 0.0.5 in CI) | https://github.com/pyrlyn/packages/tree/main/pyrlyn-kit/process | The process environment for the config env layer |
-| pyrlyn.kit:http | local (included build `packages/pyrlyn-kit`, pyrlyn/packages 0.0.5 in CI) | https://github.com/pyrlyn/packages/tree/main/pyrlyn-kit/http | Engine-neutral streaming HTTP client interface for model downloads (`aulo-models`) |
+| pyrlyn.kit:http | local (included build `packages/pyrlyn-kit`, pyrlyn/packages 0.0.5 in CI) | https://github.com/pyrlyn/packages/tree/main/pyrlyn-kit/http | Engine-neutral streaming HTTP client interface for model downloads (`aulo-models`) and the OpenAI-compatible STT engine (`aulo-speech-openai`) |
 | pyrlyn.kit:http-ktor | local (included build `packages/pyrlyn-kit`, pyrlyn/packages 0.0.5 in CI) | https://github.com/pyrlyn/packages/tree/main/pyrlyn-kit/http-ktor | Its Ktor adapter (Darwin, Curl and WinHttp engines), wired in `aulo` |
 | app.cash.sqldelight:gradle-plugin (2.4.1) | local (`build-logic`) | https://github.com/sqldelight/sqldelight | Typed SQLite queries in `aulo-store`, checked against the schema at build time |
 | app.cash.sqldelight:runtime (2.4.1) | local (via `pyrlyn.kit:db-sqldelight`) | https://github.com/sqldelight/sqldelight | Runtime of the generated queries |
@@ -78,6 +78,7 @@ missing from Conan Center has a recipe in `conan/recipes/<name>/`.
 | --- | --- | --- | --- |
 | libnghttp2 (1.68.1) | local (`aulo-grpc/conanfile.txt`) | https://github.com/nghttp2/nghttp2 | HTTP/2 under aulo's gRPC transport on every target (spec §17 D11; MIT) |
 | mbedtls (3.6.7) | local (`aulo-grpc/conanfile.txt`) | https://github.com/Mbed-TLS/mbedtls | TLS 1.3 for TCP listeners and clients, self-signed certificates (T3.8; Apache-2.0 OR GPL-2.0-or-later, taken as Apache-2.0) |
+| sherpa-onnx (2.0.3) | local (`aulo-speech-sherpa/conanfile.txt`; recipe `conan/recipes/sherpa-onnx`) | https://github.com/k2-fsa/sherpa-onnx | Offline STT (Parakeet, Moonshine) in the `aulo-speech-sherpa` helper process (T7.4). The recipe repackages the official prebuilt archives: static on macOS, shared with onnxruntime on Linux and Windows, copied next to each binary (`bundleSharedLibraries`). Apache-2.0; onnxruntime MIT |
 
 Native libraries used by the speech and audio modules (sherpa-onnx, whisper.cpp, libopus,
 and so on) are chosen and recorded here by the task that first wires each of them, including

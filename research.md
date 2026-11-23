@@ -605,6 +605,7 @@ Checked 2026-11-23. The design follows cofre's `owner-listener` service module (
 Checked 2026-11-23.
 
 - **Parakeet TDT 0.6B v3, int8 ONNX for sherpa-onnx** — `csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8`, pinned at commit `2bda32ec70b097a55adaa07d9a7173915b43cc78` (repo last modified 2026-11-07). Sizes and SHA-256 of `decoder.int8.onnx`, `encoder.int8.onnx` and `joiner.int8.onnx` are the LFS `oid`s of the Hub API tree at that commit — https://huggingface.co/api/models/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/tree/2bda32ec70b097a55adaa07d9a7173915b43cc78. `tokens.txt` is not in LFS, so its SHA-256 was computed from the downloaded file. Licence CC-BY-4.0 per the model card's metadata — https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8. The catalog is `aulo-models/data/models.json`.
+- **Moonshine base, English, quantized, for sherpa-onnx** (T7.4) — `csukuangfj2/sherpa-onnx-moonshine-base-en-quantized-2026-02-27`, pinned at commit `8f4d6c58c03d40bcea40043bb7120a878f2bbef6` (repo last modified 2026-02-27; checked 2026-11-23). Sizes and SHA-256 of `decoder_model_merged.ort` and `encoder_model.ort` are the LFS `oid`s of the Hub API tree at that commit — https://huggingface.co/api/models/csukuangfj2/sherpa-onnx-moonshine-base-en-quantized-2026-02-27/tree/8f4d6c58c03d40bcea40043bb7120a878f2bbef6. `tokens.txt` is not in LFS; its SHA-256 was computed from the downloaded file. All three files are byte-identical to the `asr-models` release archive measured in the T0.5 spike (`docs/spikes/sherpa-onnx.md`). The model card has no licence metadata; the repository's `LICENSE` (13344 bytes at that commit) says the English models are released under MIT, as does the upstream https://github.com/moonshine-ai/moonshine `LICENSE`.
 - **Hugging Face `resolve` URLs** (observed 2026-11-23 with `curl -IL`): an LFS file at a commit answers 302 to `us.aws.cdn.hf.co` with `accept-ranges: bytes`; `tokens.txt`, which is not in LFS, answers 307 to `/api/resolve-cache/…`. A commit in the path keeps the bytes fixed. Checked end to end: `aulo models pull` of the whole model verified every hash, and a partial truncated to 100 MB resumed with a 206 and still matched the pin.
 - **Range requests**: `Range: bytes=N-`, a `206` with `Content-Range: bytes N-M/L`, a `200` from a server that ignores the range, and `416` for an unsatisfiable range — RFC 9110 §14 (https://www.rfc-editor.org/rfc/rfc9110#section-14).
 - **Streaming SHA-256**: okio's `HashingSink.sha256` is in okio's common code, so all four native targets have it — https://github.com/lysine-dev/okio/blob/parent-3.18.2/okio/src/commonMain/kotlin/okio/HashingSink.kt (okio 3.18.2, the version Wire 7.2.2 brings; `github.com/square/okio` now redirects there). It replaces a second hashing library (ketch uses KotlinCrypto `sha2`, `apps/ketch`).
@@ -617,6 +618,37 @@ The speakable-text normalizer in `aulo-voice` needs a CommonMark parser with GFM
 - **org.jetbrains:markdown 0.7.18** (JetBrains, the parser behind IntelliJ's Markdown support). Apache-2.0; latest version on Maven Central, published 2026-10-15; native artifacts for `macosArm64`, `linuxX64`, `linuxArm64` and `mingwX64`, none with dependencies of their own. Sources: https://repo1.maven.org/maven2/org/jetbrains/markdown/0.7.18/markdown-0.7.18.pom and https://repo1.maven.org/maven2/org/jetbrains/markdown/maven-metadata.xml (checked 2026-11-23); https://github.com/JetBrains/markdown.
 - API in 0.7.18 (from its sources jar on Maven Central, checked 2026-11-23): `MarkdownParser(flavour, assertionsEnabled, cancellationToken)` and `buildMarkdownTreeFromString(CharSequence)`; the one-argument constructor and the `String` overload are deprecated. `GFMFlavourDescriptor` adds tables, strikethrough, autolinks, math, alerts and highlights. `EntityConverter.replaceEntities` escapes for HTML output (it turns `&` back into `&amp;`), so it cannot decode entities into plain text; `Entities.map` is the public name-to-code-point table.
 - Measured here (`SpeakableTest`, macOS debug build): parse time grows with the square of block-quote nesting depth — 4000 nested `>` take 0.8 s and 64 KiB of `>` take about 3.5 minutes — so the normalizer keeps at most 16 quote and list markers per line before parsing. Other hostile 64 KiB inputs (nested brackets, emphasis, backticks, `<`) parse in about 1 s.
+
+### 4.16 OpenAI-compatible transcription (T7.6)
+
+Checked 2026-11-23. The pages carry no version or date. Sources:
+- Reference (R): https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create
+- Guide (G): https://developers.openai.com/api/docs/guides/speech-to-text
+
+`platform.openai.com/docs/api-reference/audio/createTranscription` and `/docs/guides/speech-to-text` redirect (301) to these.
+
+- **Request**: `POST /v1/audio/transcriptions` as `multipart/form-data`. Only `file` and `model` are required (R).
+  - Accepted file types: flac, mp3, mp4, mpeg, mpga, m4a, ogg, wav, webm (R).
+  - Files are at most 25 MB (G). aulo sends 16 kHz 16-bit mono WAV and caps an utterance at 10 minutes (19.2 MB).
+- **Fields aulo sends**:
+  - `response_format`: `json` is the default, and the only format `gpt-4o-transcribe` and `gpt-4o-mini-transcribe` take (R).
+  - `stream`: `true` asks for server-sent events. `whisper-1` ignores it (R). The guide streams with `gpt-transcribe` and says existing `gpt-4o-*-transcribe` integrations stream too (G).
+  - `language`: one ISO-639-1 code (R). For `gpt-transcribe`, the guide says "`languages` replaces the singular `language` field. Don't send both fields." (G). What `gpt-transcribe` does with `language` alone is **unverified**, so aulo sends `languages[]` to models named `gpt-transcribe*`.
+  - Array fields use the bracket form, one part per element: `-F 'languages[]=en'`, `-F "include[]=logprobs"` (R, G).
+- **Models**: the guide says to "Start with gpt-transcribe". It lists `whisper-1`, `gpt-4o-transcribe`, `gpt-4o-mini-transcribe` and `gpt-4o-transcribe-diarize` as deprecated, shutting down on 2027-02-26 (G). The reference's enum also has `gpt-4o-mini-transcribe-2025-12-15` (R).
+- **JSON answer** (`response_format=json`):
+  - `text`, plus `usage` (`type` `tokens` or `duration`) (R).
+  - `languages`, an array of `{code}`, comes from `gpt-transcribe` only (R).
+  - `logprobs` comes only with `include[]=logprobs` (R).
+  - Other compatible servers may return a single `language`. aulo takes either when it is a language tag.
+- **Stream**: server-sent events, in the format MDN describes (R). Each event is a `data:` line with a JSON object, and a blank line ends it.
+  - `transcript.text.delta` carries `delta` (plus `segment_id` when diarizing).
+  - `transcript.text.done` carries `text`, `languages` (`gpt-transcribe`) and `usage`.
+  - `transcript.text.segment` comes only with `diarized_json` (R, G).
+  - The examples end with `transcript.text.done`. Neither page shows a `data: [DONE]` sentinel, nor the response's `Content-Type`; both are **unverified**.
+  - aulo ends the stream at `transcript.text.done`, accepts a `[DONE]` as chat-style servers send it, and reads a JSON body from a server that answers without a stream.
+- **Errors**: neither page documents the error body. aulo reads the `{"error": {"message": ...}}` shape of OpenAI's other endpoints when it is there (**unverified** for this endpoint) and the raw text otherwise.
+- **The local model runner**: at pyrlyn/runa `b86ede9` (2026-11-22), `git grep -i transcri` finds nothing. The Kotlin rewrite has no transcription endpoint yet; the `serve.rs` row in 6.2 describes the retired Rust workspace.
 
 ## Part 5. Conclusions and ideas to borrow (for a Rust voice computer-control agent)
 
@@ -687,7 +719,7 @@ None of the coding agent crates is on crates.io; internal deps use `path` + `ver
 
 | What | Where | Notes |
 | --- | --- | --- |
-| OpenAI/Anthropic-compatible server | `apps/runa/crates/runa/src/serve.rs:143-149` | `/v1/chat/completions`, `/v1/messages`, `/v1/embeddings`, `/v1/audio/transcriptions`; axum 0.8, port 8080 |
+| OpenAI/Anthropic-compatible server (Rust workspace, retired; see 4.16) | `apps/runa/crates/runa/src/serve.rs:143-149` | `/v1/chat/completions`, `/v1/messages`, `/v1/embeddings`, `/v1/audio/transcriptions`; axum 0.8, port 8080 |
 | Streaming caveat | `serve.rs:548` (`generate_events` returns `Vec<GenEvent>`), `serve.rs:330-339` (replayed as SSE) | Time to first token = full generation time (T1.19) |
 | Engine | `apps/runa/crates/runa-engine/src/load.rs:685`, `generate.rs:134,146` | llama-cpp-2 =0.1.133, optional mistralrs =0.8.1 |
 | Fit checker | `apps/runa/crates/runa-fit` (`verdict.rs`, `planner.rs`) | GGUF header reader, hardware probe |
