@@ -152,10 +152,10 @@ utterances that contain digits is given too.
 
 ## WER threshold for T7.4
 
-Proposed: on a fixed set of FLEURS dev clips per language, Parakeet TDT v3 int8 through
+Confirmed by the creator for Parakeet: on a fixed set of FLEURS dev clips per language, Parakeet TDT v3 int8 through
 `aulo-speech-sherpa` must reach **WER ≤ 10% for en and for ru** with the normalizer above (measured 7.84%
-and 7.75%, so about two points of margin for a smaller set). Moonshine, if wired, ≤ 15% for en counting
-empty outputs as errors. The threshold awaits the creator's confirmation.
+and 7.75%, so about two points of margin for a smaller set). Moonshine, if wired: proposed ≤ 15% for en,
+counting empty outputs as errors.
 
 ## Reproduce
 
