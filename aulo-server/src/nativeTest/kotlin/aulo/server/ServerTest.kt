@@ -357,7 +357,7 @@ class ListenersTest {
     }
 }
 
-private fun transport(block: suspend CoroutineScope.() -> Unit) = runBlocking { withTimeout(60.seconds) { block() } }
+internal fun transport(block: suspend CoroutineScope.() -> Unit) = runBlocking { withTimeout(60.seconds) { block() } }
 
 /** An [AuloServer] with one extra service, on the local socket from the default config. */
 private fun serving(block: suspend (GrpcClient, Endpoint.Unix) -> Unit) =
@@ -389,7 +389,7 @@ private fun ByteString.fileName(): String {
     return substring(2, 2 + this[1].toInt()).utf8()
 }
 
-private inline fun assertStatus(
+internal inline fun assertStatus(
     code: StatusCode,
     message: String? = null,
     block: () -> Unit,
