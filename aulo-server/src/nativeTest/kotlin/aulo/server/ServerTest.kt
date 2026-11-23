@@ -334,9 +334,10 @@ class ListenersTest {
 
     @Test
     fun listen_addresses_parse_strictly() {
+        // IPv6 from the documentation range (RFC 3849), which address scanners know is not a real host.
         assertEquals(Endpoint.Tcp("0.0.0.0", 7443), Listeners.parseListen("0.0.0.0:7443"))
         assertEquals(Endpoint.Tcp("aulo.example", 1), Listeners.parseListen("aulo.example:1"))
-        assertEquals(Endpoint.Tcp("fe80::1", 65535), Listeners.parseListen("[fe80::1]:65535"))
+        assertEquals(Endpoint.Tcp("2001:db8::1", 65535), Listeners.parseListen("[2001:db8::1]:65535"))
         for (bad in listOf(
             "",
             "7443",
@@ -345,7 +346,7 @@ class ListenersTest {
             "host:0",
             "host:65536",
             "host:123456",
-            "::1:80",
+            "2001:db8::1:80",
             "[::1]80",
             "[]:80",
             "a b:80",
