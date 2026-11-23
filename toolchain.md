@@ -23,6 +23,7 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 | cmake (3.31.12) | mise (`mise.toml`) | Conan's builds of those libraries from source (every target but macOS) | https://github.com/Kitware/CMake |
 | ninja (1.13.2) | mise (`mise.toml`) | CMake's generator for those builds on a Windows host | https://github.com/ninja-build/ninja |
 | uv (0.13.9) | mise (`mise.toml`) | Installs conan for mise (a PyPI package) | https://github.com/astral-sh/uv |
+| grpcurl (1.9.4) | mise, on demand (`mise x aqua:fullstorydev/grpcurl@1.9.4`) | Optional: `AULO_GRPCURL` makes the aulo-server tests list services and call health with it | https://github.com/fullstorydev/grpcurl |
 | protoc-gen-doc (v1.5.1) | buf remote plugin `buf.build/community/pseudomuto-doc` (`buf.gen.yaml`), nothing to install | Generates the Markdown gRPC API reference in `docs/api/` (`just api-docs`) | https://github.com/pseudomuto/protoc-gen-doc |
 
 ## Gradle
@@ -47,6 +48,7 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 | androidx.sqlite:sqlite-bundled (2.7.1) | local (via `pyrlyn.kit:db-room`; Google's Maven repository, `androidx.*` only) | https://developer.android.com/jetpack/androidx/releases/sqlite | The bundled SQLite (with FTS5) on macOS and Linux |
 | sqlite3 (3.54.0) | local (via `pyrlyn.kit:db-native`, Conan) | https://sqlite.org/ | The SQLite (with FTS5) on Windows |
 | com.squareup.wire:wire-gradle-plugin (7.2.2) | local (`build-logic`) | https://github.com/square/wire | Generates `aulo-proto` from `proto/aulo/v1` with its own proto parser, so no `protoc` (spec §17 D10; Apache-2.0) |
+| com.squareup.wire:wire-schema (7.2.2) | local (`build-logic`) | https://github.com/square/wire | Wire's schema API and descriptor encoder for `GrpcTables`, the handler that writes the gRPC method tables and reflection descriptors (Apache-2.0) |
 | com.squareup.wire:wire-runtime (7.2.2) | local (`aulo-proto`) | https://github.com/square/wire | Runtime of the generated messages: `Message`, `ProtoAdapter`, `Service` (Apache-2.0) |
 | com.squareup.okio:okio (3.18.2) | local (via `wire-runtime`) | https://github.com/square/okio | Byte strings and buffers of the Wire runtime (Apache-2.0) |
 | org.jetbrains.kotlinx:kotlinx-coroutines-core (1.11.0) | local (`aulo-proto`, `aulo-grpc`) | https://github.com/Kotlin/kotlinx.coroutines | `suspend` service methods and the channels of streaming RPCs; the version kotlin-kit uses (Apache-2.0) |

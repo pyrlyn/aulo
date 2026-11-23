@@ -44,4 +44,5 @@ include(
     ":aulo-store",
     ":aulo-proto",
     ":aulo-grpc",
+    ":aulo-server",
 )
