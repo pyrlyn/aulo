@@ -1,7 +1,8 @@
 # Chat actions
 
-Figma: frames "<Platform> / Chat actions" and "<Platform> / Delete chat" on the page
-"aulo-chat · Screens".
+Figma, chat actions: [macOS](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=68-8957) · [Windows 11](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=68-7322) · [Linux](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=69-8676)
+
+Figma, delete chat: [macOS](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=68-8984) · [Windows 11](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=68-7433) · [Linux](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=69-8785)
 
 ## Purpose
 
@@ -55,6 +56,18 @@ Rename a chat or delete it, from the conversation list or from the open chat.
 Offline, Rename and Delete are disabled in the menu with the muted hint "Needs the server".
 A server refusal shows an error banner and leaves the chat as it was.
 
+## Keys
+
+F2 renames the open chat (desktop). Delete has no key of its own: a Delete key would also fire
+while typing in the composer. The "Del" hint drawn in the Windows and Linux menus is therefore
+not shown in the app; delete starts from the menu only.
+
 ## Code
 
-Not implemented before T12.23.
+- Menu: `ChatMenu` in `composeApp/.../ui/Sidebar.kt`, opened from a row (right click or "⋯")
+  and from the chat header in `ChatWindow.kt`.
+- Inline rename: `RenameField` in `Sidebar.kt`. Delete dialog: `ConfirmDialog.kt`, where
+  Cancel is the focused button.
+- State: `ChatViewModel.rename` and `delete`, then `ChatRepository` and the server's
+  `renameChat` and `deleteChat` in `Services.kt`.
+- Phones get the long-press menu and the rename alert with their conversation list.

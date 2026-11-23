@@ -1,6 +1,6 @@
 # Search
 
-Figma: frames "<Platform> / Search" on the page "aulo-chat · Screens".
+Figma: [macOS](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=68-9096) · [Windows 11](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=68-7469) · [Linux](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=69-8808)
 
 ## Purpose
 
@@ -42,8 +42,8 @@ A clear button (×) sits in the search field. With no results: the muted line
 - Title matches come from the local cache; message hits from `ChatService.SearchMessages`,
   sent 300 ms after the last keystroke.
 - Choosing a message hit opens its chat and scrolls to the message.
-- Escape or the clear button empties the query and restores the list. Cmd+F (macOS) or
-  Ctrl+F (Windows, Linux, Web) focuses the field.
+- Escape or the clear button empties the query and restores the list. Cmd+F or Cmd+K
+  (macOS), Ctrl+F or Ctrl+K (Windows, Linux, Web) focuses the field.
 - Excerpts come from the server: drawn as plain text, one line, cut with an ellipsis.
 
 ## Errors and offline
@@ -53,4 +53,10 @@ in place of the Messages group.
 
 ## Code
 
-Not implemented before T12.23.
+- Field and results: `Sidebar` and `SearchResults` in `composeApp/.../ui/Sidebar.kt`;
+  `highlight` bolds every query word.
+- State: `ChatViewModel.onQueryChange` and `openHit`; title matches from `ChatCache`,
+  message hits from `ChatRemote.searchMessages`; the server side is `ChatStore.search`.
+- Shortcuts: `windowShortcut` in `ChatWindow.kt`.
+- Not done yet: opening a message hit opens its chat but does not scroll to the message.
+  Search exists in the wide (desktop) layout only; phones get it with their conversation list.

@@ -1,6 +1,6 @@
 # Settings
 
-Figma: frames "<Platform> / Settings" on the page "aulo-chat · Screens".
+Figma: [macOS](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=68-8892) · [Windows 11](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=68-8684) · [Linux](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=69-8552)
 
 ## Purpose
 
@@ -70,4 +70,8 @@ in settings needs the server except the model list.
 
 ## Code
 
-Not implemented before T12.23.
+- Screen: `SettingsScreen.kt`. On desktop it is its own window (`Main.kt`, Cmd+, or Ctrl+,
+  and the sidebar's Settings button); elsewhere a dialog over the app (`App.kt`).
+- State: `SettingsViewModel` over `SettingsStore` (SQLDelight `Setting.sq`); a new address
+  switches `SwitchableChatRemote` and reconnects `ChatViewModel`.
+- Phones get a Settings entry with their own designs.

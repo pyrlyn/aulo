@@ -1,6 +1,6 @@
 # Connect
 
-Figma: frames "<Platform> / Connect" on the page "aulo-chat · Screens".
+Figma: [macOS](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=68-9008) · [Windows 11](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=68-7621) · [Linux](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=69-8983)
 
 ## Purpose
 
@@ -51,4 +51,5 @@ This screen is itself the offline state for a first start.
 
 ## Code
 
-Not implemented before T12.23.
+`ConnectScreen.kt`, shown by `App.kt` while `ChatUiState.needsServer` is true; the address
+field and status line are shared with `SettingsScreen.kt`.

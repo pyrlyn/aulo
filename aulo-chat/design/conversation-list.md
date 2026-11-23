@@ -68,8 +68,10 @@ Sidebar width on desktop and web is about 220–260 dp of a 1120 dp window.
 
 ## Code
 
-Not implemented as a screen. The data side exists: `ChatRepository.chats` (a flow of
-`ChatSummary` from the SQLDelight cache, refreshed from `ChatService.ListChats`),
-`ChatRepository.newChat()` and `ChatViewModel.newChat()`. The app opens the most recent chat
-and offers New chat in the chat's top bar. Search has no client code yet;
-`ChatService.SearchMessages` is the server call for it.
+- Desktop and other wide windows: `Sidebar` in `composeApp/.../ui/Sidebar.kt`, beside the
+  chat in `ChatWindow.kt`. Rows show the title, the model's display name and a relative time
+  (`relativeTime`), refreshed every minute.
+- Data: `ChatRepository.chats` (a flow of `ChatSummary` from the SQLDelight cache, refreshed
+  from `ChatService.ListChats`), `ChatViewModel.openChat` and `newChat`.
+- Phones: not built yet. The app opens the most recent chat and offers New chat in the
+  chat's top bar.
