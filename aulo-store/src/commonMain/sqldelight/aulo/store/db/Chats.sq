@@ -1,0 +1,43 @@
+CREATE TABLE chats (
+    id TEXT NOT NULL PRIMARY KEY,
+    bot_id TEXT REFERENCES bots (id) ON DELETE SET NULL,
+    title TEXT NOT NULL,
+    model TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+CREATE INDEX chats_updated_at ON chats (updated_at);
+
+CREATE INDEX chats_bot_id ON chats (bot_id);
+
+insert:
+INSERT INTO chats (id, bot_id, title, model, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?);
+
+byId:
+SELECT * FROM chats WHERE id = ?;
+
+-- Most recently active first; the id breaks ties so the order is total.
+recent:
+SELECT * FROM chats ORDER BY updated_at DESC, id DESC LIMIT :limit OFFSET :offset;
+
+-- Keyset page in the order of `recent`: chats strictly after (afterUpdatedAt, afterId), the last
+-- chat of the previous page, optionally of one bot.
+page:
+SELECT * FROM chats
+WHERE (:botId IS NULL OR bot_id = :botId)
+  AND (:afterUpdatedAt IS NULL OR updated_at < :afterUpdatedAt OR (updated_at = :afterUpdatedAt AND id < :afterId))
+ORDER BY updated_at DESC, id DESC
+LIMIT :limit;
+
+setModel:
+UPDATE chats SET model = ?, updated_at = ? WHERE id = ?;
+
+rename:
+UPDATE chats SET title = ?, updated_at = ? WHERE id = ?;
+
+touch:
+UPDATE chats SET updated_at = ? WHERE id = ?;
+
+delete:
+DELETE FROM chats WHERE id = ?;

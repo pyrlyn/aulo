@@ -53,7 +53,47 @@ object Ulid {
     // Uuid.random() is the stdlib's cryptographically secure source on every native target;
     // 80 of its 122 random bits are enough and need no extra dependency.
     @OptIn(ExperimentalUuidApi::class)
-    private fun secureRandomBytes(): ByteArray = Uuid.random().toByteArray().copyOfRange(6, 16)
+    internal fun secureRandomBytes(): ByteArray = Uuid.random().toByteArray().copyOfRange(6, 16)
+}
+
+/**
+ * ULIDs that sort in the order this generator made them, even within one millisecond: a later id
+ * in the same millisecond is the previous one's random part plus one (the spec's monotonic mode).
+ * Not thread-safe; give each writer its own.
+ */
+class MonotonicUlid(
+    private val clock: Clock = Clock.System,
+    private val random: () -> ByteArray = Ulid::secureRandomBytes,
+) {
+    private var lastMs = -1L
+    private var last = ByteArray(RANDOM_BYTES)
+
+    fun next(): String {
+        val now = clock.now().toEpochMilliseconds()
+        // A clock that steps back keeps the last time, so order still holds.
+        if (now > lastMs) {
+            lastMs = now
+            last = random().copyOf(RANDOM_BYTES)
+        } else if (!increment(last)) {
+            // All 80 bits were set: carry into the next millisecond rather than repeat an id.
+            lastMs += 1
+            last = random().copyOf(RANDOM_BYTES)
+        }
+        return Ulid.encode(lastMs, last)
+    }
+
+    /** Adds one to [bytes] as a big-endian number; false when it wrapped to zero. */
+    private fun increment(bytes: ByteArray): Boolean {
+        for (i in bytes.indices.reversed()) {
+            bytes[i] = (bytes[i] + 1).toByte()
+            if (bytes[i] != 0.toByte()) return true
+        }
+        return false
+    }
+
+    private companion object {
+        const val RANDOM_BYTES = 10
+    }
 }
 
 /** Rejects anything but a canonical ULID; the value itself is never echoed, it may be untrusted. */

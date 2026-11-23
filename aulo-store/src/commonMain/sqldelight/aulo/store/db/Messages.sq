@@ -1,0 +1,23 @@
+CREATE TABLE messages (
+    id TEXT NOT NULL PRIMARY KEY,
+    chat_id TEXT NOT NULL REFERENCES chats (id) ON DELETE CASCADE,
+    role TEXT NOT NULL,
+    content TEXT NOT NULL,
+    wire TEXT,
+    created_at INTEGER NOT NULL
+);
+
+CREATE INDEX messages_chat_id_id ON messages (chat_id, id);
+
+insert:
+INSERT INTO messages (id, chat_id, role, content, wire, created_at) VALUES (?, ?, ?, ?, ?, ?);
+
+history:
+SELECT id, role, content, wire FROM messages WHERE chat_id = ? ORDER BY id;
+
+-- Keyset page, oldest first: messages after afterId, the last id of the previous page.
+page:
+SELECT id, chat_id, role, content, created_at FROM messages
+WHERE chat_id = :chatId AND (:afterId IS NULL OR id > :afterId)
+ORDER BY id
+LIMIT :limit;

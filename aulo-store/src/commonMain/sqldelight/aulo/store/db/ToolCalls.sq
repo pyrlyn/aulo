@@ -1,0 +1,20 @@
+CREATE TABLE tool_calls (
+    id TEXT NOT NULL PRIMARY KEY,
+    message_id TEXT NOT NULL REFERENCES messages (id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    arguments TEXT NOT NULL,
+    output TEXT,
+    status TEXT NOT NULL,
+    created_at INTEGER NOT NULL
+);
+
+CREATE INDEX tool_calls_message_id ON tool_calls (message_id);
+
+insert:
+INSERT INTO tool_calls (id, message_id, name, arguments, output, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?);
+
+ofMessage:
+SELECT * FROM tool_calls WHERE message_id = ? ORDER BY id;
+
+ofMessages:
+SELECT * FROM tool_calls WHERE message_id IN ? ORDER BY id;
