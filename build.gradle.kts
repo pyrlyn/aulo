@@ -14,6 +14,8 @@ plugins {
 // catalog. A lock entry is a strict constraint, so a changed catalog version takes no effect
 // until the locks are rewritten. After changing a dependency:
 // ./gradlew --write-locks resolveAndLockAll
+// The root project resolves nothing, so Gradle writes no lock file for it; the committed empty
+// gradle.lockfile is the one SonarCloud's text:S8569 looks for next to the root build file.
 allprojects {
     dependencyLocking {
         lockAllConfigurations()
