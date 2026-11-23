@@ -4,15 +4,20 @@ import aulo.grpc.Endpoint
 import aulo.grpc.GrpcLimits
 import aulo.grpc.GrpcServer
 import aulo.grpc.ServerHandler
+import aulo.secrets.OwnerOnlyException
+import aulo.secrets.ensureOwnerOnlyDir
+import aulo.secrets.restrictToOwner
 import aulo.server.generated.grpcHandlers
 import kotlin.time.Duration
 
 /**
  * aulod's gRPC server: the given service handlers (from the generated `grpcHandlers()` of each
- * aulo.v1 service), plus `grpc.health.v1` and `grpc.reflection.v1` for tooling.
+ * aulo.v1 service), plus `grpc.health.v1` and `grpc.reflection.v1` for tooling. Every method,
+ * the built-in ones too, passes [Authenticator] first: TCP calls need one of [tokenHashes].
  */
 class AuloServer(
     handlers: Map<String, ServerHandler>,
+    tokenHashes: Collection<String> = emptyList(),
     limits: GrpcLimits = GrpcLimits(),
 ) {
     /** Every service starts SERVING; [shutdown] turns them all NOT_SERVING first. */
@@ -25,16 +30,40 @@ class AuloServer(
         val builtIn = health.grpcHandlers() + ReflectionService(services).grpcHandlers()
         val clash = handlers.keys intersect builtIn.keys
         require(clash.isEmpty()) { "these methods are built in: ${clash.joinToString()}" }
-        server = GrpcServer(handlers + builtIn, limits)
+        val auth = Authenticator(tokenHashes)
+        val guarded =
+            (handlers + builtIn).mapValues { (_, handler) ->
+                ServerHandler { call ->
+                    auth.check(call)
+                    handler.handle(call)
+                }
+            }
+        server = GrpcServer(guarded, limits)
     }
 
-    /** Opens [listeners]; the endpoints as bound. */
+    /**
+     * Opens [listeners]; the endpoints as bound. The socket's directory is made owner-only
+     * before the bind, so nobody else can reach the socket at any moment.
+     */
     suspend fun start(listeners: Listeners): List<Endpoint> {
         if (listeners.remote != null) {
             // The config parser already demands the TLS files; serving them is T3.8.
             throw ListenerConfigException("TLS for daemon.listen is not supported yet; unset daemon.listen")
         }
-        return listOf(bind(listeners.local))
+        val socket = listeners.local.path
+        ownerOnly { ensureOwnerOnlyDir(socket.substring(0, maxOf(socket.lastIndexOf('/'), socket.lastIndexOf('\\')))) }
+        val bound = bind(listeners.local)
+        // The directory is the guard; 0600 keeps the socket closed even if it is loosened later.
+        ownerOnly { restrictToOwner(socket) }
+        return listOf(bound)
+    }
+
+    private inline fun ownerOnly(block: () -> Unit) {
+        try {
+            block()
+        } catch (e: OwnerOnlyException) {
+            throw ListenerConfigException(e.message ?: "the socket directory is not owner-only")
+        }
     }
 
     /** Opens one listener: for tests and tools; aulod opens what [start] gets from config. */
