@@ -1,4 +1,21 @@
 {
   "version": 1,
-  "entries": []
+  "entries": [
+    {
+      "file": ".github/workflows/ci.yml",
+      "rule": "unpinned-uses",
+      "fingerprint": "8d7b11f84c9c3c53",
+      "context": "e5eb876bdc6fd64d",
+      "occurrence": 0,
+      "message": "action \"pyrlyn/ci/.github/actions/macos-runner@main\" must be pinned to a full-length commit SHA like \"{owner}/{repo}@{sha}\" because the \"unpinned-uses\" rule is enabled"
+    },
+    {
+      "file": ".github/workflows/ci.yml",
+      "rule": "unpinned-uses",
+      "fingerprint": "14ef75ed18979789",
+      "context": "197e098f29212875",
+      "occurrence": 0,
+      "message": "action \"pyrlyn/ci/.github/actions/config@main\" must be pinned to a full-length commit SHA like \"{owner}/{repo}@{sha}\" because the \"unpinned-uses\" rule is enabled"
+    }
+  ]
 }
