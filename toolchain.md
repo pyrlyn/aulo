@@ -49,7 +49,10 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 | com.squareup.wire:wire-gradle-plugin (7.2.2) | local (`build-logic`) | https://github.com/square/wire | Generates `aulo-proto` from `proto/aulo/v1` with its own proto parser, so no `protoc` (spec §17 D10; Apache-2.0) |
 | com.squareup.wire:wire-runtime (7.2.2) | local (`aulo-proto`) | https://github.com/square/wire | Runtime of the generated messages: `Message`, `ProtoAdapter`, `Service` (Apache-2.0) |
 | com.squareup.okio:okio (3.18.2) | local (via `wire-runtime`) | https://github.com/square/okio | Byte strings and buffers of the Wire runtime (Apache-2.0) |
-| org.jetbrains.kotlinx:kotlinx-coroutines-core (1.11.0) | local (`aulo-proto`) | https://github.com/Kotlin/kotlinx.coroutines | `suspend` service methods and the channels of streaming RPCs; the version kotlin-kit uses (Apache-2.0) |
+| org.jetbrains.kotlinx:kotlinx-coroutines-core (1.11.0) | local (`aulo-proto`, `aulo-grpc`) | https://github.com/Kotlin/kotlinx.coroutines | `suspend` service methods and the channels of streaming RPCs; the version kotlin-kit uses (Apache-2.0) |
+| io.ktor:ktor-network (3.6.1) | local (`aulo-grpc`) | https://github.com/ktorio/ktor | TCP and Unix sockets under the gRPC transport on every target; HTTP/2 itself is nghttp2 (spec §17 D11; Apache-2.0) |
+| io.ktor:ktor-io, io.ktor:ktor-utils (3.6.1) | local (via `ktor-network`) | https://github.com/ktorio/ktor | The socket byte channels (Apache-2.0) |
+| org.jetbrains.kotlinx:kotlinx-io-core | local (via `ktor-io`) | https://github.com/Kotlin/kotlinx-io | Removes a Unix socket file when the gRPC server shuts down (Apache-2.0) |
 | org.jetbrains.kotlin:kotlin-test | local (`commonTest`) | https://github.com/JetBrains/kotlin | Unit tests |
 | org.jetbrains.kotlin:kotlin-test-junit5 | local (`build-logic` tests) | https://github.com/JetBrains/kotlin | Tests of the module-graph rules on the JVM |
 | org.junit.platform:junit-platform-launcher | local (`build-logic` tests) | https://github.com/junit-team/junit-framework | Gradle 9 needs it on the test runtime classpath |

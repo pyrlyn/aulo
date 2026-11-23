@@ -14,3 +14,13 @@ aulo {
 conan {
     cinterop("nghttp2", pkg = "libnghttp2", staticLibrary = "libnghttp2.a")
 }
+
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            // Handlers and calls are coroutines; ktor-network gives TCP and Unix sockets on every target.
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.ktor.network)
+        }
+    }
+}
