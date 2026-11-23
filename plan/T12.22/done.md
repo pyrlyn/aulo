@@ -1,6 +1,7 @@
 # T12.22. Done
 
-PR: https://github.com/pyrlyn/aulo/pull/98 (commit `eae2e38`).
+PR: https://github.com/pyrlyn/aulo/pull/98 (commit `eae2e38`; review follow-ups `b8cc5b5`,
+`6db833f`, `d62d052`, `808497a`).
 
 ## What was done
 
@@ -21,14 +22,30 @@ PR: https://github.com/pyrlyn/aulo/pull/98 (commit `eae2e38`).
 - `spec.md`: D10 and §12.1. `AGENTS.md`, the root `README.md`, `ideas.md` and `toolchain.md`
   updated.
 
+After review (SonarQube rated the security of the new code C, on four findings):
+
+- Dependency versions are locked: `gradle.lockfile` in each module and
+  `buildscript-gradle.lockfile` for the plugins; `./gradlew resolveAndLockAll --write-locks`
+  regenerates them.
+- The Android release build is shrunk and obfuscated by R8. `androidApp/proguard-rules.pro`
+  holds the keep rules for kotlinx-rpc, which ships none.
+- `usesCleartextTraffic="false"` in the Android manifest.
+- The bidi override in `ChatScreenTest` is written as an escape.
+
 ## How it was checked
 
 - `./gradlew :server:test :shared:jvmTest :composeApp:jvmTest`: server 18 tests, shared 15
-  (4 of them run the client against the real development server over gRPC), UI 10; all pass.
-- `./gradlew :androidApp:assembleDebug` and `:composeApp:linkDebugFrameworkIosSimulatorArm64`
-  build; `xcodebuild` of the generated `iosApp` project succeeds.
+  (4 of them run the client against the real development server over gRPC), UI 10; all pass,
+  also with the lock files in place.
+- `./gradlew :androidApp:assembleDebug`, `:androidApp:assembleRelease` and
+  `:composeApp:linkDebugFrameworkIosSimulatorArm64` build; `xcodebuild` of the generated
+  `iosApp` project succeeds.
 - The Android app on an emulator and the iOS app on a simulator, run by hand against
   `./gradlew :server:run`.
+- The release APK, signed with the debug key, on the emulator by hand: it connects, lists the
+  models, streams a reply, stops one, and reopens the cached chat with the server gone.
+- The desktop runtimes for Linux (x64, arm64) and Windows x64 resolve under the lock; checked
+  once from macOS with a temporary dependency on them.
 
 ## Not done, and where it went
 
@@ -42,3 +59,8 @@ PR: https://github.com/pyrlyn/aulo/pull/98 (commit `eae2e38`).
 - The `iosApp` link step warns that the Skiko ICU object is built for iOS simulator 18.5 while
   the deployment target is 16.0.
 - `gradlew.bat` is stored with LF line endings, as the root `.gitattributes` sets `eol=lf`.
+- No test runs the release build, so the keep rules are checked by hand only.
+- The channel to the development server is still plaintext on Android: gRPC over OkHttp does
+  not consult the cleartext setting. TLS comes with aulod's own transport (spec §11).
+- The lock files are written on macOS, where the iOS configurations exist. Whether Renovate
+  regenerates them completely was not checked.
