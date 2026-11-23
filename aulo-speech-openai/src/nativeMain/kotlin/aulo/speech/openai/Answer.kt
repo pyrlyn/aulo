@@ -35,18 +35,41 @@ internal suspend fun readAnswer(
     options: OpenAiSttOptions,
     onPartial: (String) -> Unit,
 ): Answer {
-    if (!head.isSuccess) throw statusError(head.status, readUpTo(body, options.maxErrorBytes))
-    val type =
-        head
-            .header("content-type")
-            ?.substringBefore(';')
-            ?.trim()
-            ?.lowercase()
-    return if (type == "text/event-stream") {
+    if (!head.isSuccess) throw statusFailure(head, body, options.maxErrorBytes)
+    return if (head.mediaType() == "text/event-stream") {
         EventStream(options, onPartial).read(body)
     } else {
         jsonAnswer(readAll(body, options.maxAnswerBytes))
     }
+}
+
+/** The type of the body without its parameters, lowercased; null when the server sent none. */
+internal fun HttpHead.mediaType(): String? =
+    header("content-type")
+        ?.substringBefore(';')
+        ?.trim()
+        ?.lowercase()
+
+/** The error an unsuccessful answer stands for, with the message from the first [maxErrorBytes] of its body. */
+internal suspend fun statusFailure(
+    head: HttpHead,
+    body: HttpBody,
+    maxErrorBytes: Int,
+): SpeechException = statusError(head.status, readUpTo(body, maxErrorBytes))
+
+/** An answer that should have been audio but is JSON or text: an error some servers send with a 200. */
+internal suspend fun bodyFailure(
+    body: HttpBody,
+    maxErrorBytes: Int,
+): SpeechException {
+    val text = readUpTo(body, maxErrorBytes)
+    val message =
+        try {
+            (Json.parseToJsonElement(text) as? JsonObject)?.let { errorOf(it) }
+        } catch (e: SerializationException) {
+            null
+        }
+    return SpeechException.Failed(message ?: "the answer is not audio: $text")
 }
 
 /** The first [max] bytes of [body] as text; the rest is not read. */
