@@ -1,0 +1,2 @@
+[requires]
+sherpa-onnx/2.0.3
