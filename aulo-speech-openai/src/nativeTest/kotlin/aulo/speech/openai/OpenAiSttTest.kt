@@ -385,10 +385,11 @@ class OpenAiEndpointTest {
         assertTrue(endpoint("http://127.0.0.1:8080/v1").isLoopback)
         assertTrue(endpoint("http://localhost/v1").isLoopback)
         assertTrue(endpoint("http://[::1]:9000/v1").isLoopback)
-        val e = assertFailsWith<SpeechException.Invalid> { endpoint("http://192.168.1.5:8080/v1") }
+        // 192.0.2.0/24 is reserved for documentation (RFC 5737): another machine that is never real.
+        val e = assertFailsWith<SpeechException.Invalid> { endpoint("http://192.0.2.5:8080/v1") }
         assertTrue("only over https" in e.message!!, e.message)
         // Without a key, plain HTTP to another machine is the user's call.
-        assertFalse(endpoint("http://192.168.1.5:8080/v1", key = null).isLoopback)
+        assertFalse(endpoint("http://192.0.2.5:8080/v1", key = null).isLoopback)
     }
 
     @Test
