@@ -1,10 +1,12 @@
 The aulo daemon: serves the aulo.v1 API to the local socket and, when configured, TCP
 
-Usage: aulod <COMMAND>
+Usage: aulod [OPTIONS] <COMMAND>
 
 Commands:
-  run  Run in the foreground until SIGINT or SIGTERM (Ctrl+C on Windows)
+  run      Run in the foreground until SIGINT or SIGTERM (Ctrl+C on Windows)
+  service  Run aulod at login: a launchd agent, a systemd user unit or a Task Scheduler task
 
 Options:
-  -h, --help     Print help
-  -V, --version  Print version
+      --home <DIR>  The aulo home, ahead of AULO_HOME and ~/.aulo
+  -h, --help        Print help
+  -V, --version     Print version
