@@ -8,7 +8,7 @@ PR: https://github.com/pyrlyn/aulo/pull/105 (stacked on #104), branch `t3.6-aulo
   `<home>/config.toml` and must exist (`LoadOptions.configFile`); the home itself still comes
   from `AULO_HOME` or the user directory. `--listen` overrides `daemon.listen` as the highest
   layer, so TLS is still required on TCP. Every operator error is `error: …` with exit 1.
-- `runDaemon` (aulo-server): listeners, the owner-only run directory, a kotlin-kit `FileLock`
+- `runDaemon` (aulo-server): listeners, the owner-only run directory, a pyrlyn-kit `FileLock`
   on `run/aulod.lock`, the pidfile `run/aulod.pid`, the store, the first token, `AuloServer`
   with `ChatService`; graceful shutdown, pidfile removed, lock released. A second aulod for the
   same home fails with `aulod is already running for <home> (pid N)` before touching anything.

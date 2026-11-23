@@ -18,7 +18,7 @@ Done when:
 
 Execution plan:
 
-1. A new `:aulo-store` LIBRARY module with SQLDelight 2.4.1 (the version kotlin-kit's `db-sqldelight` runtime uses). It runs on kotlin-kit's `db-room` on macOS and Linux, and on `db-native` on Windows.
+1. A new `:aulo-store` LIBRARY module with SQLDelight 2.4.1 (the version pyrlyn-kit's `db-sqldelight` runtime uses). It runs on pyrlyn-kit's `db-room` on macOS and Linux, and on `db-native` on Windows.
    - It is the only SQLite owner: `pyrlyn.kit:db*` joins the SQLite list in `ModuleGraph`.
 2. Migrations live in `aulo-store/migrations/<key>/{up,down}.sql`.
    - They are ported from the Rust `core_tables` and `message_wire` migrations, with the `wire` column folded into the first one.

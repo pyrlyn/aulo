@@ -20,7 +20,7 @@ Done when:
 
 The design follows cofre's `owner-listener` service module (Rust): every backend talks only to
 a `ServiceManager` (read, write, remove, make a directory, run a program), so tests drive all
-three against a fake on any host. Nothing is copied; kotlin-kit gives `currentExe()` and
+three against a fake on any host. Nothing is copied; pyrlyn-kit gives `currentExe()` and
 `runBounded`.
 
 1. `aulod run --home DIR`: the home for this run, ahead of `AULO_HOME`. Every backend starts

@@ -19,10 +19,10 @@ concurrency:
 permissions:
   contents: read
 
-# Shared Kotlin/Native libraries (kotlin-kit) and the build settings they need, from a checkout of
+# Shared Kotlin/Native libraries (pyrlyn-kit) and the build settings they need, from a checkout of
 # pyrlyn/packages next to the repository (settings.gradle.kts reads these variables).
 env:
-  KOTLIN_KIT_DIR: ${{ github.workspace }}/packages/kotlin-kit
+  KOTLIN_KIT_DIR: ${{ github.workspace }}/packages/pyrlyn-kit
   SHARED_SETTINGS_DIR: ${{ github.workspace }}/packages/shared-settings
 
 jobs:
@@ -135,13 +135,11 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: pyrlyn/packages
-          # spawnPipes for the speech helpers (pyrlyn/packages#9) and HttpClient.streamPost for the OpenAI-compatible
-          # STT engine (pyrlyn/packages#10, stacked on #9); repin to their merge commit once both land.
-          ref: 303aa1f9e5cd7c326e9e419e1eced1580c3ebe59 # 0.0.5+spawnPipes+streamPost
+          ref: cc286918bf40a71aa09dd5cfcf6497fc173d36de
           path: packages
           persist-credentials: false
 
-      # The JDK and what builds the C libraries with Conan: SQLite for Windows (kotlin-kit's
+      # The JDK and what builds the C libraries with Conan: SQLite for Windows (pyrlyn-kit's
       # db-native) and nghttp2 for Linux and Windows (aulo-grpc). mise installs Conan with uv into
       # its pinned Python; the lint and agent tools in mise.toml are not needed to build.
       - if: env.RUN == 'true'
@@ -159,12 +157,12 @@ jobs:
         with:
           path: ~/.konan
           key: konan-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('gradle/libs.versions.toml') }}
-          # kotlin-kit's conan script reads konan.properties when Gradle creates its task, before
+          # pyrlyn-kit's conan script reads konan.properties when Gradle creates its task, before
           # Kotlin/Native is downloaded; an older cache still holds the toolchain after a catalog
           # change that leaves the Kotlin version alone.
           restore-keys: konan-${{ runner.os }}-${{ runner.arch }}-
 
-      # kotlin-kit's conan script reads konan.properties while Gradle creates the Windows task, and
+      # pyrlyn-kit's conan script reads konan.properties while Gradle creates the Windows task, and
       # Gradle downloads Kotlin/Native only later, so a run without a warm cache always failed there.
       # The archive comes from Maven Central, where the Kotlin Gradle plugin fetches it too.
       - if: env.RUN == 'true' && runner.os == 'Windows'

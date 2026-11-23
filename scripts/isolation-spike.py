@@ -23,7 +23,8 @@ MARKER = "aulo-spike-marker"
 
 def main() -> int:
     if os.geteuid() != 0:
-        os.execvp("sudo", ["sudo", "-n", sys.executable, *sys.argv])
+        # The probe takes no arguments, so nothing from the command line reaches sudo.
+        os.execvp("sudo", ["sudo", "-n", sys.executable, os.path.abspath(__file__)])
     caller = os.environ.get("SUDO_USER") or "ubuntu"
     display = free_display()
     cleanup(display)

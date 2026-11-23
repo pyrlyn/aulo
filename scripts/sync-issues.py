@@ -19,6 +19,8 @@ PLAN = Path(__file__).resolve().parent.parent / "plan"
 PAUSE_S = 1.5
 CARD_META = re.compile(r"^Stage: (S\d+) · Area: (\S+) · Depends on: (.+?) · Blocks: \d+ task\(s\)(?: · Issue: #(\d+))?$", re.M)
 FRONT = re.compile(r"\A---\n(.*?)\n---\n", re.S)
+# owner/name as GitHub allows it; nothing that gh could read as an option.
+REPO = re.compile(r"[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9._-]+")
 
 
 def parse_task(path):
@@ -69,6 +71,10 @@ def main():
     ap.add_argument("--repo", required=True, help="owner/name, e.g. pyrlyn/aulo")
     ap.add_argument("--apply", action="store_true", help="really create on GitHub")
     a = ap.parse_args()
+    if not REPO.fullmatch(a.repo):
+        sys.exit(f"--repo must be owner/name, got {a.repo!r}")
+    # Values go to gh in --flag=value form, so none of them can be taken for another option.
+    repo = f"--repo={a.repo}"
     stages, tasks = parse()
     known = {t["id"]: t["issue"] for t in tasks}
 
@@ -77,11 +83,11 @@ def main():
     have = set()
     if a.apply:
         # Fail before creating anything when the repository is missing or unreachable.
-        gh(["repo", "view", a.repo, "--json", "name"], True)
-        have = {l["name"] for l in json.loads(gh(["label", "list", "-R", a.repo, "-L", "500", "--json", "name"], True))}
+        gh(["api", f"repos/{a.repo}", "--jq", ".name"], True)
+        have = {l["name"] for l in json.loads(gh(["label", "list", repo, "--limit=500", "--json=name"], True))}
     for name, color in sorted(labels.items()):
         if name not in have:
-            gh(["label", "create", name, "-R", a.repo, "-c", color], a.apply)
+            gh(["label", "create", repo, f"--color={color}", "--", name], a.apply)
 
     ms = {}
     if a.apply:
@@ -96,9 +102,9 @@ def main():
             continue
         deps = ", ".join(f"{d} (#{known[d]})" if known.get(d) else d for d in t["deps"]) or "none"
         body = f"**Task:** {t['id']} · **Priority:** {t['pri']} · **Complexity:** {t['cx']}/5 · **Depends on:** {deps}\n\n{t['body']}\n\nSource of truth: `plan/{t['id']}/task.md`."
-        out = gh(["issue", "create", "-R", a.repo, "-t", f"{t['id']}. {t['title']}", "-b", body,
-                  "-l", f"{t['pri']},complexity:{t['cx']},area:{t['area']}",
-                  "-m", f"{t['stage']}. {stages[t['stage']]}"], a.apply)
+        out = gh(["issue", "create", repo, f"--title={t['id']}. {t['title']}", f"--body={body}",
+                  f"--label={t['pri']},complexity:{t['cx']},area:{t['area']}",
+                  f"--milestone={t['stage']}. {stages[t['stage']]}"], a.apply)
         if a.apply:
             num = int(out.strip().rsplit("/", 1)[-1])
             known[t["id"]] = num

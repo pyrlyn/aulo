@@ -5,13 +5,13 @@
 java = "temurin-21" # runs Gradle and the Kotlin/Native compiler
 python = "3.15.2" # runs scripts/sync-issues.py (stdlib only)
 just = "1.58.0" # justfile (Gradle test, lint and build wrappers, api-docs)
-# C libraries: Conan builds them with CMake and (on Windows) Ninja. SQLite for Windows (kotlin-kit's
+# C libraries: Conan builds them with CMake and (on Windows) Ninja. SQLite for Windows (pyrlyn-kit's
 # db-native), nghttp2 for Linux and Windows (aulo-grpc; macOS takes Conan Center's binary). Every
 # `test` run links the Linux x86_64 and Windows test binaries whatever the host, so each CI runner
 # installs these. uv installs Conan into the Python above.
 uv = "0.13.9"
-conan = "2.33.0" # the version kotlin-kit's and aulo-grpc's conan.lock were made with
-cmake = "3.31.12" # the version kotlin-kit's mingwX64 Conan profile declares
+conan = "2.33.0" # the version pyrlyn-kit's and aulo-grpc's conan.lock were made with
+cmake = "3.31.12" # the version pyrlyn-kit's mingwX64 Conan profile declares
 ninja = "1.13.2"
 # Workflow lint (hk.pkl); CI lints through the pipeline workflow.
 "github:jdx/jactionlint" = "2.0.2" # the pre-push hook and local `mise x -- jactionlint`
