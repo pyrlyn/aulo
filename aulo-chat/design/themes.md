@@ -22,10 +22,12 @@ the same layers with each kit's colour collection switched to its Light mode.
 
 | Kit | Collection and mode |
 | --- | --- |
-| macOS | "Desktop · Color", Light |
-| Windows 11 | "Windows · Color", Light |
+| macOS | "Desktop · Color" and "macOS · Color", Light |
+| Windows 11 | "Windows · Color" and "Windows · Color (Mailune)", Light |
 | Linux | "Linux · Color" and "Linux · Color (Pyrlyn)", Light (values from libadwaita's light palette) |
 | iOS, Android | "iOS · Color", "Android · Color", Light |
 
-In each platform section of "aulo-chat · Screens" the light frames sit to the right of the
-dark ones, in the same order.
+In the iOS, Android and Web sections of "aulo-chat · Screens" the light frames sit to the
+right of the dark ones, in the same order. In the macOS, Windows 11 and Linux sections the
+light frames form the row under the dark ones (`desktop.md`). Frames that show the desktop
+itself (Quick talk) also swap the wallpaper for the platform's light one where the kit has it.

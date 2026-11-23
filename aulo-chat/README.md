@@ -137,16 +137,22 @@ Android and iOS.
 
 Figma: [Pyrlyn UIkit, page "aulo-chat · Screens"](https://www.figma.com/design/DYzhrhrlKOy09vNjp6JgAz/Pyrlyn-UIkit?node-id=49-227)
 
-The page has one section per platform (iOS, Android, macOS, Windows 11, Linux, Web), each
-with the same twelve screens built from that platform's kit in the same file, once dark and
-once light (`design/themes.md`). Components the kits lacked (message bubble, composer, typing
-indicator, attachment chip, model picker and model row, conversation row, voice recorder,
-suggestion chip, banner, empty state, sidebar, chat header, message hit row, chat actions
-menu, settings dialog) were added to each kit's own page.
+The page has one section per platform (iOS, Android, macOS, Windows 11, Linux, Web), built
+from that platform's kit in the same file, once dark and once light (`design/themes.md`).
+iOS, Android and Web hold the twelve chat-list screens below. macOS, Windows 11 and Linux
+hold sixteen bot-based screens: a bot sidebar, chat with tool calls and approvals, voice,
+quick talk, the screen viewer and a settings window with seven tabs
+([design/desktop.md](design/desktop.md)). Components the kits lacked (message bubble,
+composer, typing indicator, attachment chip, model picker and model row, conversation row,
+voice recorder, suggestion chip, banner, empty state, sidebar, chat header, message hit row,
+chat actions menu, settings dialog, and for desktop bot avatar, bot row, bot header, tool
+call, voice marker, activity line, approval card and settings row) were added to each kit's
+own page.
 
 Each screen has a file in [`design/`](design) that describes it without the mockup: purpose,
 layout, components, states, behaviour on errors and offline, and what the code has. Its
-second line links the Figma frames.
+second line links the Figma frames. [design/README.md](design/README.md) is the index and
+the rules for changing frames.
 
 | Mockup (frame name `<Platform> / …`) | Description | In code |
 | --- | --- | --- |
@@ -161,6 +167,11 @@ second line links the Figma frames.
 | Search | [design/search.md](design/search.md) | `SearchResults` in `Sidebar.kt` (desktop) |
 | Settings | [design/settings.md](design/settings.md) | `SettingsScreen.kt`, its own window on desktop |
 | Connect | [design/connect.md](design/connect.md) | `ConnectScreen.kt` |
+| Approval (desktop) | [design/approval.md](design/approval.md) | Not built |
+| Voice (desktop) | [design/voice.md](design/voice.md) | Not built |
+| Quick talk (desktop) | [design/quick-talk.md](design/quick-talk.md) | Not built |
+| Screen viewer (desktop) | [design/screen-viewer.md](design/screen-viewer.md) | Not built |
+| Settings · Providers … Connections (desktop) | [design/settings-desktop.md](design/settings-desktop.md) | Not built; `SettingsScreen.kt` has the server address, appearance and default model |
 
 Below 720 dp of width the app shows `ChatScreen` alone; above it, `ChatWindow` puts the
 sidebar beside the chat. Both are functions of `ChatUiState`, so each state can be rendered
