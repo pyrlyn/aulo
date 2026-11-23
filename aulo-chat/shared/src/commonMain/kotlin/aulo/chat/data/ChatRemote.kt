@@ -262,8 +262,7 @@ const val MAX_CACHED_MESSAGES = 500
 
 private fun Throwable.translated(): Throwable {
     if (this !is GrpcStatusException) return this
-    // The function, not the property: off the JVM the status type has no public `description`.
-    val detail = status.getDescription() ?: status.statusCode.name
+    val detail = status.detail() ?: status.statusCode.name
     return when (status.statusCode) {
         GrpcStatusCode.UNAVAILABLE, GrpcStatusCode.DEADLINE_EXCEEDED, GrpcStatusCode.CANCELLED, GrpcStatusCode.UNKNOWN ->
             OfflineException("The server cannot be reached.", this)

@@ -1,0 +1,15 @@
+-- Which migrations a database has had, by key (the migration's directory name). A database of its
+-- own in SQLDelight's terms so Schema.create makes only this table, before any migration runs.
+CREATE TABLE IF NOT EXISTS __aulo_migrations (
+    key TEXT NOT NULL PRIMARY KEY,
+    applied_at INTEGER NOT NULL
+);
+
+applied:
+SELECT key FROM __aulo_migrations ORDER BY key;
+
+record:
+INSERT INTO __aulo_migrations (key, applied_at) VALUES (?, ?);
+
+forget:
+DELETE FROM __aulo_migrations WHERE key = ?;

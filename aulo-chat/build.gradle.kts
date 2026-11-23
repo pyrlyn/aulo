@@ -18,9 +18,12 @@ plugins {
 }
 
 // The catalog pins what the build asks for; the lock files pin what it gets, transitive modules
-// included, so a build does not change under an unchanged catalog. After changing a dependency,
-// on macOS (the iOS configurations exist only there):
-// ./gradlew resolveAndLockAll --write-locks
+// included, so a build does not change under an unchanged catalog; gradle/verification-metadata.xml
+// pins the checksum of every file it downloads. A lock entry is a strict constraint, so a changed
+// catalog version takes no effect until the locks are rewritten. After changing a dependency, on
+// macOS (where the iOS frameworks link), in one run, since relocking alone fails verification:
+// ./gradlew --write-locks --write-verification-metadata sha256 resolveAndLockAll build <tasks>
+// (the task list is in README.md)
 allprojects {
     dependencyLocking {
         lockAllConfigurations()
@@ -50,6 +53,14 @@ allprojects {
 // patch release with the same compiler API; drop this once a gRPC build for our Kotlin is
 // published.
 subprojects {
+    // A shared-source-set metadata compile warns whenever two dependencies publish klibs with one
+    // unique name (Compose's and SQLDelight's `runtime`, JetBrains' and Google's androidx forks),
+    // which no build setting can avoid. The same sources compile for every target with warnings
+    // as errors, so these compiles may warn.
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
+        if (name.endsWith("KotlinMetadata")) compilerOptions.allWarningsAsErrors.set(false)
+    }
+
     configurations.configureEach {
         if (name.contains("CompilerPluginClasspath", ignoreCase = true)) {
             resolutionStrategy.eachDependency {

@@ -1,0 +1,10 @@
+A local-first voice agent that controls your computer
+
+Usage: aulo <COMMAND>
+
+Commands:
+  config  Inspect the configuration
+
+Options:
+  -h, --help     Print help
+  -V, --version  Print version

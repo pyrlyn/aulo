@@ -1,0 +1,32 @@
+CREATE TABLE grants (
+    id TEXT NOT NULL PRIMARY KEY,
+    subject TEXT NOT NULL,
+    scope TEXT NOT NULL,
+    decision TEXT NOT NULL,
+    expires_at INTEGER,
+    created_at INTEGER NOT NULL
+);
+
+CREATE INDEX grants_subject_scope ON grants (subject, scope);
+
+insert:
+INSERT INTO grants (id, subject, scope, decision, expires_at, created_at) VALUES (?, ?, ?, ?, ?, ?);
+
+all:
+SELECT * FROM grants ORDER BY id;
+
+-- Keyset page, oldest first: grants after afterId, the last id of the previous page.
+page:
+SELECT * FROM grants
+WHERE :afterId IS NULL OR id > :afterId
+ORDER BY id
+LIMIT :limit;
+
+-- The expiry filter lives here so no caller can forget it.
+active:
+SELECT * FROM grants
+WHERE subject = :subject AND (expires_at IS NULL OR expires_at > :now)
+ORDER BY id;
+
+delete:
+DELETE FROM grants WHERE id = ?;

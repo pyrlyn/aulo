@@ -7,13 +7,14 @@ A local-first voice agent that controls your computer.
 
 Talk to aulo and it talks back. It runs shell commands, opens and drives apps, works in a browser, and reads the screen when it has to. It speaks MCP both ways, loads plugins, and runs on local models (the local model runner, Ollama, LM Studio) or remote ones (OpenAI, Anthropic, Gemini, xAI, OpenRouter, any OpenAI-compatible endpoint). Every speech-to-text and text-to-speech engine is swappable at runtime.
 
-aulo runs as a daemon, `aulod`, with a gRPC API. Use it from the native desktop apps with chats (macOS, Windows), from the `aulo` CLI, or run it headless on a server and connect remotely.
+aulo runs as a daemon, `aulod`, with a gRPC API. Use it from `aulo-chat` (the official Compose Multiplatform client, on Android, iOS and desktop), from the `aulo` CLI, or run it headless on a server and connect remotely.
 
 **Status:** early development, no release yet. aulo is being rewritten in **Kotlin/Native**
 (Gradle KMP, native targets). The first modules of the daemon (audio, speech engines, models,
-plugins, the gRPC protocol, realtime, store, telemetry) will land in the Gradle project; the
-desktop apps are not in the repository yet. The plan has been reset to the start: every task
-in [plan/](plan/README.md) is open again.
+plugins, the gRPC protocol, realtime, store, telemetry) will land in the Gradle project. The
+official client is [aulo-chat](aulo-chat/README.md), a Compose Multiplatform app in this
+repository; native SwiftUI and WinUI apps are not needed (spec §17 D2, D12). The plan has
+been reset to the start: every task in [plan/](plan/README.md) is open again.
 
 - [Specification](spec.md)
 - [Research and sources](research.md)
@@ -23,18 +24,14 @@ in [plan/](plan/README.md) is open again.
 
 ## Build
 
-The Gradle Kotlin/Native workspace arrives with the first S2 task. Until then, pin the JDK
-and the lint tools with mise:
+The Gradle wrapper brings Gradle and the Kotlin/Native toolchain; mise pins the JDK that runs
+it and the lint tools:
 
 ```bash
 mise install               # JDK 21 and the lint tools from mise.toml
-```
-
-When the workspace exists:
-
-```bash
 ./gradlew test             # host-target tests
 ./gradlew ktlintCheck      # style
+./gradlew assemble         # aulo and aulod executables in aulo/build/bin/
 ```
 
 `just api-docs` regenerates [docs/api](docs/api/aulo.v1.md) from `proto/`.

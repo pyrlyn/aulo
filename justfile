@@ -1,6 +1,19 @@
-# Gradle tasks land with the first Kotlin/Native workspace task (plan S2).
-default:
-    @echo "Gradle workspace is not in the tree yet (plan S2). Until then: mise install, just api-docs."
+# Host-target tests and style, the same checks CI runs.
+default: test lint
+
+test:
+    ./gradlew test
+
+lint:
+    ./gradlew ktlintCheck
+
+# Rewrites schemas/aulo.schema.json from the config types (the stale-schema test checks it).
+schema:
+    AULO_UPDATE_SCHEMA=1 ./gradlew :aulo-config:allTests
+
+# Links the `aulo` and `aulod` executables for every target this host can build.
+build:
+    ./gradlew assemble
 
 # Regenerates docs/api from the protos. Needs network: the plugin runs on the BSR.
 api-docs:

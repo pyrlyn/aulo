@@ -1,14 +1,22 @@
 # Tool pins for mise users (https://mise.jdx.dev/). The Kotlin/Native toolchain itself comes from
 # the Gradle wrapper and the Kotlin Gradle plugin; mise only provides the JDK that runs Gradle
-# and the repository lint tools. The Gradle wrapper lands with the first S2 workspace task.
+# and the repository lint tools.
 [tools]
 java = "temurin-21" # runs Gradle and the Kotlin/Native compiler
-python = "3.15.1" # runs scripts/sync-issues.py (stdlib only)
-just = "1.58.0" # justfile (api-docs and, later, Gradle wrappers)
+python = "3.15.2" # runs scripts/sync-issues.py (stdlib only)
+just = "1.58.0" # justfile (Gradle test, lint and build wrappers, api-docs)
+# C libraries: Conan builds them with CMake and (on Windows) Ninja. SQLite for Windows (kotlin-kit's
+# db-native), nghttp2 for Linux and Windows (aulo-grpc; macOS takes Conan Center's binary). Every
+# `test` run links the Linux x86_64 and Windows test binaries whatever the host, so each CI runner
+# installs these. uv installs Conan into the Python above.
+uv = "0.13.9"
+conan = "2.33.0" # the version kotlin-kit's and aulo-grpc's conan.lock were made with
+cmake = "3.31.12" # the version kotlin-kit's mingwX64 Conan profile declares
+ninja = "1.13.2"
 # Workflow lint (hk.pkl); CI lints through the pipeline workflow.
 "github:jdx/jactionlint" = "2.0.2" # the pre-push hook and local `mise x -- jactionlint`
 hk = "2.5.0" # runs jactionlint as a pre-push hook (hk.pkl); `mise x -- hk install --mise`
 shellcheck = "0.11.0" # used by jactionlint for run: scripts; CI uses the runner image's copy
 node = "26.12.1" # Active LTS; runtime for the npm: tools below
 "npm:agent-browser" = "0.39.2" # browser automation CLI for agents: Run and verify the browser tasks aulo performs.
-"npm:agent-device" = "0.21.31" # device/app automation CLI for agents (Callstack): Launch and drive the aulo desktop app.
+"npm:agent-device" = "0.21.37" # device/app automation CLI for agents (Callstack): Launch and drive the aulo desktop app.

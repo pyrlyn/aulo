@@ -1,0 +1,8 @@
+args = ["config", "show"]
+status = 1
+
+[home]
+"config.toml" = """
+[voice]
+lisen = "wake-word"
+"""
