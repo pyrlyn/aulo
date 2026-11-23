@@ -28,6 +28,30 @@
           "sha256": "d58544679ea4bc6ac563d1f545eb7d474bd6cfa467f0a6e2c1dc1c7d37e3c35d"
         }
       ]
+    },
+    {
+      "id": "moonshine-base-en-quantized",
+      "kind": "stt",
+      "name": "Moonshine base, English (quantized, sherpa-onnx)",
+      "license": "MIT",
+      "base_url": "https://huggingface.co/csukuangfj2/sherpa-onnx-moonshine-base-en-quantized-2026-02-27/resolve/8f4d6c58c03d40bcea40043bb7120a878f2bbef6/",
+      "files": [
+        {
+          "path": "decoder_model_merged.ort",
+          "size": 109424400,
+          "sha256": "d9d7b333af34bc552580576ddcf248a1c6c839e0d3b43b09afb9376ed009899d"
+        },
+        {
+          "path": "encoder_model.ort",
+          "size": 31326816,
+          "sha256": "7c66495948d0d08ec1af454cd4b5514862ae6511e94712a60e6d83eaec8dc8cf"
+        },
+        {
+          "path": "tokens.txt",
+          "size": 549350,
+          "sha256": "2870d843e14c1e187bf1913a521562a63b53933814bd7f2145120468f494a049"
+        }
+      ]
     }
   ]
 }
