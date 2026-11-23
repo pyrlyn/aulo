@@ -11,6 +11,9 @@ coroutines = "1.11.0"
 wire = "7.2.2"
 # Sockets (TCP and Unix) under the gRPC transport (spec §17 D11).
 ktor = "3.6.1"
+# Streaming SHA-256 of model downloads (T7.3); the version Wire already brings, so the build
+# keeps one okio.
+okio = "3.18.2"
 # OS randomness (getrandom, CCRandomGenerateBytes, BCryptGenRandom) for bearer tokens (T3.4).
 crypto-rand = "0.6.0"
 
@@ -29,6 +32,7 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 wire-runtime = { module = "com.squareup.wire:wire-runtime", version.ref = "wire" }
 ktor-network = { module = "io.ktor:ktor-network", version.ref = "ktor" }
+okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 crypto-rand = { module = "org.kotlincrypto.random:crypto-rand", version.ref = "crypto-rand" }
 
 [plugins]

@@ -600,6 +600,16 @@ Checked 2026-11-23. The design follows cofre's `owner-listener` service module (
   - `StandardOutput=append:` exists since systemd 240 — https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html and https://github.com/systemd/systemd/blob/main/NEWS.
   - Without lingering the user manager stops after the last session ends; `loginctl enable-linger` keeps it — https://www.freedesktop.org/software/systemd/man/latest/loginctl.html, https://www.freedesktop.org/software/systemd/man/latest/logind.conf.html.
 
+### 4.14 Model downloads (T7.3)
+
+Checked 2026-11-23.
+
+- **Parakeet TDT 0.6B v3, int8 ONNX for sherpa-onnx** — `csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8`, pinned at commit `2bda32ec70b097a55adaa07d9a7173915b43cc78` (repo last modified 2026-11-07). Sizes and SHA-256 of `decoder.int8.onnx`, `encoder.int8.onnx` and `joiner.int8.onnx` are the LFS `oid`s of the Hub API tree at that commit — https://huggingface.co/api/models/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/tree/2bda32ec70b097a55adaa07d9a7173915b43cc78. `tokens.txt` is not in LFS, so its SHA-256 was computed from the downloaded file. Licence CC-BY-4.0 per the model card's metadata — https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8. The catalog is `aulo-models/data/models.json`.
+- **Hugging Face `resolve` URLs** (observed 2026-11-23 with `curl -IL`): an LFS file at a commit answers 302 to `us.aws.cdn.hf.co` with `accept-ranges: bytes`; `tokens.txt`, which is not in LFS, answers 307 to `/api/resolve-cache/…`. A commit in the path keeps the bytes fixed. Checked end to end: `aulo models pull` of the whole model verified every hash, and a partial truncated to 100 MB resumed with a 206 and still matched the pin.
+- **Range requests**: `Range: bytes=N-`, a `206` with `Content-Range: bytes N-M/L`, a `200` from a server that ignores the range, and `416` for an unsatisfiable range — RFC 9110 §14 (https://www.rfc-editor.org/rfc/rfc9110#section-14).
+- **Streaming SHA-256**: okio's `HashingSink.sha256` is in okio's common code, so all four native targets have it — https://github.com/lysine-dev/okio/blob/parent-3.18.2/okio/src/commonMain/kotlin/okio/HashingSink.kt (okio 3.18.2, the version Wire 7.2.2 brings; `github.com/square/okio` now redirects there). It replaces a second hashing library (ketch uses KotlinCrypto `sha2`, `apps/ketch`).
+- **Durability**: kotlin-kit's `appendSink` cannot fsync (`fs/Entries.kt`, pyrlyn/packages 0.0.5), so a verified file is renamed without an fsync. A power loss can leave a short file under the final name; `aulo models` tells it apart by the pinned size and downloads it again.
+
 ## Part 5. Conclusions and ideas to borrow (for a Rust voice computer-control agent)
 
 1. **Two-brain voice design.** Front: cheap full-duplex/realtime voice (GPT-Live 1, Gemini 3.8 Live, xAI Voice
