@@ -3,7 +3,8 @@ A local-first voice agent that controls your computer
 Usage: aulo <COMMAND>
 
 Commands:
-  config  Inspect the configuration
+  config   Inspect the configuration
+  connect  Check that a remote aulod answers with the pinned certificate
 
 Options:
   -h, --help     Print help

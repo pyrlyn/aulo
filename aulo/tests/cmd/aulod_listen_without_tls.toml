@@ -1,4 +1,0 @@
-# TCP needs TLS, which only the configuration can name.
-program = "aulod"
-args = ["run", "--listen", "127.0.0.1:7777"]
-status = 1
