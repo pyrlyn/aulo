@@ -19,8 +19,9 @@ permissions:
   contents: read
 
 jobs:
-  # A pull request's commit subjects must be Conventional Commits (workspace rule). Pushes to
-  # main skip this: every commit there arrived through a pull request that passed it.
+  # A pull request's commit subjects follow the workspace rule: `<task id>: <title>` (T12.22: …)
+  # when the commit belongs to a task, a Conventional Commit otherwise. Pushes to main skip this:
+  # every commit there arrived through a pull request that passed it.
   commits:
     if: github.event_name == 'pull_request' && github.event.pull_request.draft != true
     runs-on: ubuntu-latest
@@ -43,7 +44,7 @@ jobs:
             || { echo "base branch $base not found" >&2; exit 1; }
           # Merge commits are skipped (git writes their subjects), and so are reverts, which
           # git writes in its own format. Every offender is listed before the step fails.
-          pattern='^(feat|fix|docs|ci|test|chore|style|refactor|perf|build)(\([a-z0-9._/-]+\))?!?: .+'
+          pattern='^(T[0-9]+(\.[0-9]+)*|(feat|fix|docs|ci|test|chore|style|refactor|perf|build)(\([a-z0-9._/-]+\))?!?): .+'
           bad=0
           for sha in $(git rev-list --no-merges --reverse "$base..HEAD"); do
             subject=$(git log -1 --format=%s "$sha")
@@ -51,7 +52,7 @@ jobs:
               "Revert "*) continue ;;
             esac
             if ! printf '%s\n' "$subject" | grep -Eq "$pattern"; then
-              echo "not a Conventional Commit: $sha $subject" >&2
+              echo "neither '<task id>: <title>' nor a Conventional Commit: $sha $subject" >&2
               bad=1
             fi
           done
