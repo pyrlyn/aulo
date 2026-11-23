@@ -471,7 +471,7 @@ A Compose Multiplatform app (D12) in `aulo-chat/`, its own Gradle build, so the 
 - **Structure.** Clean architecture: domain (models, use cases), data (gRPC gateway, SQLDelight cache, repository), presentation (a view model exposing one `StateFlow`), Compose UI; Koin wires it.
 - **Offline.** The 20 most recent chats are cached on the device and shown read-only when aulod cannot be reached.
 - **Untrusted text.** Model output is drawn as plain text and capped per message.
-- **Design.** Screens for every platform are in the Pyrlyn UIkit Figma file; `aulo-chat/design/` describes each screen in Markdown.
+- **Design.** Screens for every platform are in the Aulo Figma file, built from the Pyrlyn UIkit library; `aulo-chat/design/` describes each screen in Markdown.
 - **Development server.** `aulo-chat/server` serves the same contract with a stub model, a bounded request queue, retries and a per-chat rate limit, until aulod does (S3, S4). It is not a deployment shape.
 
 ## 13. Server mode
