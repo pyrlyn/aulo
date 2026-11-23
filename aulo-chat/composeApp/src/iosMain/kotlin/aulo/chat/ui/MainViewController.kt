@@ -29,5 +29,6 @@ private fun endpointFromBundle(): ServerEndpoint {
 @Suppress("FunctionName")
 fun MainViewController(): UIViewController {
     koin
-    return ComposeUIViewController { App() }
+    val version = NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleShortVersionString") as? String
+    return ComposeUIViewController { App(version.orEmpty()) }
 }

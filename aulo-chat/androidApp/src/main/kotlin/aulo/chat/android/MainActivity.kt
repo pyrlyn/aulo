@@ -11,6 +11,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // The screen pads itself by the system bars and the keyboard.
         enableEdgeToEdge()
-        setContent { App() }
+        val version = packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
+        setContent { App(version) }
     }
 }

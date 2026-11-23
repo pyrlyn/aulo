@@ -43,7 +43,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import aulo.chat.domain.Attachment
 import aulo.chat.domain.AttachmentKind
 import aulo.chat.domain.ChatMessage
@@ -53,15 +52,13 @@ import aulo.chat.domain.ModelInfo
 import aulo.chat.domain.Notice
 import aulo.chat.domain.NoticeLevel
 import aulo.chat.presentation.ChatUiState
-import aulo.chat.presentation.ChatViewModel
 import aulo.chat.ui.theme.LocalChatColors
 import aulo.chat.ui.theme.LocalChatShapes
-import org.koin.compose.viewmodel.koinViewModel
 
 /** The widest the messages and the composer grow on a large window. */
 internal val ContentWidth = 760.dp
 
-/** What the chat screen can ask for; [ChatRoute] wires these to the view model. */
+/** What the chat screen can ask for; [chatActions] wires these to the view model. */
 class ChatActions(
     val onInputChange: (String) -> Unit = {},
     val onSend: () -> Unit = {},
@@ -75,26 +72,6 @@ class ChatActions(
     val onNewChat: () -> Unit = {},
 )
 
-@Composable
-fun ChatRoute(viewModel: ChatViewModel = koinViewModel()) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
-    val actions = remember(viewModel) {
-        ChatActions(
-            onInputChange = viewModel::onInputChange,
-            onSend = viewModel::send,
-            onStop = viewModel::stop,
-            onRetry = viewModel::retry,
-            onSelectModel = viewModel::selectModel,
-            onAttach = viewModel::attach,
-            onRemoveAttachment = viewModel::removeAttachment,
-            onReconnect = viewModel::connect,
-            onDismissNotice = viewModel::dismissNotice,
-            onNewChat = viewModel::newChat,
-        )
-    }
-    ChatScreen(state, actions)
-}
-
 /** The chat screen as a function of its state: everything it shows is in [state]. */
 @Composable
 fun ChatScreen(state: ChatUiState, actions: ChatActions, modifier: Modifier = Modifier) {
@@ -102,28 +79,37 @@ fun ChatScreen(state: ChatUiState, actions: ChatActions, modifier: Modifier = Mo
     Surface(modifier.fillMaxSize(), color = colors.background, contentColor = colors.text) {
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
             TopBar(state, actions)
-            if (state.loading || state.connection is ConnectionState.Connecting) {
-                LinearProgressIndicator(Modifier.fillMaxWidth().height(2.dp))
-            }
-            if (state.connection is ConnectionState.Offline) {
-                Banner(
-                    text = "Offline — showing chats saved on this device.",
-                    container = colors.warningContainer,
-                    content = colors.onWarningContainer,
-                    action = "Retry",
-                    onAction = actions.onReconnect,
-                )
-            }
-            state.notice?.let { NoticeBanner(it, actions.onDismissNotice) }
-            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
-                when {
-                    state.loading -> Unit
-                    state.empty -> EmptyState(onSuggestion = actions.onInputChange)
-                    else -> MessageList(state.messages, actions.onRetry)
-                }
-            }
-            Composer(state, actions)
+            ChatBody(state, actions, Modifier.weight(1f))
         }
+    }
+}
+
+/** Everything under the header: progress, banners, the messages and the composer. */
+@Composable
+internal fun ChatBody(state: ChatUiState, actions: ChatActions, modifier: Modifier = Modifier) {
+    val colors = LocalChatColors.current
+    Column(modifier.fillMaxWidth()) {
+        if (state.loading || state.connection is ConnectionState.Connecting) {
+            LinearProgressIndicator(Modifier.fillMaxWidth().height(2.dp))
+        }
+        if (state.connection is ConnectionState.Offline) {
+            Banner(
+                text = "Offline — showing chats saved on this device.",
+                container = colors.warningContainer,
+                content = colors.onWarningContainer,
+                action = "Retry",
+                onAction = actions.onReconnect,
+            )
+        }
+        state.notice?.let { NoticeBanner(it, actions.onDismissNotice) }
+        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+            when {
+                state.loading -> Unit
+                state.empty -> EmptyState(onSuggestion = actions.onInputChange)
+                else -> MessageList(state.messages, actions.onRetry)
+            }
+        }
+        Composer(state, actions)
     }
 }
 
@@ -154,7 +140,7 @@ private fun TopBar(state: ChatUiState, actions: ChatActions) {
 }
 
 @Composable
-private fun ConnectionLabel(connection: ConnectionState) {
+internal fun ConnectionLabel(connection: ConnectionState) {
     val colors = LocalChatColors.current
     val (dot, label) = when (connection) {
         ConnectionState.Online -> colors.ok to "Online"
@@ -168,7 +154,7 @@ private fun ConnectionLabel(connection: ConnectionState) {
 }
 
 @Composable
-private fun ModelPicker(current: ModelId?, models: List<ModelInfo>, enabled: Boolean, onSelect: (ModelId) -> Unit) {
+internal fun ModelPicker(current: ModelId?, models: List<ModelInfo>, enabled: Boolean, onSelect: (ModelId) -> Unit) {
     val colors = LocalChatColors.current
     var open by remember { mutableStateOf(false) }
     // Offline the list is empty; the chat's own model id is all that is known then.
@@ -231,7 +217,7 @@ private fun NoticeBanner(notice: Notice, onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun Banner(text: String, container: Color, content: Color, action: String, onAction: () -> Unit) {
+internal fun Banner(text: String, container: Color, content: Color, action: String, onAction: () -> Unit) {
     Surface(color = container, contentColor = content) {
         Row(
             Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp),
