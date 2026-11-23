@@ -52,6 +52,14 @@ allprojects {
 // patch release with the same compiler API; drop this once a gRPC build for our Kotlin is
 // published.
 subprojects {
+    // A shared-source-set metadata compile warns whenever two dependencies publish klibs with one
+    // unique name (Compose's and SQLDelight's `runtime`, JetBrains' and Google's androidx forks),
+    // which no build setting can avoid. The same sources compile for every target with warnings
+    // as errors, so these compiles may warn.
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
+        if (name.endsWith("KotlinMetadata")) compilerOptions.allWarningsAsErrors.set(false)
+    }
+
     configurations.configureEach {
         if (name.contains("CompilerPluginClasspath", ignoreCase = true)) {
             resolutionStrategy.eachDependency {
