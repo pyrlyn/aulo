@@ -16,7 +16,7 @@ kotlin {
     linuxArm64()
     mingwX64()
 
-    // unixMain holds what macOS and Linux share (kotlin-kit's SQLite adapter, for one); mingwMain
+    // unixMain holds what macOS and Linux share (pyrlyn-kit's SQLite adapter, for one); mingwMain
     // is the Windows side of the same API.
     applyDefaultHierarchyTemplate {
         common {

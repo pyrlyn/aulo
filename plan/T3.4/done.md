@@ -39,4 +39,4 @@ Per-method scopes, and issuing and revoking tokens, are in `roadmap.md` ("API to
 
 ## Caveat
 
-kotlin-kit 0.0.5's `gradle/conan.gradle.kts` reads `konan.properties` when the task is created, before Kotlin/Native is downloaded. With a cold `~/.konan` this breaks the Windows build. The cache restore-key works around it here; the fix belongs in pyrlyn/packages.
+pyrlyn-kit 0.0.5's `gradle/conan.gradle.kts` reads `konan.properties` when the task is created, before Kotlin/Native is downloaded. With a cold `~/.konan` this breaks the Windows build. The cache restore-key works around it here; the fix belongs in pyrlyn/packages.

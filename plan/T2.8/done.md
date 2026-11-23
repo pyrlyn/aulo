@@ -3,8 +3,8 @@
 `:aulo-store`: SQLite with bots, chats, messages, tool calls and usage. PR: https://github.com/pyrlyn/aulo/pull/93, stacked on #92.
 
 - **SQL access.**
-  - SQLDelight 2.4.1 checks every query against the schema at build time. It is the version kotlin-kit's `db-sqldelight` runtime is built against.
-  - SQLite comes from kotlin-kit: `db-room` (androidx `sqlite-bundled` 2.7.1) on macOS and Linux, and `db-native` (Conan-built SQLite 3.54.0) on Windows.
+  - SQLDelight 2.4.1 checks every query against the schema at build time. It is the version pyrlyn-kit's `db-sqldelight` runtime is built against.
+  - SQLite comes from pyrlyn-kit: `db-room` (androidx `sqlite-bundled` 2.7.1) on macOS and Linux, and `db-native` (Conan-built SQLite 3.54.0) on Windows.
   - `checkModuleGraph` counts those adapters as SQLite, so `:aulo-store` stays the only owner.
 - **Migrations.**
   - Filename-keyed `migrations/<key>/{up,down}.sql`, embedded by a new shared build-logic `EmbedFilesTask`. aulo-config's default TOML moved to the same task.
