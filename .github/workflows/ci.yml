@@ -73,7 +73,7 @@ jobs:
       value: ${{ steps.r.outputs.value }}
     steps:
       - id: r
-        uses: pyrlyn/ci/.github/actions/macos-runner@9675ff42a0e3785beabccb68b0e4fa65910de453 # main
+        uses: pyrlyn/ci/.github/actions/macos-runner@main
         with:
           runner: ${{ vars.MACOS_RUNNER }}
           value: '["macos-15"]'
@@ -88,7 +88,7 @@ jobs:
       docs-only: ${{ steps.config.outputs.docs-only }}
     steps:
       - id: config
-        uses: pyrlyn/ci/.github/actions/config@9675ff42a0e3785beabccb68b0e4fa65910de453 # main
+        uses: pyrlyn/ci/.github/actions/config@main
 
   build:
     name: ${{ matrix.os }} (${{ matrix.target }})

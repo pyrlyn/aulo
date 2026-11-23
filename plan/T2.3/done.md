@@ -9,7 +9,7 @@
 - Each `build` job runs `./gradlew test ktlintCheck`, links the release `aulo` and `aulod`, runs `--version` on both as a smoke test and uploads them. Nothing builds for x86_64 macOS.
 - linuxArm64 is cross-linked on the Linux x86_64 job. The `ubuntu-24.04-arm (linuxArm64)` job then runs that job's test binary and both executables on real arm64 hardware.
 - The docs-only skip and the `SKIP_CI_TESTS` and `MACOS_CI_DISABLED` variables behave as in the other Kotlin/Native project. The commit-subject job and pipeline.yml stay.
-- pyrlyn/ci has no shared Kotlin/Gradle workflow (checked at 9675ff42). The jobs therefore live in this repository and use pyrlyn/ci's `config` and `macos-runner` actions.
+- pyrlyn/ci has no shared Kotlin/Gradle workflow (checked at 9675ff42). The jobs therefore live in this repository and use pyrlyn/ci's `config` and `macos-runner` actions at `@main` (the org `no-pinned-ci` check requires `@main` for pyrlyn/ci, never a SHA).
 
 How it was checked:
 
