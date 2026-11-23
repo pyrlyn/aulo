@@ -27,6 +27,7 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 | ninja (1.13.2) | mise (`mise.toml`) | CMake's generator for those builds on a Windows host | https://github.com/ninja-build/ninja |
 | uv (0.13.9) | mise (`mise.toml`) | Installs conan for mise (a PyPI package) | https://github.com/astral-sh/uv |
 | grpcurl (1.9.4) | mise, on demand (`mise x aqua:fullstorydev/grpcurl@1.9.4`) | Optional: `AULO_GRPCURL` makes the aulo-server tests list services and call health with it | https://github.com/fullstorydev/grpcurl |
+| libsecret-1 | system package on Linux (`libsecret-1-0` on Debian and Ubuntu); optional | `:aulo-secrets` opens it with `dlopen` at run time to keep tokens in the Secret Service; nothing links it (LGPL-2.1-or-later); without it secrets go to 0600 files | https://gitlab.gnome.org/GNOME/libsecret |
 | protoc-gen-doc (v1.5.1) | buf remote plugin `buf.build/community/pseudomuto-doc` (`buf.gen.yaml`), nothing to install | Generates the Markdown gRPC API reference in `docs/api/` (`just api-docs`) | https://github.com/pseudomuto/protoc-gen-doc |
 
 ## Gradle
@@ -58,6 +59,7 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 | io.ktor:ktor-network (3.6.1) | local (`aulo-grpc`) | https://github.com/ktorio/ktor | TCP and Unix sockets under the gRPC transport on every target; HTTP/2 itself is nghttp2 (spec §17 D11; Apache-2.0) |
 | io.ktor:ktor-io, io.ktor:ktor-utils (3.6.1) | local (via `ktor-network`) | https://github.com/ktorio/ktor | The socket byte channels (Apache-2.0) |
 | org.jetbrains.kotlinx:kotlinx-io-core | local (via `ktor-io`) | https://github.com/Kotlin/kotlinx-io | Removes a Unix socket file when the gRPC server shuts down (Apache-2.0) |
+| org.kotlincrypto.random:crypto-rand (0.6.0) | local (`aulo-server`) | https://github.com/KotlinCrypto/random | The OS's random bytes (`getrandom`, `CCRandomGenerateBytes`, `BCryptGenRandom`) for bearer tokens on every target (Apache-2.0) |
 | org.jetbrains.kotlin:kotlin-test | local (`commonTest`) | https://github.com/JetBrains/kotlin | Unit tests |
 | org.jetbrains.kotlin:kotlin-test-junit5 | local (`build-logic` tests) | https://github.com/JetBrains/kotlin | Tests of the module-graph rules on the JVM |
 | org.junit.platform:junit-platform-launcher | local (`build-logic` tests) | https://github.com/junit-team/junit-framework | Gradle 9 needs it on the test runtime classpath |

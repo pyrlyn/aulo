@@ -18,6 +18,7 @@ import kotlin.time.Duration
 
 internal class StreamServerCall(
     override val path: String,
+    override val endpoint: Endpoint,
     override val metadata: List<Pair<String, String>>,
     override val timeout: Duration?,
     private val connection: ServerConnection,
@@ -44,6 +45,7 @@ internal class StreamServerCall(
 @OptIn(ExperimentalForeignApi::class)
 internal class ServerConnection(
     socket: Socket,
+    private val endpoint: Endpoint,
     limits: GrpcLimits,
     parent: Job,
     private val handlers: Map<String, ServerHandler>,
@@ -214,7 +216,7 @@ internal class ServerConnection(
             }
         val metadata = headers.filter { (name, _) -> !name.startsWith(":") && name !in RESERVED_HEADERS }
         stream.headers.clear()
-        val call = StreamServerCall(path, metadata, timeout, this, stream)
+        val call = StreamServerCall(path, endpoint, metadata, timeout, this, stream)
         stream.job = scope.launch { serve(stream, handler, call, timeout) }
     }
 

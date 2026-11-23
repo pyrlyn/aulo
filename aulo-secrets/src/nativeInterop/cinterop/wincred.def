@@ -1,0 +1,5 @@
+package = aulo.secrets.wincred
+# Kotlin/Native's platform.windows leaves Credential Manager out.
+headers = windows.h wincred.h
+headerFilter = wincred.h
+linkerOpts = -ladvapi32

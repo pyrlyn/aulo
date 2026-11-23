@@ -21,7 +21,10 @@ data class Listeners(
     val remote: RemoteListener? = null,
 ) {
     companion object {
-        /** The socket file in the aulo home directory. */
+        /** The owner-only directory in the aulo home that holds the socket. */
+        const val RUN_DIR = "run"
+
+        /** The socket file in [RUN_DIR]. */
         const val SOCKET_NAME = "aulod.sock"
 
         // sun_path is 104 bytes on macOS and 108 on Linux and Windows, with the terminating NUL.
@@ -32,7 +35,7 @@ data class Listeners(
             home: String,
         ): Listeners {
             val separator = if ('\\' in home && '/' !in home) "\\" else "/"
-            val socket = home.trimEnd('/', '\\') + separator + SOCKET_NAME
+            val socket = home.trimEnd('/', '\\') + separator + RUN_DIR + separator + SOCKET_NAME
             if (socket.encodeToByteArray().size > MAX_SOCKET_PATH_BYTES) {
                 throw ListenerConfigException(
                     "the socket path $socket is longer than $MAX_SOCKET_PATH_BYTES bytes; set AULO_HOME to a shorter directory",

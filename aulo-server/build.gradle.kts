@@ -46,6 +46,12 @@ kotlin {
             api(project(":aulo-grpc"))
             implementation(project(":aulo-config"))
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.crypto.rand)
+        }
+        nativeMain.dependencies {
+            // The owner-only socket directory and where the first token is kept; its hash is stored.
+            implementation(project(":aulo-secrets"))
+            implementation(project(":aulo-store"))
         }
         nativeTest.dependencies {
             // Temporary home directories for the local socket; grpcurl as a child process.
