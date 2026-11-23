@@ -63,7 +63,7 @@ class EndToEndTest {
     fun tearDown() {
         // The view models go first: Main must be idle before it is reset.
         runBlocking { viewModels.forEach { it.viewModelScope.coroutineContext.job.cancelAndJoin() } }
-        remotes.forEach { it.shutdown() }
+        remotes.forEach { it.close() }
         server.shutdownNow()
         Dispatchers.resetMain()
     }
@@ -79,6 +79,7 @@ class EndToEndTest {
             StopGeneration(),
             SwitchModel(),
             SampleAttachmentPicker(),
+            memorySettings(main),
         ).also { viewModels += it }
     }
 

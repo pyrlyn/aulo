@@ -2,6 +2,7 @@ package aulo.chat.data
 
 import aulo.chat.domain.ChatMessage
 import aulo.chat.domain.ChatSummary
+import aulo.chat.domain.MessageHit
 import aulo.chat.domain.MessageRole
 import aulo.chat.domain.ModelId
 import aulo.chat.domain.ModelInfo
@@ -14,12 +15,15 @@ import aulo.v1.ChatService
 import aulo.v1.ConfigService
 import aulo.v1.ConverseRequest
 import aulo.v1.CreateChatRequest
+import aulo.v1.DeleteChatRequest
 import aulo.v1.Event
 import aulo.v1.Interrupt
 import aulo.v1.ListChatsRequest
 import aulo.v1.ListMessagesRequest
 import aulo.v1.ListModelsRequest
 import aulo.v1.ModelRef
+import aulo.v1.RenameChatRequest
+import aulo.v1.SearchMessagesRequest
 import aulo.v1.SessionService
 import aulo.v1.TurnEndReason
 import aulo.v1.UserTurn
@@ -83,14 +87,73 @@ sealed interface TurnEvent {
 interface ChatRemote {
     suspend fun listChats(limit: Int): List<ChatSummary>
 
-    suspend fun createChat(): ChatSummary
+    /** [model] null leaves the choice to the server. */
+    suspend fun createChat(model: ModelId? = null): ChatSummary
+
+    suspend fun renameChat(chatId: String, title: String): ChatSummary
+
+    suspend fun deleteChat(chatId: String)
 
     suspend fun listMessages(chatId: String): List<ChatMessage>
+
+    /** The newest [limit] messages holding every word of [query]. */
+    suspend fun searchMessages(query: String, limit: Int): List<MessageHit>
 
     suspend fun listModels(): List<ModelInfo>
 
     /** One `Converse` stream attached to [chatId]; it ends when [submissions] ends. */
     fun converse(chatId: String, submissions: Flow<Submission>): Flow<TurnEvent>
+
+    /** Drops the connection; the remote is not used afterwards. */
+    fun close() {}
+}
+
+/**
+ * The remote the app talks to, which Settings can point at another server. Calls go to the
+ * current server; [switchTo] replaces it only once the new one has answered, so a typo in the
+ * address never cuts the app off from the server it has.
+ */
+class SwitchableChatRemote(
+    endpoint: ServerEndpoint,
+    private val connect: (ServerEndpoint) -> ChatRemote,
+) : ChatRemote {
+    private var current: ChatRemote = connect(endpoint)
+
+    var endpoint: ServerEndpoint = endpoint
+        private set
+
+    /** @throws OfflineException or [ServerException] when [next] does not answer; nothing changes then. */
+    suspend fun switchTo(next: ServerEndpoint) {
+        val candidate = connect(next)
+        try {
+            candidate.listChats(1)
+        } catch (e: Exception) {
+            candidate.close()
+            throw e
+        }
+        val old = current
+        current = candidate
+        endpoint = next
+        old.close()
+    }
+
+    override suspend fun listChats(limit: Int) = current.listChats(limit)
+
+    override suspend fun createChat(model: ModelId?) = current.createChat(model)
+
+    override suspend fun renameChat(chatId: String, title: String) = current.renameChat(chatId, title)
+
+    override suspend fun deleteChat(chatId: String) = current.deleteChat(chatId)
+
+    override suspend fun listMessages(chatId: String) = current.listMessages(chatId)
+
+    override suspend fun searchMessages(query: String, limit: Int) = current.searchMessages(query, limit)
+
+    override suspend fun listModels() = current.listModels()
+
+    override fun converse(chatId: String, submissions: Flow<Submission>) = current.converse(chatId, submissions)
+
+    override fun close() = current.close()
 }
 
 /** `aulo.v1` over gRPC: the API aulod serves and the development server stands in for. */
@@ -104,8 +167,34 @@ class GrpcChatRemote(endpoint: ServerEndpoint) : ChatRemote {
         chats.listChats(ListChatsRequest { pageSize = limit.toUInt() }).chats.map { it.toSummary() }
     }
 
-    override suspend fun createChat(): ChatSummary = call {
-        chats.createChat(CreateChatRequest { }).chat.toSummary()
+    override suspend fun createChat(model: ModelId?): ChatSummary = call {
+        chats.createChat(
+            CreateChatRequest {
+                if (model != null) this.model = model.toRef()
+            },
+        ).chat.toSummary()
+    }
+
+    override suspend fun renameChat(chatId: String, title: String): ChatSummary = call {
+        chats.renameChat(
+            RenameChatRequest {
+                this.chatId = chatId
+                this.title = title
+            },
+        ).chat.toSummary()
+    }
+
+    override suspend fun deleteChat(chatId: String) {
+        call { chats.deleteChat(DeleteChatRequest { this.chatId = chatId }) }
+    }
+
+    override suspend fun searchMessages(query: String, limit: Int): List<MessageHit> = call {
+        chats.searchMessages(
+            SearchMessagesRequest {
+                this.query = query
+                pageSize = limit.toUInt()
+            },
+        ).messages.map { MessageHit(it.chatId, it.id, excerpt(it.content, query), it.createdAt.toMs()) }
     }
 
     override suspend fun listMessages(chatId: String): List<ChatMessage> = call {
@@ -154,8 +243,8 @@ class GrpcChatRemote(endpoint: ServerEndpoint) : ChatRemote {
             .catch { throw it.translated() }
     }
 
-    /** Drops the connection. The app keeps one for its whole life; tests open many. */
-    fun shutdown() {
+    /** Drops the connection. The app keeps one per server it talks to; tests open many. */
+    override fun close() {
         client.shutdownNow()
     }
 
@@ -187,13 +276,32 @@ private fun Submission.toProto(): ConverseRequest.Submission = when (this) {
     is Submission.UserTurn -> ConverseRequest.Submission.UserTurn(UserTurn { text = this@toProto.text })
     Submission.Interrupt -> ConverseRequest.Submission.Interrupt(Interrupt { })
     is Submission.SwitchModel -> ConverseRequest.Submission.SwitchModel(
-        aulo.v1.SwitchModel {
-            model = ModelRef {
-                provider = this@toProto.model.provider
-                model = this@toProto.model.model
-            }
-        },
+        aulo.v1.SwitchModel { model = this@toProto.model.toRef() },
     )
+}
+
+private fun ModelId.toRef() = ModelRef {
+    provider = this@toRef.provider
+    model = this@toRef.model
+}
+
+/** The longest excerpt a search hit shows; the row cuts it further to its width. */
+const val MAX_EXCERPT_CHARS = 160
+
+/**
+ * One line of [content] around the first word of [query] it holds, so the row shows why the
+ * message matched. Server text: whitespace is folded and the result is capped.
+ */
+internal fun excerpt(content: String, query: String): String {
+    val flat = content.take(MAX_MESSAGE_CHARS).replace(Regex("\\s+"), " ").trim()
+    val at = query.split(' ').filter { it.isNotBlank() }
+        .map { flat.indexOf(it, ignoreCase = true) }
+        .filter { it >= 0 }
+        .minOrNull() ?: 0
+    // A little context before the match, so it does not start the line cold.
+    val start = (at - MAX_EXCERPT_CHARS / 4).coerceAtLeast(0)
+    val cut = flat.substring(start).take(MAX_EXCERPT_CHARS)
+    return (if (start > 0) "…" else "") + cut + (if (start + cut.length < flat.length) "…" else "")
 }
 
 private fun Event.Kind.toDomain(): TurnEvent? = when (this) {

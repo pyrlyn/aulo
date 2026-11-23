@@ -8,6 +8,7 @@ import aulo.chat.domain.ChatRepository
 import aulo.chat.domain.ChatSession
 import aulo.chat.domain.ChatSummary
 import aulo.chat.domain.ConnectionState
+import aulo.chat.domain.MessageHit
 import aulo.chat.domain.MessageRole
 import aulo.chat.domain.MessageState
 import aulo.chat.domain.ModelId
@@ -69,7 +70,39 @@ class DefaultChatRepository(
 
     override suspend fun models(): List<ModelInfo> = guarded { remote.listModels() }
 
-    override suspend fun newChat(): ChatSummary = guarded { remote.createChat().also { cache.upsertChat(it) } }
+    override suspend fun newChat(model: ModelId?): ChatSummary =
+        guarded { remote.createChat(model).also { cache.upsertChat(it) } }
+
+    override suspend fun refresh(chat: ChatSummary) {
+        if (state.value !is ConnectionState.Online) return
+        try {
+            cache.replaceMessages(chat.id, remote.listMessages(chat.id))
+        } catch (e: OfflineException) {
+            state.value = ConnectionState.Offline(e.message ?: "The server cannot be reached.")
+        } catch (_: ServerException) {
+            // The chat may be gone on the server; what the cache has is still worth showing.
+        }
+    }
+
+    override suspend fun rename(chatId: String, title: String): ChatSummary {
+        val clean = title.lineSequence().joinToString(" ").trim().truncateUtf8(MAX_TITLE_BYTES)
+        require(clean.isNotEmpty()) { "a chat title cannot be empty" }
+        return guarded { remote.renameChat(chatId, clean).also { cache.upsertChat(it) } }
+    }
+
+    override suspend fun delete(chatId: String) = guarded {
+        remote.deleteChat(chatId)
+        cache.deleteChat(chatId)
+    }
+
+    override suspend fun search(query: String): List<MessageHit> {
+        // The API takes at most 1 KiB of query; longer input is cut, not refused.
+        val words = query.trim().truncateUtf8(MAX_QUERY_BYTES)
+        if (words.isEmpty()) return emptyList()
+        return guarded { remote.searchMessages(words, SEARCH_HITS) }
+    }
+
+    override suspend fun clearCache() = cache.clear()
 
     override fun open(chat: ChatSummary, scope: CoroutineScope): ChatSession =
         DefaultChatSession(chat, remote, cache, scope, nowMs) { reason -> state.value = ConnectionState.Offline(reason) }
@@ -197,6 +230,22 @@ internal class DefaultChatSession(
     }
 
     private fun localId() = "local-" + Random.nextLong().toULong().toString(16)
+}
+
+/** The limits `RenameChatRequest.title` and `SearchMessagesRequest.query` document. */
+const val MAX_TITLE_BYTES = 200
+const val MAX_QUERY_BYTES = 1024
+
+/** How many message hits one search shows. */
+const val SEARCH_HITS = 50
+
+/** Cuts on a character boundary so the result never ends in half a code point. */
+internal fun String.truncateUtf8(maxBytes: Int): String {
+    if (encodeToByteArray().size <= maxBytes) return this
+    var end = length
+    while (end > 0 && substring(0, end).encodeToByteArray().size > maxBytes) end--
+    if (end > 0 && this[end - 1].isHighSurrogate()) end--
+    return substring(0, end)
 }
 
 /**

@@ -37,7 +37,7 @@ Rename a chat or delete it, from the conversation list or from the open chat.
 | --- | --- |
 | Menu open | The row stays highlighted while its menu is open. |
 | Renaming | Inline field or alert with the title selected. |
-| Saving a rename | The new title shows at once; on failure it reverts and an error banner says why. |
+| Saving a rename | The new title shows once the server accepts it; on failure the old title stays and an error banner says why. |
 | Confirming delete | The dialog; the default button is Cancel, so Enter does not delete. |
 | Deleted | The row disappears; if it was the open chat, the next chat opens, or the empty state. |
 
@@ -45,8 +45,8 @@ Rename a chat or delete it, from the conversation list or from the open chat.
 
 - Delete always needs a click or key on the dialog's Delete button: never a spoken yes, never
   a single key without the dialog.
-- A title is trimmed and at most 200 bytes (`RenameChatRequest`); an empty title restores the
-  automatic one.
+- A title is trimmed and at most 200 bytes (`RenameChatRequest`); Save is disabled while the
+  field is blank, because the server rejects an empty title.
 - Rename and delete go to the server (`ChatService.RenameChat`, `ChatService.DeleteChat`), then
   update the local cache.
 

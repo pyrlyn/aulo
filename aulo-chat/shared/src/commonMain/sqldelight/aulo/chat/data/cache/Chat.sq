@@ -38,6 +38,9 @@ VALUES (?, ?, ?, ?, ?);
 deleteAllChats:
 DELETE FROM chat;
 
+deleteChat:
+DELETE FROM chat WHERE id = ?;
+
 deleteMessagesWithoutChat:
 DELETE FROM message WHERE chat_id NOT IN (SELECT id FROM chat);
 

@@ -22,8 +22,41 @@ interface ChatRepository {
     /** @throws OfflineException when the server cannot be reached. */
     suspend fun models(): List<ModelInfo>
 
-    /** @throws OfflineException when the server cannot be reached. */
-    suspend fun newChat(): ChatSummary
+    /**
+     * [model] null starts the chat with the server's default model.
+     * @throws OfflineException when the server cannot be reached.
+     */
+    suspend fun newChat(model: ModelId? = null): ChatSummary
+
+    /**
+     * Refreshes the messages of [chat] from the server into the cache before it is opened. Offline
+     * it leaves the cache as it is and reports through [connection]; it never throws for that.
+     */
+    suspend fun refresh(chat: ChatSummary)
+
+    /**
+     * [title] is trimmed; it must not be empty and is cut to the 200 bytes the API takes.
+     * @throws OfflineException when the server cannot be reached.
+     * @throws ServerException when the server refuses.
+     */
+    suspend fun rename(chatId: String, title: String): ChatSummary
+
+    /**
+     * Deletes the chat on the server, then on this device.
+     * @throws OfflineException when the server cannot be reached.
+     * @throws ServerException when the server refuses.
+     */
+    suspend fun delete(chatId: String)
+
+    /**
+     * Messages on the server holding every word of [query], newest first.
+     * @throws OfflineException when the server cannot be reached.
+     * @throws ServerException when the server refuses.
+     */
+    suspend fun search(query: String): List<MessageHit>
+
+    /** Forgets every cached chat and message; the server keeps them. */
+    suspend fun clearCache()
 
     /** Opens the conversation stream of one chat; it lives until [ChatSession.close] or [scope] ends. */
     fun open(chat: ChatSummary, scope: CoroutineScope): ChatSession

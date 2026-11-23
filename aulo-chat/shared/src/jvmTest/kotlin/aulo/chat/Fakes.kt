@@ -3,16 +3,19 @@ package aulo.chat
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import aulo.chat.data.ChatCache
 import aulo.chat.data.ChatRemote
+import aulo.chat.data.SettingsStore
 import aulo.chat.data.Submission
 import aulo.chat.data.TurnEnd
 import aulo.chat.data.TurnEvent
 import aulo.chat.data.cache.ChatDatabase
 import aulo.chat.domain.ChatMessage
 import aulo.chat.domain.ChatSummary
+import aulo.chat.domain.MessageHit
 import aulo.chat.domain.MessageRole
 import aulo.chat.domain.ModelId
 import aulo.chat.domain.ModelInfo
 import aulo.chat.domain.OfflineException
+import aulo.chat.domain.ServerException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
@@ -23,8 +26,11 @@ import kotlin.coroutines.CoroutineContext
 val ECHO = ModelId("stub", "echo")
 val SLOW = ModelId("stub", "slow")
 
-fun memoryCache(context: CoroutineContext) =
-    ChatCache(JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY, Properties(), ChatDatabase.Schema), context)
+private fun memoryDriver() = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY, Properties(), ChatDatabase.Schema)
+
+fun memoryCache(context: CoroutineContext) = ChatCache(memoryDriver(), context)
+
+fun memorySettings(context: CoroutineContext) = SettingsStore(memoryDriver(), context)
 
 /**
  * A server the test drives by hand: it records what the client submits and answers only when
@@ -71,9 +77,32 @@ class FakeRemote : ChatRemote {
         return chats.take(limit)
     }
 
-    override suspend fun createChat(): ChatSummary {
+    override suspend fun createChat(model: ModelId?): ChatSummary {
         check()
-        return seedChat("new-${++created}", "")
+        return seedChat("new-${++created}", "").let { chat ->
+            if (model == null) chat else chat.copy(model = model).also { chats[0] = it }
+        }
+    }
+
+    override suspend fun renameChat(chatId: String, title: String): ChatSummary {
+        check()
+        val index = chats.indexOfFirst { it.id == chatId }
+        if (index < 0) throw ServerException("no chat $chatId")
+        return chats[index].copy(title = title).also { chats[index] = it }
+    }
+
+    override suspend fun deleteChat(chatId: String) {
+        check()
+        if (!chats.removeAll { it.id == chatId }) throw ServerException("no chat $chatId")
+        messages.remove(chatId)
+    }
+
+    override suspend fun searchMessages(query: String, limit: Int): List<MessageHit> {
+        check()
+        return messages.values.flatten()
+            .filter { it.text.contains(query, ignoreCase = true) }
+            .take(limit)
+            .map { MessageHit(it.chatId, it.id, it.text, it.createdAtMs) }
     }
 
     override suspend fun listMessages(chatId: String): List<ChatMessage> {

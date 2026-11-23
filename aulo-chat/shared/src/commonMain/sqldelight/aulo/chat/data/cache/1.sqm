@@ -1,0 +1,6 @@
+-- Version 1 had only the cache; version 2 adds the settings table (Setting.sq).
+
+CREATE TABLE setting (
+    key TEXT NOT NULL PRIMARY KEY,
+    setting_value TEXT NOT NULL
+);

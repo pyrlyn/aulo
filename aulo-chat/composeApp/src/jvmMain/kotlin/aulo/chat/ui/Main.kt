@@ -16,7 +16,9 @@ fun main() {
         System.err.println("AULO_CHAT_PORT must be a port number between 1 and 65535.")
         exitProcess(2)
     }
-    startKoin { modules(chatModules(endpoint, desktopPlatformModule(dataDir()))) }
+    // Set explicitly for this run, the environment wins over the address saved in Settings.
+    val pinned = listOf("AULO_CHAT_HOST", "AULO_CHAT_PORT").any { !System.getenv(it).isNullOrBlank() }
+    startKoin { modules(chatModules(endpoint, desktopPlatformModule(dataDir()), pinned)) }
     application {
         Window(
             onCloseRequest = ::exitApplication,

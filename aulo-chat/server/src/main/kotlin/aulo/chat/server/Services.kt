@@ -146,9 +146,20 @@ class ChatServiceImpl(
         }
     }
 
-    override suspend fun searchMessages(message: SearchMessagesRequest): SearchMessagesResponse =
-        throw notServed("SearchMessages")
+    override suspend fun searchMessages(message: SearchMessagesRequest): SearchMessagesResponse {
+        if (message.query.toByteArray().size > MAX_QUERY_BYTES) throw invalid("query is longer than $MAX_QUERY_BYTES bytes")
+        val chatId = if (message.presence.hasChatId) message.chatId else null
+        if (chatId != null) store.chat(chatId) ?: throw notFound(chatId)
+        val (items, next) = store.search(message.query, chatId).page(message.pageSize, message.pageToken)
+        return SearchMessagesResponse {
+            messages = items.map { it.toProto() }
+            nextPageToken = next
+        }
+    }
 }
+
+// The limit `SearchMessagesRequest` documents.
+private const val MAX_QUERY_BYTES = 1024
 
 /** Only the model list is real; the rest of the daemon's configuration has no stand-in. */
 class ConfigServiceImpl(private val model: ChatModel) : ConfigService {

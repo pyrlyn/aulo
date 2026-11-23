@@ -50,6 +50,12 @@ data class ChatMessage(
     val createdAtMs: Long = 0,
 )
 
+/** One message that matched a search. [excerpt] is server text: one line, drawn as plain text. */
+data class MessageHit(val chatId: String, val messageId: String, val excerpt: String, val createdAtMs: Long)
+
+/** Settings → Appearance. [System] follows the operating system and changes with it. */
+enum class Appearance { System, Light, Dark }
+
 sealed interface ConnectionState {
     data object Connecting : ConnectionState
 

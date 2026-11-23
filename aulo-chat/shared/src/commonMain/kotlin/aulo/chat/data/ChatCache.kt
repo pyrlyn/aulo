@@ -63,6 +63,20 @@ class ChatCache(driver: SqlDriver, private val context: CoroutineContext = Dispa
 
     suspend fun appendMessage(message: ChatMessage) = withContext(context) { insert(message) }
 
+    suspend fun deleteChat(chatId: String) = withContext(context) {
+        queries.transaction {
+            queries.deleteChat(chatId)
+            queries.deleteMessages(chatId)
+        }
+    }
+
+    suspend fun clear() = withContext(context) {
+        queries.transaction {
+            queries.deleteAllChats()
+            queries.deleteMessagesWithoutChat()
+        }
+    }
+
     private fun upsert(chat: ChatSummary) =
         queries.upsertChat(chat.id, chat.title, chat.model.provider, chat.model.model, chat.updatedAtMs)
 

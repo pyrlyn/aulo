@@ -19,6 +19,7 @@ import aulo.chat.domain.SendMessage
 import aulo.chat.domain.StopGeneration
 import aulo.chat.domain.SwitchModel
 import aulo.chat.presentation.ChatViewModel
+import aulo.chat.presentation.OFFLINE_SEARCH
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -58,6 +59,7 @@ class ChatViewModelTest {
             StopGeneration(),
             SwitchModel(),
             SampleAttachmentPicker(),
+            memorySettings(dispatcher),
         ).also { advanceUntilIdle() }
     }
 
@@ -268,12 +270,116 @@ class ChatViewModelTest {
         val repository = DefaultChatRepository(remote, cache)
         val vm = ChatViewModel(
             repository, OpenChat(repository), LoadModels(repository), SendMessage(), StopGeneration(), SwitchModel(),
-            SampleAttachmentPicker(),
+            SampleAttachmentPicker(), memorySettings(dispatcher),
         )
         advanceUntilIdle()
         val state = vm.state.value
         assertIs<ConnectionState.Offline>(state.connection)
         assertEquals(listOf("Plan a trip", "Day 1: Alfama"), state.messages.map { it.text })
         assertTrue(state.models.isEmpty())
+    }
+
+    @Test
+    fun `the sidebar lists the cached chats and opens another one with its history`() = test {
+        remote.seedChat("old", "Old chat", "hi", "hello")
+        remote.seedChat("lisbon", "Trip to Lisbon", "Plan a trip", "Day 1: Alfama")
+        val vm = viewModel()
+        assertEquals(listOf("Trip to Lisbon", "Old chat"), vm.state.value.chats.map { it.title })
+
+        vm.openChat(vm.state.value.chats.last())
+        advanceUntilIdle()
+        assertEquals("Old chat", vm.state.value.chat?.title)
+        assertEquals(listOf("hi", "hello"), vm.state.value.messages.map { it.text })
+    }
+
+    @Test
+    fun `a rename is trimmed, sent and shown in the list`() = test {
+        remote.seedChat("lisbon", "Trip to Lisbon", "Plan a trip")
+        val vm = viewModel()
+        vm.rename(vm.state.value.chat!!, "  Lisbon\nin May  ")
+        advanceUntilIdle()
+        assertEquals("Lisbon in May", remote.chats.single().title)
+        assertEquals("Lisbon in May", vm.state.value.chat?.title)
+        assertEquals("Lisbon in May", vm.state.value.chats.single().title)
+    }
+
+    @Test
+    fun `a blank rename is ignored`() = test {
+        remote.seedChat("lisbon", "Trip to Lisbon", "Plan a trip")
+        val vm = viewModel()
+        vm.rename(vm.state.value.chat!!, "   ")
+        advanceUntilIdle()
+        assertEquals("Trip to Lisbon", remote.chats.single().title)
+    }
+
+    @Test
+    fun `deleting the open chat removes it everywhere and opens the next one`() = test {
+        remote.seedChat("old", "Old chat", "hi", "hello")
+        remote.seedChat("lisbon", "Trip to Lisbon", "Plan a trip")
+        val vm = viewModel()
+        vm.delete(vm.state.value.chat!!)
+        advanceUntilIdle()
+        assertEquals(listOf("old"), remote.chats.map { it.id })
+        assertEquals(listOf("Old chat"), vm.state.value.chats.map { it.title })
+        assertEquals("Old chat", vm.state.value.chat?.title)
+        assertEquals(listOf("hi", "hello"), vm.state.value.messages.map { it.text })
+    }
+
+    @Test
+    fun `deleting offline keeps the chat and says why`() = test {
+        remote.seedChat("lisbon", "Trip to Lisbon", "Plan a trip")
+        val vm = viewModel()
+        remote.disconnect()
+        vm.delete(vm.state.value.chat!!)
+        advanceUntilIdle()
+        assertEquals(listOf("Trip to Lisbon"), vm.state.value.chats.map { it.title })
+        assertEquals(NoticeLevel.Warning, vm.state.value.notice?.level)
+    }
+
+    @Test
+    fun `search matches titles at once and messages after a pause in typing`() = test {
+        remote.seedChat("old", "Release notes", "draft the notes")
+        remote.seedChat("lisbon", "Trip to Lisbon", "Plan a trip to lisbon", "Day 1: Alfama")
+        val vm = viewModel()
+        vm.onQueryChange("lisbon")
+        assertEquals(listOf("Trip to Lisbon"), vm.state.value.titleMatches.map { it.title })
+        assertTrue(vm.state.value.search.hits.isEmpty(), "the server is asked only after the pause")
+
+        advanceUntilIdle()
+        assertEquals(listOf("lisbon-m0"), vm.state.value.search.hits.map { it.messageId })
+        assertFalse(vm.state.value.search.searching)
+
+        vm.openHit(vm.state.value.search.hits.single())
+        advanceUntilIdle()
+        assertFalse(vm.state.value.search.active, "opening a hit clears the query")
+        assertEquals("Trip to Lisbon", vm.state.value.chat?.title)
+    }
+
+    @Test
+    fun `offline search keeps the title matches and explains the missing messages`() = test {
+        remote.seedChat("lisbon", "Trip to Lisbon", "Plan a trip to lisbon")
+        val vm = viewModel()
+        remote.disconnect()
+        advanceUntilIdle()
+        vm.onQueryChange("lisbon")
+        advanceUntilIdle()
+        assertEquals(listOf("Trip to Lisbon"), vm.state.value.titleMatches.map { it.title })
+        assertEquals(OFFLINE_SEARCH, vm.state.value.search.error)
+    }
+
+    @Test
+    fun `new chats start with the default model from settings`() = test {
+        remote.seedChat("lisbon", "Trip to Lisbon", "Plan a trip")
+        val settings = memorySettings(dispatcher)
+        settings.setDefaultModel(SLOW)
+        val repository = DefaultChatRepository(remote, memoryCache(dispatcher))
+        val vm = ChatViewModel(
+            repository, OpenChat(repository), LoadModels(repository), SendMessage(), StopGeneration(), SwitchModel(),
+            SampleAttachmentPicker(), settings,
+        )
+        advanceUntilIdle()
+        vm.newChat()
+        advanceUntilIdle()
+        assertEquals(SLOW, vm.state.value.chat?.model)
     }
 }

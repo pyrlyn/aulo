@@ -66,6 +66,21 @@ class ChatStore(
         messages[chatId]?.toList().orEmpty()
     }
 
+    /**
+     * Messages holding every word of [query], newest first. The daemon uses an FTS index; the
+     * stand-in matches words case-insensitively, which is what the query means to a user, and
+     * never reads the query as syntax.
+     */
+    fun search(query: String, chatId: String?): List<StoredMessage> = synchronized(lock) {
+        val words = query.lowercase().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        if (words.isEmpty()) return emptyList()
+        val scope = if (chatId == null) messages.values.asSequence() else sequenceOf(messages[chatId].orEmpty())
+        scope.flatten()
+            .filter { message -> message.content.lowercase().let { text -> words.all { it in text } } }
+            .sortedByDescending { it.createdAtMs }
+            .toList()
+    }
+
     /** Returns null when the chat was deleted while the turn was running. */
     fun append(chatId: String, role: Role, content: String): StoredMessage? = synchronized(lock) {
         val list = messages[chatId] ?: return null

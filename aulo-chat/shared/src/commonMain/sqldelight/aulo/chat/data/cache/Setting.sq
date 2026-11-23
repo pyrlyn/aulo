@@ -1,0 +1,15 @@
+-- What the user chose in Settings. Kept apart from the cache: clearing the cache keeps these.
+
+CREATE TABLE setting (
+    key TEXT NOT NULL PRIMARY KEY,
+    setting_value TEXT NOT NULL
+);
+
+selectSettings:
+SELECT * FROM setting;
+
+upsertSetting:
+INSERT OR REPLACE INTO setting(key, setting_value) VALUES (?, ?);
+
+deleteSetting:
+DELETE FROM setting WHERE key = ?;

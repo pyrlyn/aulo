@@ -2,6 +2,7 @@ package aulo.chat.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import aulo.chat.data.SettingsStore
 import aulo.chat.domain.Attachment
 import aulo.chat.domain.AttachmentKind
 import aulo.chat.domain.AttachmentPicker
@@ -11,6 +12,7 @@ import aulo.chat.domain.ChatSession
 import aulo.chat.domain.ChatSummary
 import aulo.chat.domain.ConnectionState
 import aulo.chat.domain.LoadModels
+import aulo.chat.domain.MessageHit
 import aulo.chat.domain.MessageRole
 import aulo.chat.domain.MessageTooLongException
 import aulo.chat.domain.ModelId
@@ -20,17 +22,21 @@ import aulo.chat.domain.NoticeLevel
 import aulo.chat.domain.OfflineException
 import aulo.chat.domain.OpenChat
 import aulo.chat.domain.SendMessage
+import aulo.chat.domain.ServerException
 import aulo.chat.domain.StopGeneration
 import aulo.chat.domain.SwitchModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class ChatUiState(
     val chat: ChatSummary? = null,
+    val chats: List<ChatSummary> = emptyList(),
     val messages: List<ChatMessage> = emptyList(),
     val input: String = "",
     val attachments: List<Attachment> = emptyList(),
@@ -39,6 +45,7 @@ data class ChatUiState(
     val generating: Boolean = false,
     val notice: Notice? = null,
     val loading: Boolean = true,
+    val search: SearchState = SearchState(),
 ) {
     val online: Boolean get() = connection is ConnectionState.Online
 
@@ -47,6 +54,27 @@ data class ChatUiState(
 
     /** Nothing to show yet and nothing on the way: the screen offers suggestions instead. */
     val empty: Boolean get() = !loading && messages.isEmpty()
+
+    /** Never reached a server and nothing cached: the Connect screen is all there is to show. */
+    val needsServer: Boolean get() = !loading && chat == null && connection is ConnectionState.Offline
+
+    /** Chats whose title holds every word of the query, from the cache, so they show offline too. */
+    val titleMatches: List<ChatSummary>
+        get() {
+            val words = search.query.lowercase().split(' ').filter { it.isNotBlank() }
+            if (words.isEmpty()) return emptyList()
+            return chats.filter { chat -> words.all { it in chat.title.lowercase() } }
+        }
+}
+
+/** The sidebar's search. [hits] are message matches from the server; [error] is why there are none. */
+data class SearchState(
+    val query: String = "",
+    val hits: List<MessageHit> = emptyList(),
+    val searching: Boolean = false,
+    val error: String? = null,
+) {
+    val active: Boolean get() = query.isNotBlank()
 }
 
 const val MAX_ATTACHMENTS = 6
@@ -60,12 +88,14 @@ class ChatViewModel(
     private val stopGeneration: StopGeneration,
     private val switchModel: SwitchModel,
     private val picker: AttachmentPicker,
+    private val settings: SettingsStore,
 ) : ViewModel() {
     private val mutable = MutableStateFlow(ChatUiState())
     val state: StateFlow<ChatUiState> = mutable.asStateFlow()
 
     private var session: ChatSession? = null
     private var sessionJob: Job? = null
+    private var searchJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -74,7 +104,9 @@ class ChatViewModel(
         viewModelScope.launch {
             // A chat gets its title with its first message; the cache is where that shows up.
             repository.chats.collect { chats ->
-                mutable.update { state -> state.copy(chat = chats.firstOrNull { it.id == state.chat?.id } ?: state.chat) }
+                mutable.update { state ->
+                    state.copy(chats = chats, chat = chats.firstOrNull { it.id == state.chat?.id } ?: state.chat)
+                }
             }
         }
         connect()
@@ -96,11 +128,104 @@ class ChatViewModel(
     fun newChat() {
         viewModelScope.launch {
             try {
-                show(repository.newChat())
+                show(repository.newChat(settings.settings.first().defaultModel))
             } catch (e: OfflineException) {
                 tell(NoticeLevel.Warning, e.message)
+            } catch (e: ServerException) {
+                // A default model this server does not know: start with the server's own.
+                tell(NoticeLevel.Warning, "${e.message}; the chat starts with the server's default model.")
+                runCatching { show(repository.newChat()) }
             }
         }
+    }
+
+    /** Opens a chat from the list; offline it opens what the cache has. */
+    fun openChat(chat: ChatSummary) {
+        if (chat.id == mutable.value.chat?.id) return
+        viewModelScope.launch {
+            repository.refresh(chat)
+            show(chat)
+        }
+    }
+
+    fun rename(chat: ChatSummary, title: String) {
+        if (title.isBlank()) return
+        viewModelScope.launch {
+            try {
+                repository.rename(chat.id, title)
+            } catch (e: OfflineException) {
+                tell(NoticeLevel.Warning, e.message)
+            } catch (e: ServerException) {
+                tell(NoticeLevel.Error, "The chat was not renamed: ${e.message}")
+            }
+        }
+    }
+
+    /** Only after the confirmation dialog: deleting is never one click. */
+    fun delete(chat: ChatSummary) {
+        viewModelScope.launch {
+            try {
+                repository.delete(chat.id)
+            } catch (e: OfflineException) {
+                tell(NoticeLevel.Warning, e.message)
+                return@launch
+            } catch (e: ServerException) {
+                tell(NoticeLevel.Error, "The chat was not deleted: ${e.message}")
+                return@launch
+            }
+            if (mutable.value.chat?.id != chat.id) return@launch
+            val next = mutable.value.chats.firstOrNull { it.id != chat.id }
+            if (next != null) {
+                repository.refresh(next)
+                show(next)
+            } else {
+                newChat()
+            }
+        }
+    }
+
+    fun onQueryChange(query: String) {
+        mutable.update { it.copy(search = it.search.copy(query = query, error = null)) }
+        searchJob?.cancel()
+        if (query.isBlank()) {
+            mutable.update { it.copy(search = SearchState()) }
+            return
+        }
+        searchJob = viewModelScope.launch {
+            // Waits for a pause in typing so the server sees one query, not one per key.
+            delay(SEARCH_DEBOUNCE_MS)
+            if (!mutable.value.online) {
+                mutable.update { it.copy(search = it.search.copy(hits = emptyList(), error = OFFLINE_SEARCH)) }
+                return@launch
+            }
+            mutable.update { it.copy(search = it.search.copy(searching = true)) }
+            val outcome = try {
+                Result.success(repository.search(query))
+            } catch (e: OfflineException) {
+                Result.failure(e)
+            } catch (e: ServerException) {
+                Result.failure(e)
+            }
+            mutable.update { state ->
+                if (state.search.query != query) return@update state
+                state.copy(
+                    search = state.search.copy(
+                        hits = outcome.getOrDefault(emptyList()),
+                        searching = false,
+                        error = outcome.exceptionOrNull()?.let { "Message search failed: ${it.message}" },
+                    ),
+                )
+            }
+        }
+    }
+
+    fun clearQuery() = onQueryChange("")
+
+    /** A message hit opens its chat. */
+    fun openHit(hit: MessageHit) {
+        val chat = mutable.value.chats.firstOrNull { it.id == hit.chatId } ?: return
+        clearQuery()
+        openChat(chat)
     }
 
     private fun show(chat: ChatSummary?) {
@@ -195,3 +320,7 @@ class ChatViewModel(
         session?.close()
     }
 }
+
+const val SEARCH_DEBOUNCE_MS = 300L
+
+const val OFFLINE_SEARCH = "Message search needs the server."
