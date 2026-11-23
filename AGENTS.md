@@ -11,7 +11,7 @@ If an `AGENTS.md` or `CLAUDE.md` exists higher in the tree, follow it too; on co
 
 - `spec.md` — the specification. Section numbers are stable; tasks cite them.
 - `research.md` — sources for every external fact and the reuse map of the workspace (Part 6).
-- `plan/` — one folder per task (`plan/<id>/task.md`, closed ones also `done.md`); `plan/README.md` says how to read it. Settled decisions D1–D9 are recorded in `spec.md` §17. Never decide an open question in `spec.md` §17 yourself; ask the creator.
+- `plan/` — one folder per task (`plan/<id>/task.md`, closed ones also `done.md`); `plan/README.md` says how to read it. Settled decisions D1–D11 are recorded in `spec.md` §17. Never decide an open question in `spec.md` §17 yourself; ask the creator.
 
 ## Hard rules
 
@@ -37,6 +37,8 @@ If an `AGENTS.md` or `CLAUDE.md` exists higher in the tree, follow it too; on co
 - `desktop/macos` (SwiftUI) and `desktop/windows` (WinUI 3) — native apps over `aulo-ffi` (T12.3, T12.15).
 - `proto/aulo/v1/` — gRPC service definitions (T3.1).
 - `:aulo-proto` is that API as Kotlin: Wire generates the messages and one `<Service>Server` interface per service into `build/generated` on every build (spec §17 D10). Nothing generated is committed; change the `.proto` files, never the output. It holds no transport.
+- `:aulo-grpc` owns the gRPC stack: gRPC over HTTP/2 on nghttp2 for every target (spec §17 D11). It knows no aulo service.
+- C libraries come only through Conan. A module applies the `aulo.conan` plugin, lists them in its `conanfile.txt`, pins their recipe revisions in its `conan.lock`, and binds each one with `conan { cinterop(...) }` and a `.def` file. The profiles in `conan/` take Conan Center's binaries on macOS and build Linux and Windows from source with Kotlin/Native's own clang and sysroots. After changing a `conanfile.txt`, recreate its lock: `conan lock create <module>/conanfile.txt --lockfile-out=<module>/conan.lock -pr:h=conan/macosArm64.profile -pr:b=conan/build.profile`. A package whose requirements differ per platform makes the Linux or Windows install fail on the lock; then extend the lock with those profiles too.
 - `plugins/` — plugin SDK examples (T11.5).
 - `docs/` — guides, threat model, spike reports (`docs/spikes/`). Historical spike reports may describe the retired Rust workspace; new work follows this file and `spec.md`.
 - `scripts/sync-issues.py` — creates GitHub issues from the active tasks in `plan/` (dry run by default).

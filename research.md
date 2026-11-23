@@ -535,6 +535,24 @@ Sources:
 - **kotlinx-rpc gRPC is pre-release only.** Every gRPC build on https://github.com/Kotlin/kotlinx-rpc/releases is tagged `-grpc-<n>` and marked pre-release; the stable line (0.10.4) has no gRPC.
 - **pbandk.** `lastUpdated` 2024-09-03 in https://repo1.maven.org/maven2/pro/streem/pbandk/pbandk-runtime/maven-metadata.xml.
 
+### 4.10 HTTP/2 for the gRPC transport (T3.3)
+
+Checked 2026-11-23. gRPC runs over HTTP/2; aulo needs it on all four targets (spec §17 D3). The creator chose nghttp2 through Conan (D11).
+
+- **Ktor's native server has no HTTP/2.** On Kotlin/Native the CIO engine is Ktor's only server engine (https://github.com/ktorio/ktor-documentation/blob/main/topics/server-native.md), and the engine table marks CIO without HTTP/2 (https://github.com/ktorio/ktor-documentation/blob/main/topics/server-engines.md); both on `main` at 2026-11-23.
+- **nghttp2** (https://github.com/nghttp2/nghttp2) is MIT: https://github.com/nghttp2/nghttp2/blob/v1.68.1/COPYING.
+  - Releases: v1.71.0 (2026-11-02), v1.70.0 (2026-07-29), v1.69.0 (2026-04-19), v1.68.1 (2026-03-18) — https://github.com/nghttp2/nghttp2/releases.
+  - Advisories: the newest, CVE-2026-27135 (GHSA-6933-cjhr-5qg6, high), is fixed in 1.68.1; none is newer — https://github.com/nghttp2/nghttp2/security/advisories.
+  - With `NGHTTP2_STATICLIB` undefined, `nghttp2.h` declares the API as imported from a DLL on Windows (https://github.com/nghttp2/nghttp2/blob/v1.68.1/lib/includes/nghttp2/nghttp2.h); the recipe defines it for MSVC only, so `aulo-grpc`'s `nghttp2.def` defines it for mingw.
+- **Conan Center** (https://github.com/conan-io/conan-center-index/tree/master/recipes/libnghttp2, checked 2026-11-23): the newest recipe is `libnghttp2/1.68.1`, revision `3a79da87678aa68876fd527ac668f52b`, pinned in `aulo-grpc/conan.lock`. It has no `tool_requires`, and the programs (`with_app`) and the HPACK tools (`with_hpack`) are off by default.
+- **Its prebuilt binaries** (`conan list "libnghttp2/1.68.1#3a79da87678aa68876fd527ac668f52b:*" -r conancenter`, Conan 2.33.0): macOS armv8 and x86_64 (apple-clang 17), Windows x86_64 and armv8 (msvc 194), Linux x86_64 (gcc 13). None for Linux armv8 or MinGW.
+  - aulo takes the macOS binary only. Its objects say `minos 13.0` (`otool -l`); Kotlin/Native 2.4.21 links macOS binaries for 12.0 (`minVersion.macos`), and aulo supports macOS 15+ (D3). The macOS test binary links and runs.
+  - The Linux and Windows libraries are built from the recipe with Kotlin/Native's own compiler and sysroots, so they reference nothing the sysroot that links them lacks.
+- **Kotlin/Native's toolchains** (https://github.com/JetBrains/kotlin/blob/v2.4.21/kotlin-native/konan/konan.properties): Linux x86_64 links against a GCC 8.3.0 / glibc 2.19 sysroot, Linux aarch64 against GCC 8.3.0 / glibc 2.25, Windows against `msys2-mingw-w64-x86_64-2` (GCC 9.2.0). The host's LLVM (`llvmHome.<host>`) has `clang`, `clang++`, `ld.lld` and `llvm-ar`, and no `llvm-ranlib` (`llvm-21-aarch64-macos-essentials-97`, listed 2026-11-23). `llvm-ar` writes the archive index itself, so the profiles in `conan/` turn CMake's ranlib off on macOS and Linux hosts.
+- **Kotlin installs that toolchain in a task.** The Kotlin Gradle plugin 2.4.21 registers `downloadKotlinNativeDistribution` in every project with native targets: https://github.com/JetBrains/kotlin/blob/v2.4.21/libraries/tools/kotlin-gradle-plugin/src/common/kotlin/org/jetbrains/kotlin/gradle/targets/native/internal/KotlinNativeDownloadTask.kt. It installs Kotlin/Native and unpacks the dependencies of the project's targets. aulo's Conan tasks depend on it, so the sysroots exist on a cold cache.
+- **Conan's cache is not concurrent.** Conan 2's guidelines say so and tell parallel jobs to use separate caches through `CONAN_HOME`: https://docs.conan.io/2/knowledge/guidelines.html. aulo's Conan tasks run one at a time (a Gradle build service) in their own `build/conan-home`; kotlin-kit's Conan task uses `~/.conan2`.
+- **Shared native source sets.** With `kotlin.mpp.enableCInteropCommonization=true` (https://github.com/JetBrains/kotlin/blob/v2.4.21/libraries/tools/kotlin-gradle-plugin/src/common/kotlin/org/jetbrains/kotlin/gradle/plugin/PropertiesProvider.kt), `nativeMain` sees one commonized binding of every target. Compiling that metadata (`assemble`, IDE sync) therefore runs Conan for every target the host builds; a per-target compile runs only its own.
+
 ## Part 5. Conclusions and ideas to borrow (for a Rust voice computer-control agent)
 
 1. **Two-brain voice design.** Front: cheap full-duplex/realtime voice (GPT-Live 1, Gemini 3.8 Live, xAI Voice
