@@ -19,6 +19,12 @@ kotlin {
             api(libs.okio)
             implementation(libs.kotlinx.coroutines.core)
         }
+        nativeMain.dependencies {
+            // The engines register in aulo-voice's registry (part of registerSherpa's signature) and start their
+            // helper with kotlin-kit's process pipes.
+            api(project(":aulo-voice"))
+            implementation("pyrlyn.kit:process")
+        }
         commonTest.dependencies {
             implementation(project(":aulo-testkit"))
         }

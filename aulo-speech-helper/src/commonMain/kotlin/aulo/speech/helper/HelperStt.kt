@@ -63,6 +63,9 @@ data class HelperOptions(
     }
 }
 
+/** Where closed engines stop their helpers, off the caller's thread. */
+private val releaser = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
 /** Begin, cancel and finish of a few utterances at most can wait behind a full audio queue. */
 private const val CONTROL_SLOTS = 16
 
@@ -227,7 +230,8 @@ class HelperStt(
         if (!closed.compareAndSet(expectedValue = false, newValue = true)) return
         queue.close()
         scope.cancel()
-        link.close()
+        // Stopping a process waits for it to be reaped, and close may come from poll, which never waits.
+        releaser.launch { link.close() }
     }
 
     private fun send(message: Out) {

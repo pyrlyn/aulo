@@ -4,6 +4,7 @@ package aulo.speech.sherpa
 
 import aulo.speech.PIPELINE_SAMPLE_RATE_HZ
 import aulo.speech.helper.ServeOptions
+import aulo.speech.helper.SherpaStt
 import aulo.speech.helper.UtteranceDecoder
 import cnames.structs.SherpaOnnxOfflineRecognizer
 import kotlinx.cinterop.CPointer
@@ -42,17 +43,22 @@ private const val MOONSHINE_PARTIAL_EVERY = PIPELINE_SAMPLE_RATE_HZ / 2
 
 /** The offline STT models the helper runs, by the name aulod passes on its command line. */
 enum class SttModel(
+    /** The name aulod passes, from the engine table it starts helpers by. */
     val id: String,
     /** The files the model directory must hold; sherpa-onnx's own message for a missing one is poor. */
     val files: List<String>,
     val serve: ServeOptions,
 ) {
     /** Parakeet TDT v3: 25 languages, a final per VAD segment. */
-    PARAKEET("parakeet", listOf("encoder.int8.onnx", "decoder.int8.onnx", "joiner.int8.onnx", "tokens.txt"), ServeOptions()),
+    PARAKEET(
+        SherpaStt.PARAKEET.helperModel,
+        listOf("encoder.int8.onnx", "decoder.int8.onnx", "joiner.int8.onnx", "tokens.txt"),
+        ServeOptions(),
+    ),
 
     /** Moonshine base, English: fast enough to decode the growing utterance for partials. */
     MOONSHINE(
-        "moonshine",
+        SherpaStt.MOONSHINE.helperModel,
         listOf("encoder_model.ort", "decoder_model_merged.ort", "tokens.txt"),
         ServeOptions(partialEverySamples = MOONSHINE_PARTIAL_EVERY),
     ),

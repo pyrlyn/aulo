@@ -25,6 +25,9 @@ kotlin {
             // kotlinx-io paths, to check the model files before sherpa-onnx sees them.
             implementation("pyrlyn.kit:fs")
         }
+        nativeTest.dependencies {
+            implementation(libs.kotlinx.coroutines.core)
+        }
     }
     targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().configureEach {
         binaries {
@@ -33,5 +36,15 @@ kotlin {
                 entryPoint = "aulo.speech.sherpa.main"
             }
         }
+    }
+}
+
+// HelperProcessTest starts the linked helper of the target under test, as aulod would.
+kotlin.targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().configureEach {
+    val helper = binaries.getExecutable("helper", org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType.DEBUG)
+    val testName = "${name}Test"
+    tasks.withType<org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest>().matching { it.name == testName }.configureEach {
+        dependsOn(helper.linkTaskProvider)
+        environment("AULO_SHERPA_HELPER", helper.outputFile.path)
     }
 }
