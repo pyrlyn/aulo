@@ -74,6 +74,7 @@ missing from Conan Center has a recipe in `conan/recipes/<name>/`.
 | --- | --- | --- | --- |
 | libnghttp2 (1.68.1) | local (`aulo-grpc/conanfile.txt`) | https://github.com/nghttp2/nghttp2 | HTTP/2 under aulo's gRPC transport on every target (spec §17 D11; MIT) |
 | mbedtls (3.6.7) | local (`aulo-grpc/conanfile.txt`) | https://github.com/Mbed-TLS/mbedtls | TLS 1.3 for TCP listeners and clients, self-signed certificates (T3.8; Apache-2.0 OR GPL-2.0-or-later, taken as Apache-2.0) |
+| sherpa-onnx (2.0.3) | local (`aulo-speech-sherpa/conanfile.txt`; recipe `conan/recipes/sherpa-onnx`) | https://github.com/k2-fsa/sherpa-onnx | Offline STT (Parakeet, Moonshine) in the `aulo-speech-sherpa` helper process (T7.4). The recipe repackages the official prebuilt archives: static on macOS, shared with onnxruntime on Linux and Windows, copied next to each binary (`bundleSharedLibraries`). Apache-2.0; onnxruntime MIT |
 
 Native libraries used by the speech and audio modules (sherpa-onnx, whisper.cpp, libopus,
 and so on) are chosen and recorded here by the task that first wires each of them, including

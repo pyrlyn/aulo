@@ -1,0 +1,3 @@
+# sherpa-onnx, which only the helper executable links. The version here, the recipe revision in conan.lock.
+[requires]
+sherpa-onnx/2.0.3

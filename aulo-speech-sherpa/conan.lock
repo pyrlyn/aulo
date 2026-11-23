@@ -1,0 +1,9 @@
+{
+    "version": "0.5",
+    "requires": [
+        "sherpa-onnx/2.0.3#f862f31c9a1a28fcd9a327377e845e03%1795453857.173938"
+    ],
+    "build_requires": [],
+    "python_requires": [],
+    "config_requires": []
+}
