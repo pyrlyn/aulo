@@ -74,6 +74,7 @@ kotlin {
         }
         nativeMain.dependencies {
             implementation(project(":aulo-config"))
+            implementation(project(":aulo-models"))
             implementation(project(":aulo-secrets"))
             implementation(project(":aulo-server"))
             implementation(project(":aulo-store"))
@@ -81,6 +82,7 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation("pyrlyn.kit:cli")
             implementation("pyrlyn.kit:fs")
+            implementation("pyrlyn.kit:http-ktor")
             implementation("pyrlyn.kit:process")
         }
         nativeTest.dependencies {

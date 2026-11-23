@@ -4,12 +4,16 @@ import aulo.app.BuildInfo
 import aulo.config.ConfigException
 import aulo.config.DEFAULT_TOML
 import aulo.config.LoadOptions
+import aulo.config.auloHome
 import aulo.config.loadConfig
 import aulo.config.render
+import aulo.models.MODEL_HTTP_SETTINGS
 import cli.Parsed
 import cli.Settings
 import cli.command
 import cli.parse
+import http.HttpClient
+import http.ktor.KtorHttp
 import kotlinx.coroutines.runBlocking
 
 private val tree =
@@ -27,6 +31,31 @@ private val tree =
             }
             subcommand("default") {
                 doc("Print every key with its default, commented out, to copy from.")
+            }
+        }
+        subcommand("models") {
+            doc(
+                "Download, list and remove speech models\n\n" +
+                    "Models come from a catalog built into aulo, pinned to exact files by size and SHA-256, and live in " +
+                    "the models directory of the aulo home. A download that stops resumes on the next pull.",
+            )
+            subcommandRequired = true
+            subcommand("ls") { doc("List the catalog with each model's install state.") }
+            subcommand("pull") {
+                doc("Download a model and check every file against its pinned SHA-256.")
+                positional("id") {
+                    required = true
+                    valueName = "ID"
+                    doc("The model id, as `aulo models ls` shows it")
+                }
+            }
+            subcommand("rm") {
+                doc("Delete a model, partial downloads included.")
+                positional("id") {
+                    required = true
+                    valueName = "ID"
+                    doc("The model id, as `aulo models ls` shows it")
+                }
             }
         }
         subcommand("connect") {
@@ -52,12 +81,15 @@ private val tree =
 /**
  * Runs one command line. [env] is the process environment and [projectDir] the directory whose
  * `.aulo.toml` applies; both are parameters so tests run commands in-process from fixtures.
+ * [http] opens the client a model download uses, and [progress] shows a long command's progress.
  */
 fun runCli(
     args: List<String>,
     env: Map<String, String>,
     projectDir: String?,
     settings: Settings,
+    http: () -> HttpClient = { KtorHttp(MODEL_HTTP_SETTINGS) },
+    progress: (String) -> Unit = {},
 ): Parsed.Exit {
     val matches =
         when (val parsed = parse(tree, args, settings)) {
@@ -70,6 +102,12 @@ fun runCli(
         val addr = config.matches.value("addr") ?: error("no ADDR")
         val pin = config.matches.value("pin") ?: error("no --pin")
         return runBlocking { connect(addr, pin, env) }
+    }
+    if (config.name == "models") {
+        val action = config.matches.subcommand ?: error("no models subcommand")
+        val home = auloHome(env) ?: return Parsed.Exit("error: no aulo home: set AULO_HOME or HOME\n", stderr = true, code = 1)
+        val id = if (action.name == "ls") null else action.matches.value("id")
+        return runBlocking { models(action.name, id, modelManager(home), http, progress) }
     }
     val action = config.matches.subcommand ?: error("no config subcommand")
     return when (action.name) {

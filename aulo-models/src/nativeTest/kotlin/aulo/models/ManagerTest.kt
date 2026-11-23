@@ -26,7 +26,7 @@ class ManagerTest {
     private val tokens = content(1_200, seed = 2)
     private val nested = content(900, seed = 3)
     private val catalog = Catalog(listOf(model("voice-1", "voice.onnx" to voice, "tokens.txt" to tokens, "espeak/data.bin" to nested)))
-    private val manager = ModelManager(home.path, catalog, server)
+    private val manager = ModelManager(home.path, catalog)
     private val dir get() = joinPath(home.path, "models", "voice-1")
 
     init {
@@ -46,7 +46,7 @@ class ManagerTest {
         bytes: ByteArray,
     ) = WriteOptions(createParent = true).write(path, bytes)
 
-    private fun pull(onProgress: (Progress) -> Unit = {}) = runBlocking { manager.pull("voice-1", onProgress) }
+    private fun pull(onProgress: (Progress) -> Unit = {}) = runBlocking { manager.pull("voice-1", server, onProgress) }
 
     private fun nothingKept(name: String) {
         assertNull(entryKind(file(name)), "$name was kept")
@@ -192,9 +192,9 @@ class ManagerTest {
     }
 
     @Test fun unknownAndUnsafeIdsAreRefused() {
-        assertEquals("unknown model `nope`", assertFailsWith<ModelException.UnknownModel> { runBlocking { manager.pull("nope") } }.message)
+        assertEquals("unknown model `nope`", assertFailsWith<ModelException.UnknownModel> { runBlocking { manager.pull("nope", server) } }.message)
         for (id in listOf("../escape", "a/b", "", "UP", "x".repeat(100))) {
-            val pull = assertFailsWith<ModelException.UnsafeName> { runBlocking { manager.pull(id) } }
+            val pull = assertFailsWith<ModelException.UnsafeName> { runBlocking { manager.pull(id, server) } }
             assertFalse(id.isNotEmpty() && id in pull.message.orEmpty(), "the id was echoed")
             assertFailsWith<ModelException.UnsafeName> { manager.remove(id) }
         }
@@ -213,6 +213,6 @@ class ManagerTest {
 
     @Test fun theManagerRefusesAnInvalidCatalog() {
         val bad = Catalog(listOf(model("BAD", "a" to ByteArray(1))))
-        assertFailsWith<ModelException.BadCatalog> { ModelManager(home.path, bad, server) }
+        assertFailsWith<ModelException.BadCatalog> { ModelManager(home.path, bad) }
     }
 }

@@ -1,0 +1,3 @@
+# Refused before any request is made.
+args = ["models", "pull", "whisper-huge"]
+status = 1
