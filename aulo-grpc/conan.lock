@@ -1,0 +1,9 @@
+{
+    "version": "0.5",
+    "requires": [
+        "libnghttp2/1.68.1#3a79da87678aa68876fd527ac668f52b%1793007549.341"
+    ],
+    "build_requires": [],
+    "python_requires": [],
+    "config_requires": []
+}

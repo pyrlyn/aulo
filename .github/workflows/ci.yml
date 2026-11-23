@@ -138,11 +138,11 @@ jobs:
           path: packages
           persist-credentials: false
 
-      # The JDK and what builds SQLite for Windows (aulo-store's tests compile the mingw target on
-      # every runner; mise installs Conan with uv into its pinned Python); the lint and agent tools
-      # in mise.toml are not needed to build.
+      # The JDK and what builds the C libraries with Conan: SQLite for Windows (kotlin-kit's
+      # db-native) and nghttp2 for Linux and Windows (aulo-grpc). mise installs Conan with uv into
+      # its pinned Python; the lint and agent tools in mise.toml are not needed to build.
       - if: env.RUN == 'true'
-        name: Install the JDK and the SQLite build tools (mise.toml)
+        name: Install the JDK and the C library build tools (mise.toml)
         uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
         with:
           install_args: java python uv conan cmake ninja
@@ -165,7 +165,9 @@ jobs:
           TASK: ${{ matrix.task }}
           TARGET: ${{ matrix.target }}
         run: |
-          tasks=(":aulo:linkAuloReleaseExecutable$TASK" ":aulo:linkAulodReleaseExecutable$TASK")
+          # aulo-grpc's test binary links nghttp2, which Conan builds on this runner; the
+          # executables do not link it until aulo-server does (T3.3).
+          tasks=(":aulo:linkAuloReleaseExecutable$TASK" ":aulo:linkAulodReleaseExecutable$TASK" ":aulo-grpc:linkDebugTest$TASK")
           if [ "$SKIP_TESTS" = true ]; then
             echo "::notice title=SKIP_CI_TESTS::tests skipped by SKIP_CI_TESTS"
           else
@@ -174,6 +176,7 @@ jobs:
           # linuxArm64 is cross-linked here and run by the linux-arm64 job.
           if [ "$TARGET" = linuxX64 ]; then
             tasks+=(:aulo:linkAuloReleaseExecutableLinuxArm64 :aulo:linkAulodReleaseExecutableLinuxArm64 :aulo:linkDebugTestLinuxArm64)
+            tasks+=(:aulo-grpc:linkDebugTestLinuxArm64)
           fi
           ./gradlew "${tasks[@]}" --console=plain
 

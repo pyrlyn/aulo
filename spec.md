@@ -224,6 +224,7 @@ Module roles follow the usual layering: contracts, domain, adapters, assembly, s
 | `aulo-plugin` | adapter | Manifest, discovery, grants, process and WASM hosts |
 | `aulo-skills` | adapter | `SKILL.md` discovery through `agent-ext`: an index line in the prompt, the body only on request (T11.8) |
 | `aulo-plugin-sdk` | contract | Plugin-side SDK (gRPC plugin services, manifest types) |
+| `aulo-grpc` | adapter (gRPC stack owner) | gRPC over HTTP/2 on nghttp2 for every target: listeners, framing, status, deadlines, caps (D11). Knows no aulo service |
 | `aulo-server` | assembly | gRPC services, auth, TLS |
 | `aulo` | surface | CLI binary (`aulo`) and daemon binary (`aulod`) |
 | `aulo-app` | domain | UI-agnostic client core for the native apps: gRPC client, Timeline fold, coalescing Controller, inbox, intents (cox-app pattern) |
@@ -578,6 +579,7 @@ Settled by the creator on 2026-10-07 (details in `plan/T0.*/`):
 - **D8** The repository is the public `pyrlyn/aulo`. Creator, 2026-10-07.
 - **D9** sherpa-onnx links espeak-ng (GPL-3.0) in-process; the GPL is accepted. A build that contains sherpa-onnx TTS is distributed under GPL-3.0-or-later only, so the royalty-free and commercial options of D1 do not cover it. Other GPL engines (Piper) still run as separate plugin processes. Creator, 2026-10-07 (sherpa-onnx spike, risk R1).
 - **D10** Protobuf code comes from Wire (T3.2): messages and service interfaces for all four targets. kotlinx-rpc gRPC has no Windows target and only pre-releases (`research.md` 4.9). Wire has no native gRPC transport; T3.3 chooses one. Creator, 2026-11-23.
+- **D11** The gRPC transport is aulo's own, on nghttp2 (MIT), in `aulo-grpc` (T3.3). Conan installs nghttp2 as a static library on every target: Conan Center's binary on macOS, built from the locked recipe with Kotlin/Native's clang and sysroots for Linux and Windows. Ktor's native server has no HTTP/2 (`research.md` 4.10). Creator, 2026-11-23.
 
 Open:
 
