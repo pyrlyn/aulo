@@ -29,13 +29,20 @@ Start the server first, then a client. A client started without a server shows t
 state; start the server and press Retry.
 
 Dependency versions are locked: `gradle.lockfile` in each module and
-`buildscript-gradle.lockfile` for the plugins. A build fails when it resolves a version the
-lock does not name, so after changing a dependency or a plugin regenerate them on macOS (the
-iOS configurations exist only there):
+`buildscript-gradle.lockfile` for the plugins. `gradle/verification-metadata.xml` holds the
+SHA-256 of every file the build downloads. A build fails when it resolves a version the lock
+does not name or a file whose checksum is not listed, so after changing a dependency or a
+plugin regenerate both on macOS (the iOS configurations exist only there):
 
 ```bash
 ./gradlew resolveAndLockAll --write-locks
+./gradlew --write-verification-metadata sha256 help :composeApp:jvmTest :shared:jvmTest :server:test \
+  :server:installDist :androidApp:assembleDebug :androidApp:assembleRelease \
+  :composeApp:linkDebugFrameworkIosSimulatorArm64 :composeApp:packageDistributionForCurrentOS
 ```
+
+The Compose Desktop, Skiko and Kotlin/Native files for Linux and Windows hosts are trusted by
+name in that file instead: their names carry the host, so one host cannot list the others.
 
 ### Desktop
 
