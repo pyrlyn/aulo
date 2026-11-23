@@ -19,12 +19,6 @@ import time
 
 USER = "aulo-spike"
 MARKER = "aulo-spike-marker"
-# Xvfb puts its socket here; the X server fixes the path, and the probe never creates files in it.
-X11_SOCKET_DIR = "/tmp/.X11-unix"  # NOSONAR: the X server fixes this socket directory
-
-
-def x11_socket(display: int) -> str:
-    return f"{X11_SOCKET_DIR}/X{display}"
 
 
 def main() -> int:
@@ -57,7 +51,7 @@ def main() -> int:
         os.chmod(marker, 0o600)
         file_denied = other_cannot_read(caller, marker)
         proc = start_xvfb(display)
-        socket_path = x11_socket(display)
+        socket_path = f"/tmp/.X11-unix/X{display}"
         wait_for(socket_path)
         os.chmod(socket_path, 0o700)
         socket_denied = other_cannot_connect(caller, display)
@@ -75,7 +69,7 @@ def main() -> int:
 
 def free_display() -> int:
     for number in range(90, 110):
-        if not os.path.exists(x11_socket(number)):
+        if not os.path.exists(f"/tmp/.X11-unix/X{number}"):
             return number
     raise SystemExit("no free X display")
 
@@ -131,13 +125,13 @@ def other_cannot_connect(user: str, display: int) -> bool:
         "import socket, sys\n"
         "s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)\n"
         "try:\n"
-        "    s.connect(sys.argv[1])\n"
+        "    s.connect('/tmp/.X11-unix/X' + sys.argv[1])\n"
         "except PermissionError:\n"
         "    sys.exit(0)\n"
         "sys.exit(1)\n"
     )
     result = subprocess.run(
-        ["sudo", "-u", user, sys.executable, "-c", code, x11_socket(display)],
+        ["sudo", "-u", user, sys.executable, "-c", code, str(display)],
         check=False,
     )
     return result.returncode == 0
@@ -148,11 +142,11 @@ def owner_can_connect(display: int) -> bool:
         "import socket, sys\n"
         "s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)\n"
         "s.settimeout(2)\n"
-        "s.connect(sys.argv[1])\n"
+        "s.connect('/tmp/.X11-unix/X' + sys.argv[1])\n"
         "sys.exit(0)\n"
     )
     result = subprocess.run(
-        ["sudo", "-u", USER, sys.executable, "-c", code, x11_socket(display)],
+        ["sudo", "-u", USER, sys.executable, "-c", code, str(display)],
         check=False,
     )
     return result.returncode == 0
@@ -172,7 +166,7 @@ def cleanup(display: int) -> None:
                 break
             time.sleep(0.1)
         subprocess.run(["userdel", "-r", USER], check=False, stderr=subprocess.DEVNULL)
-    socket_path = x11_socket(display)
+    socket_path = f"/tmp/.X11-unix/X{display}"
     if os.path.exists(socket_path):
         os.remove(socket_path)
 
