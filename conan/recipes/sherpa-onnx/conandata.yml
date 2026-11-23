@@ -1,0 +1,23 @@
+# The official prebuilt archives of a sherpa-onnx release, by `<os>-<arch>` of the host profile. The macOS and
+# Linux checksums match the release's checksum.txt; it lists no Windows archive, so that one was hashed when it was
+# pinned. The C API header and the licence are not in the archives; they come from the same tag.
+sources:
+  "2.0.3":
+    header:
+      url: "https://raw.githubusercontent.com/k2-fsa/sherpa-onnx/v2.0.3/sherpa-onnx/c-api/c-api.h"
+      sha256: "1f738de63a206328253ff471edda96b011fa1bd6f2a028f82967a7761abc2edd"
+    license:
+      url: "https://raw.githubusercontent.com/k2-fsa/sherpa-onnx/v2.0.3/LICENSE"
+      sha256: "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    Macos-armv8:
+      url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.3/sherpa-onnx-v2.0.3-osx-arm64-static-lib.tar.bz2"
+      sha256: "c86468ad8f79b679550f0865cc1a67747f58b8cc8780623ed7d8367fd4b541a3"
+    Linux-x86_64:
+      url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.3/sherpa-onnx-v2.0.3-linux-x64-shared-lib.tar.bz2"
+      sha256: "898e710a00ae0ed64e82d8696f65e40969e18c65e664b41fa80c52c4d865bd33"
+    Linux-armv8:
+      url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.3/sherpa-onnx-v2.0.3-linux-aarch64-shared-cpu-lib.tar.bz2"
+      sha256: "e67c22b1d06a20cd5e1577d14be2d80d9be7cf555dc0732b9af3dbc37843a5dc"
+    Windows-x86_64:
+      url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.3/sherpa-onnx-v2.0.3-win-x64-shared-MT-Release-lib.tar.bz2"
+      sha256: "61a0b0371b54554c65068f994c83de482e78928fa9d0b7dfb7c35a451595e7fb"

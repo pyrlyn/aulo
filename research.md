@@ -375,7 +375,7 @@ Versions: crates.io API `max_stable_version` (or newest pre-release) and GitHub 
 |---|---|---|---|---|
 | whisper.cpp | https://github.com/ggml-org/whisper.cpp | v1.9.5, 2026-10-06 | yes | MIT, C/C++, Metal/CUDA |
 | `whisper-rs` | https://codeberg.org/tazz4843/whisper-rs (moved from GitHub) | 0.16.0, 2026-03-12 | yes | bindings to whisper.cpp |
-| **sherpa-onnx** (+ official `sherpa-onnx` crate) | https://github.com/k2-fsa/sherpa-onnx | v1.13.8, 2026-09-10 (crate 1.13.8) | yes, very active | Apache-2.0; one Rust crate covers streaming Zipformer, **Parakeet TDT**, Whisper, **Moonshine v2**, SenseVoice, Qwen3-ASR, plus VAD, KWS, TTS, diarization, speaker ID, speech enhancement — `rust-api-examples/examples/` |
+| **sherpa-onnx** (+ official `sherpa-onnx` crate) | https://github.com/k2-fsa/sherpa-onnx | v2.0.3, 2026-11-22 (checked 2026-11-23; was v1.13.8 / crate 1.13.8 on 2026-09-10) | yes, very active | Apache-2.0; C API bound from Kotlin/Native through a local Conan recipe over the prebuilt archives (`docs/spikes/sherpa-onnx.md`); one Rust crate covers streaming Zipformer, **Parakeet TDT**, Whisper, **Moonshine v2**, SenseVoice, Qwen3-ASR, plus VAD, KWS, TTS, diarization, speaker ID, speech enhancement — `rust-api-examples/examples/` |
 | `sherpa-rs` (3rd-party) | https://github.com/thewh1teagle/sherpa-rs | 0.6.8, 2025-10-05 | slowing | superseded by official crate |
 | Parakeet TDT 0.6B v3 | https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3 | modified 2026-08-05 | yes | CC-BY-4.0, 25 languages per HF tags incl. **ru** and uk; NeMo repo now `NVIDIA-NeMo/Speech` v3.0.0 2026-08-07 |
 | `parakeet-rs` | https://github.com/altunenes/parakeet-rs | 0.3.8, 2026-09-23 | yes | ONNX via `ort` |
@@ -395,7 +395,7 @@ Versions: crates.io API `max_stable_version` (or newest pre-release) and GitHub 
 | Piper (new home) | https://github.com/OHF-Voice/piper1-gpl | v1.8.0, 2026-09-04 | yes | **GPL-3.0** now; old `rhasspy/piper` (MIT) archived; voices MIT on HF `rhasspy/piper-voices` |
 | `piper-rs` + `espeak-rs` | https://github.com/thewh1teagle/piper-rs | 0.2.0 / 0.2.0, 2026-05-21 | yes | phonemizer via espeak-ng (GPL-3.0) — license impact |
 | Kokoro-82M | https://huggingface.co/hexgrad/Kokoro-82M | weights Apache-2.0, 2025-04-10 | model frozen | run via sherpa-onnx (`kokoro_tts_en.rs`) or `kokoro-tts` crate 0.3.3 (2026-06-01) |
-| sherpa-onnx TTS | (above) | 1.13.8 | yes | Kokoro, Kitten, Matcha, VITS/Piper, Pocket TTS, Supertonic, ZipVoice |
+| sherpa-onnx TTS | (above) | 2.0.3 | yes | Kokoro, Kitten, Matcha, VITS/Piper, Pocket TTS, Supertonic, ZipVoice. Since 2.0.0 no espeak-ng or piper-phonemize (CHANGELOG @ v2.0.3, #4055): text goes through a lexicon and unknown words are skipped, or the caller passes phonemes (`phoneme_codepoints`) |
 | espeak-ng | https://github.com/espeak-ng/espeak-ng | 1.52.0, 2024-12-12 (push 2026-09) | slow | GPL-3.0, robotic but tiny |
 | System TTS | `tts` crate https://github.com/ndarilek/tts-rs | 0.26.3, 2024-07-06 | stale | wraps AVSpeech/SAPI/Speech Dispatcher; or call `say` / AVSpeechSynthesizer via objc2 |
 | Kyutai TTS | https://huggingface.co/kyutai/tts-1.6b-en_fr | 2025-09-11 | moderate | streaming, CC-BY-4.0 |
@@ -405,10 +405,10 @@ Versions: crates.io API `max_stable_version` (or newest pre-release) and GitHub 
 
 Kokoro catalog entry `kokoro-multi-lang-v1_0` (T7.9), checked 2026-10-07:
 
-- Archive: release `tts-models` asset `kokoro-multi-lang-v1_0.tar.bz2` of https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models — GitHub API digest `sha256:c5f7e2d2caf082bc1d20fb70334a61d99d20b484500aad32e7cf84c128ea3298`, 349,906,910 bytes (asset updated 2026-09-08). Per-file sizes and SHA-256 in `crates/aulo-models/data/models.json` were computed from that archive (377 files, 401,239,297 bytes).
+- Archive: release `tts-models` asset `kokoro-multi-lang-v1_0.tar.bz2` of https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models — GitHub API digest `sha256:c5f7e2d2caf082bc1d20fb70334a61d99d20b484500aad32e7cf84c128ea3298`, 349,906,910 bytes (asset updated 2026-09-08). Re-uploaded 2026-10-26: now `sha256:60703707bc05ccd48d60e1eb723f38b07d6e474795a0b6a588d7220400e0f7a4`, 349,886,476 bytes (GitHub API, checked 2026-11-23); the per-file list below was not re-checked against it. Per-file sizes and SHA-256 in `crates/aulo-models/data/models.json` were computed from that archive (377 files, 401,239,297 bytes).
 - Download: the same files from https://huggingface.co/csukuangfj/kokoro-multi-lang-v1_0 at commit `f7b96bb6bef5c5da4d3aa4f4e0498fbbf62dc78b`; all 377 sizes and hashes (LFS SHA-256, git blob SHA-1) matched the archive.
 - Voice ids (sid 0–53): `scripts/kokoro/v1.0/generate_voices_bin.py` at https://github.com/k2-fsa/sherpa-onnx/tree/v1.13.8, matching the model's `speaker2id` metadata. Languages and grades: https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md. No Russian voice.
-- Licences: weights Apache-2.0 (https://huggingface.co/hexgrad/Kokoro-82M); `espeak-ng-data` GPL-3.0-or-later (spec §17 D9).
+- Licences: weights Apache-2.0 (https://huggingface.co/hexgrad/Kokoro-82M); `espeak-ng-data` GPL-3.0-or-later (spec §17 D9). sherpa-onnx 2.x never reads `espeak-ng-data`; it needs `lexicon-us-en.txt` (178,401 entries, 6.21% of FLEURS en dev words missing, `docs/spikes/sherpa-onnx.md` R6).
 
 ### 4.3 VAD, turn detection, wake word
 
@@ -423,7 +423,7 @@ Kokoro catalog entry `kokoro-multi-lang-v1_0` (T7.9), checked 2026-10-07:
 | openWakeWord | https://github.com/dscripka/openWakeWord | v0.6.0, 2024-02-11 (push 2025-12) | low | code Apache-2.0 but **pre-trained models CC BY-NC-SA 4.0** (README); Rust port `oww-rs` 0.3.3 (2026-06-12) |
 | Porcupine | https://github.com/Picovoice/porcupine | v4.0, 2025-12-11 | yes | needs Picovoice **AccessKey**; v4 bindings list has **no Rust** (`binding/`: android, dotnet, flutter, ios, java, nodejs, python, react(-native), web); `pv_porcupine` crate stale |
 | `rustpotter` | https://github.com/GiviMAD/rustpotter | 3.0.2, **2023-10-01** | no | avoid |
-| **sherpa-onnx KWS** | (above) `keyword_spotter.rs` | 1.13.8 | yes | open-vocabulary keywords (no per-word training), Apache-2.0 — best Rust wake-word option |
+| **sherpa-onnx KWS** | (above) `keyword_spotter.rs` | 2.0.3 | yes | open-vocabulary keywords (no per-word training), Apache-2.0 — best Rust wake-word option |
 
 ### 4.4 Audio I/O and echo cancellation
 
@@ -436,7 +436,7 @@ Kokoro catalog entry `kokoro-multi-lang-v1_0` (T7.9), checked 2026-10-07:
 | `webrtc-audio-processing` | https://github.com/tonarino/webrtc-audio-processing | 2.1.0, 2026-05-13 | yes | WebRTC APM: AEC3, NS, AGC (C++ build) |
 | `aec3` (pure Rust port) | https://github.com/RubyBit/aec3-rs | 0.4.0, 2026-09-16 | young | evaluate before relying on it |
 | macOS Voice Processing I/O | `AVAudioInputNode.setVoiceProcessingEnabled` — https://developer.apple.com/videos/play/wwdc2019/510/, https://developer.apple.com/videos/play/wwdc2023/10235/ | OS | yes | system AEC/NS/AGC; needs both I/O nodes in VP mode, engine stopped when enabling, may change channel count |
-| sherpa-onnx speech enhancement | GTCRN / DPDFNet examples | 1.13.8 | yes | denoise, not AEC |
+| sherpa-onnx speech enhancement | GTCRN / DPDFNet examples | 2.0.3 | yes | denoise, not AEC |
 
 ### 4.5 Agent plumbing: LLM clients, MCP, plugins
 
@@ -609,6 +609,14 @@ Checked 2026-11-23.
 - **Range requests**: `Range: bytes=N-`, a `206` with `Content-Range: bytes N-M/L`, a `200` from a server that ignores the range, and `416` for an unsatisfiable range — RFC 9110 §14 (https://www.rfc-editor.org/rfc/rfc9110#section-14).
 - **Streaming SHA-256**: okio's `HashingSink.sha256` is in okio's common code, so all four native targets have it — https://github.com/lysine-dev/okio/blob/parent-3.18.2/okio/src/commonMain/kotlin/okio/HashingSink.kt (okio 3.18.2, the version Wire 7.2.2 brings; `github.com/square/okio` now redirects there). It replaces a second hashing library (ketch uses KotlinCrypto `sha2`, `apps/ketch`).
 - **Durability**: kotlin-kit's `appendSink` cannot fsync (`fs/Entries.kt`, pyrlyn/packages 0.0.5), so a verified file is renamed without an fsync. A power loss can leave a short file under the final name; `aulo models` tells it apart by the pinned size and downloads it again.
+
+### 4.15 Markdown parsing for speech (T7.15)
+
+The speakable-text normalizer in `aulo-voice` needs a CommonMark parser with GFM tables and strikethrough that runs on every Kotlin/Native target.
+
+- **org.jetbrains:markdown 0.7.18** (JetBrains, the parser behind IntelliJ's Markdown support). Apache-2.0; latest version on Maven Central, published 2026-10-15; native artifacts for `macosArm64`, `linuxX64`, `linuxArm64` and `mingwX64`, none with dependencies of their own. Sources: https://repo1.maven.org/maven2/org/jetbrains/markdown/0.7.18/markdown-0.7.18.pom and https://repo1.maven.org/maven2/org/jetbrains/markdown/maven-metadata.xml (checked 2026-11-23); https://github.com/JetBrains/markdown.
+- API in 0.7.18 (from its sources jar on Maven Central, checked 2026-11-23): `MarkdownParser(flavour, assertionsEnabled, cancellationToken)` and `buildMarkdownTreeFromString(CharSequence)`; the one-argument constructor and the `String` overload are deprecated. `GFMFlavourDescriptor` adds tables, strikethrough, autolinks, math, alerts and highlights. `EntityConverter.replaceEntities` escapes for HTML output (it turns `&` back into `&amp;`), so it cannot decode entities into plain text; `Entities.map` is the public name-to-code-point table.
+- Measured here (`SpeakableTest`, macOS debug build): parse time grows with the square of block-quote nesting depth — 4000 nested `>` take 0.8 s and 64 KiB of `>` take about 3.5 minutes — so the normalizer keeps at most 16 quote and list markers per line before parsing. Other hostile 64 KiB inputs (nested brackets, emphasis, backticks, `<`) parse in about 1 s.
 
 ## Part 5. Conclusions and ideas to borrow (for a Rust voice computer-control agent)
 
