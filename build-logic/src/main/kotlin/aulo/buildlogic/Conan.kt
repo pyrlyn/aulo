@@ -27,6 +27,7 @@ import org.gradle.work.DisableCachingByDefault
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import java.io.File
+import java.io.FileOutputStream
 import java.util.Properties
 import javax.inject.Inject
 
@@ -107,36 +108,57 @@ abstract class ConanInstallTask
             out.deleteRecursively()
             val profileDir = profiles.get().asFile
             val log = temporaryDir.resolve("conan.log")
+            log.delete()
+            // A recipe Conan Center lacks lives in `conan/recipes/<name>`; it reaches this build's
+            // cache only by export, and the lockfile then pins the revision exported.
+            val local = localRecipes(profileDir)
+            local.forEach { conan(log, listOf("export", it.path), toolchain = false) }
+            // Such a recipe packages a verified download, so it is "built" even where nothing
+            // else may be.
+            val build = if (fromSource.get()) listOf("--build=missing") else buildOnly(local.map { it.name })
+            conan(
+                log,
+                listOf(
+                    "install",
+                    conanfile.get().asFile.path,
+                    "--lockfile=${lockfile.get().asFile.path}",
+                    "-pr:h=${profileDir.resolve("${target.get()}.profile").path}",
+                    "-pr:b=${profileDir.resolve("build.profile").path}",
+                ) + build +
+                    listOf(
+                        "--deployer=direct_deploy",
+                        "--deployer-folder=${out.path}",
+                        "--output-folder=${out.resolve("generators").path}",
+                    ),
+                toolchain = fromSource.get(),
+            )
+        }
+
+        /** Runs one conan command, appending its output to [log]; a stream per command, as Gradle closes it after each. */
+        private fun conan(
+            log: File,
+            args: List<String>,
+            toolchain: Boolean,
+        ) {
             val exit =
-                log.outputStream().use { stream ->
-                    try {
+                try {
+                    FileOutputStream(log, true).use { stream ->
                         exec
                             .exec {
-                                commandLine(
-                                    "conan",
-                                    "install",
-                                    conanfile.get().asFile.path,
-                                    "--lockfile=${lockfile.get().asFile.path}",
-                                    "-pr:h=${profileDir.resolve("${target.get()}.profile").path}",
-                                    "-pr:b=${profileDir.resolve("build.profile").path}",
-                                    if (fromSource.get()) "--build=missing" else "--build=never",
-                                    "--deployer=direct_deploy",
-                                    "--deployer-folder=${out.path}",
-                                    "--output-folder=${out.resolve("generators").path}",
-                                )
+                                commandLine(listOf("conan") + args)
                                 environment("CONAN_HOME", conanHome.get().asFile.path)
-                                if (fromSource.get()) environment(toolchain())
+                                if (toolchain) environment(toolchain())
                                 standardOutput = stream
                                 errorOutput = stream
                                 isIgnoreExitValue = true
                             }.exitValue
-                    } catch (e: GradleException) {
-                        throw GradleException("Could not run conan; `mise install` provides it, CMake and Ninja (mise.toml)", e)
                     }
+                } catch (e: GradleException) {
+                    throw GradleException("Could not run conan; `mise install` provides it, CMake and Ninja (mise.toml)", e)
                 }
             if (exit != 0) {
                 val tail = log.readLines().takeLast(LOG_TAIL).joinToString("\n")
-                throw GradleException("conan install failed for ${target.get()} (exit $exit). The end of $log:\n$tail")
+                throw GradleException("conan ${args.first()} failed for ${target.get()} (exit $exit). The end of $log:\n$tail")
             }
         }
 
@@ -158,6 +180,18 @@ abstract class ConanInstallTask
         }
     }
 
+/** The recipes kept in the repository, one directory with a `conanfile.py` each under `conan/recipes`. */
+internal fun localRecipes(profiles: File): List<File> =
+    profiles
+        .resolve("recipes")
+        .listFiles { dir -> dir.resolve("conanfile.py").isFile }
+        .orEmpty()
+        .sortedBy { it.name }
+
+/** `--build` arguments that build only the packages named, and with no name build nothing. */
+internal fun buildOnly(packages: List<String>): List<String> =
+    if (packages.isEmpty()) listOf("--build=never") else packages.map { "--build=missing:$it/*" }
+
 /** The `conan { }` block of a module that applies `aulo.conan`. */
 abstract class ConanExtension
     @Inject
@@ -167,11 +201,16 @@ abstract class ConanExtension
         /**
          * Binds the static library [staticLibrary] of the Conan package [pkg] on every native target
          * as the cinterop [name], described by `src/nativeInterop/cinterop/<name>.def`.
+         *
+         * Without [staticLibrary] nothing is embedded in the binding: the package's `lib` directory
+         * goes on the linker path of the target's binaries, and the `.def` file names the libraries
+         * with `-l` in a per-platform `linkerOpts`. That suits a package of many libraries, or of
+         * shared ones, whose set differs by platform.
          */
         fun cinterop(
             name: String,
             pkg: String,
-            staticLibrary: String,
+            staticLibrary: String? = null,
         ) {
             project.extensions.getByType<KotlinMultiplatformExtension>().targets.withType<KotlinNativeTarget>().configureEach {
                 val install = project.tasks.named<ConanInstallTask>(conanInstallTaskName(this.name))
@@ -185,8 +224,9 @@ abstract class ConanExtension
                     compilations.getByName("main").cinterops.create(name) {
                         definitionFile.set(project.layout.projectDirectory.file("src/nativeInterop/cinterop/$name.def"))
                         includeDirs(root.resolve("include"))
-                        extraOpts("-libraryPath", root.resolve("lib").path, "-staticLibrary", staticLibrary)
+                        if (staticLibrary != null) extraOpts("-libraryPath", root.resolve("lib").path, "-staticLibrary", staticLibrary)
                     }
+                if (staticLibrary == null) binaries.all { linkerOpts("-L${root.resolve("lib").path}") }
                 project.tasks.named(interop.interopProcessingTaskName) {
                     // The options above carry paths only: this makes the binding wait for Conan and
                     // rebuild when Conan installs something else.

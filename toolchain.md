@@ -61,7 +61,8 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 
 Static libraries a module binds through cinterop: the version in its `conanfile.txt`, the recipe
 revision in its `conan.lock`. Conan Center's binary on macOS; built from the recipe with
-Kotlin/Native's own clang and sysroots for Linux and Windows (`research.md` 4.10).
+Kotlin/Native's own clang and sysroots for Linux and Windows (`research.md` 4.10). A package
+missing from Conan Center has a recipe in `conan/recipes/<name>/`.
 
 | Package | Where | Source | Why here |
 | --- | --- | --- | --- |
