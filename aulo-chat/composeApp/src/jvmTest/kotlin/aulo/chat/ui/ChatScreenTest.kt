@@ -198,9 +198,10 @@ class ChatScreenTest {
     @Test
     fun `the server address comes from the environment and a bad port is refused`() {
         assertEquals(ServerEndpoint("127.0.0.1", 50051), endpointFromEnv(emptyMap()))
+        // 192.0.2.0/24 is reserved for documentation (RFC 5737), so the test names no real host.
         assertEquals(
-            ServerEndpoint("10.0.0.5", 6000),
-            endpointFromEnv(mapOf("AULO_CHAT_HOST" to "10.0.0.5", "AULO_CHAT_PORT" to "6000")),
+            ServerEndpoint("192.0.2.5", 6000),
+            endpointFromEnv(mapOf("AULO_CHAT_HOST" to "192.0.2.5", "AULO_CHAT_PORT" to "6000")),
         )
         assertNull(endpointFromEnv(mapOf("AULO_CHAT_PORT" to "70000")))
         assertNull(endpointFromEnv(mapOf("AULO_CHAT_PORT" to "grpc")))
