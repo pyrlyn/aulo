@@ -47,6 +47,7 @@ kotlin {
             implementation(project(":aulo-config"))
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.crypto.rand)
+            implementation(project(":aulo-types"))
         }
         nativeMain.dependencies {
             // The owner-only socket directory and where the first token is kept; its hash is stored.
