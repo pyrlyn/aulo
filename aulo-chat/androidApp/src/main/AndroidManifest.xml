@@ -3,10 +3,14 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- usesCleartextTraffic is off, so every network stack that asks Android may not use
+         clear text. gRPC over OkHttp does not ask: the plaintext channel to the development
+         server is chosen in ChatRemote, and this flag does not stop it. -->
     <application
         android:name=".ChatApplication"
         android:allowBackup="false"
         android:label="aulo chat"
+        android:usesCleartextTraffic="false"
         android:theme="@android:style/Theme.Material.NoActionBar">
         <activity
             android:name=".MainActivity"

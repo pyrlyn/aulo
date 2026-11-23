@@ -179,5 +179,7 @@ web target yet (see below), so the Web mockups have no code counterpart.
 - **Dark theme only**, English only.
 - **No automatic reconnect.** Retry on the offline banner reconnects.
 - **Plaintext to the server.** TLS and tokens arrive with `aulod`'s own transport (spec §11).
+  On Android the manifest turns clear text off, but gRPC over OkHttp does not consult that
+  setting, so the channel to the server is plaintext there too.
 - **Model text is plain text.** It is untrusted input, so nothing in it is interpreted;
   markdown rendering is a later, deliberate step.
