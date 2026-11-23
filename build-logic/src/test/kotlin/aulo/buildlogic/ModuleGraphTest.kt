@@ -97,6 +97,16 @@ class ModuleGraphTest {
     }
 
     @Test
+    fun nghttp2CountsAsTheGrpcStack() {
+        val graph =
+            listOf(
+                node(":aulo-grpc", ModuleRole.LIBRARY, cinterops = setOf("nghttp2")),
+                node(":aulo-server", ModuleRole.LIBRARY, setOf("com.squareup.wire:wire-grpc-server")),
+            )
+        assertEquals(listOf("the gRPC stack has more than one owner module: :aulo-grpc, :aulo-server"), ModuleGraph.violations(graph))
+    }
+
+    @Test
     fun everyModuleDeclaresARole() {
         assertEquals(
             listOf(":aulo-x: declares no role (set aulo { role = ... } in its build file)"),
