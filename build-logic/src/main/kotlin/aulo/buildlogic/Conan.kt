@@ -5,6 +5,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileSystemOperations
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -21,11 +22,14 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.named
+import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.withType
 import org.gradle.process.ExecOperations
 import org.gradle.work.DisableCachingByDefault
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.plugin.mpp.Executable
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.TestExecutable
 import java.io.File
 import java.io.FileOutputStream
 import java.util.Properties
@@ -241,5 +245,39 @@ abstract class ConanExtension
                         .withPathSensitivity(PathSensitivity.RELATIVE)
                 }
             }
+        }
+
+        /**
+         * Copies the shared libraries of the Conan package [pkg] (the `.so` files in `lib` on Linux, the `.dll` files in `bin`
+         * on Windows) next to every executable and test binary, where the loader looks: the `.def`
+         * gives Linux binaries the RPATH `$ORIGIN`, and Windows searches the `.exe`'s directory
+         * first. A package of static libraries has none, so nothing is copied on macOS.
+         */
+        fun bundleSharedLibraries(pkg: String) {
+            val fs = project.objects.newInstance<Injected>().fs
+            project.extensions.getByType<KotlinMultiplatformExtension>().targets.withType<KotlinNativeTarget>().configureEach {
+                val install = project.tasks.named<ConanInstallTask>(conanInstallTaskName(this.name))
+                val root = install.flatMap { it.outputDir.dir("direct_deploy/$pkg") }
+                binaries.all {
+                    if (this !is Executable && this !is TestExecutable) return@all
+                    linkTaskProvider.configure {
+                        inputs.dir(install.flatMap { it.outputDir }).withPropertyName("conan").withPathSensitivity(PathSensitivity.RELATIVE)
+                        val out = destinationDirectory
+                        doLast {
+                            fs.copy {
+                                from(root.map { it.dir("lib") }) { include("*.so", "*.so.*") }
+                                from(root.map { it.dir("bin") }) { include("*.dll") }
+                                into(out)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /** Gradle services a configuration-cache-safe action may hold. */
+        interface Injected {
+            @get:Inject
+            val fs: FileSystemOperations
         }
     }
