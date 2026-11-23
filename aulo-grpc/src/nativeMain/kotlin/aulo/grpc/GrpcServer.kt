@@ -61,7 +61,7 @@ class GrpcServer(
             }
             listeners += listener to bound
         }
-        scope.launch { accept(listener) }
+        scope.launch { accept(listener, bound) }
         return bound
     }
 
@@ -85,7 +85,10 @@ class GrpcServer(
         selector.close()
     }
 
-    private suspend fun accept(listener: ServerSocket) {
+    private suspend fun accept(
+        listener: ServerSocket,
+        endpoint: Endpoint,
+    ) {
         while (true) {
             val socket =
                 try {
@@ -100,7 +103,7 @@ class GrpcServer(
             val admitted =
                 mutex.withLock {
                     if (closing || connections.size >= limits.maxConnections) return@withLock false
-                    val connection = ServerConnection(socket, limits, job, handlers)
+                    val connection = ServerConnection(socket, endpoint, limits, job, handlers)
                     connections[connection] = scope.launch { serve(connection) }
                     true
                 }
