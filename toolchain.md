@@ -73,6 +73,7 @@ Kotlin/Native's own clang and sysroots for Linux and Windows (`research.md` 4.10
 | Package | Where | Source | Why here |
 | --- | --- | --- | --- |
 | libnghttp2 (1.68.1) | local (`aulo-grpc/conanfile.txt`) | https://github.com/nghttp2/nghttp2 | HTTP/2 under aulo's gRPC transport on every target (spec §17 D11; MIT) |
+| mbedtls (3.6.7) | local (`aulo-grpc/conanfile.txt`) | https://github.com/Mbed-TLS/mbedtls | TLS 1.3 for TCP listeners and clients, self-signed certificates (T3.8; Apache-2.0 OR GPL-2.0-or-later, taken as Apache-2.0) |
 
 Native libraries used by the speech and audio modules (sherpa-onnx, whisper.cpp, libopus,
 and so on) are chosen and recorded here by the task that first wires each of them, including

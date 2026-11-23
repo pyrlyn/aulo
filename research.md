@@ -569,6 +569,20 @@ Checked 2026-11-23. aulod keeps its first API token in the OS keychain and only 
   - Checked against a real Secret Service: Ubuntu 24.04 arm64 in Colima, `libsecret-1-0` and `gnome-keyring` from the Ubuntu archive, under `dbus-run-session` with an unlocked keyring; the round-trip test passed with no fallback (2026-11-23).
   - Conan Center has a `libsecret` recipe (0.20.x and 0.21.x, listed 2026-11-23, https://conan.io/center/recipes/libsecret); not used, since it would link LGPL code into aulo.
 
+### 4.12 TLS for TCP listeners (T3.8)
+
+Checked 2026-11-23. The creator chose Mbed TLS (T3.8) for TLS 1.3 on all four targets through Conan.
+
+- **Licence.** Apache-2.0 OR GPL-2.0-or-later; aulo takes it under Apache-2.0 (`LICENSE` in the Conan package of `mbedtls/3.6.7`, the same text as https://github.com/Mbed-TLS/mbedtls/blob/mbedtls-3.6.7/LICENSE).
+- **Versions.** Releases: 3.6.8, 4.1.2 and 4.3.0 (2026-11-16); 3.6.7 (2026-07-07) — https://github.com/Mbed-TLS/mbedtls/releases. The 3.6 LTS branch is supported until 2027-03-28; the 3.6.8 notes recommend 4.1.x LTS for TLS users (same page).
+- **Conan Center.** `conan list "mbedtls/*" -r conancenter` (Conan 2.33.0, 2026-11-23): newest 3.6.7, no 4.x; `tf-psa-crypto`, which 4.x needs, is not there either. The recipe's `config.yml` on `master` of https://github.com/conan-io/conan-center-index lists the same.
+- **Configuration of the Conan build** (the deployed `mbedtls/mbedtls_config.h`, 3.6.7): TLS 1.2 and 1.3, TLS 1.3 ephemeral key exchange, ALPN, `KEEP_PEER_CERTIFICATE`, x509 write, PEM write, PSA crypto; no `THREADING_C`, so aulo's shim serialises every call; the p256-m driver is off.
+- **Advisories fixed in 3.6.8, against aulo's use of 3.6.7** (https://github.com/Mbed-TLS/mbedtls/releases/tag/mbedtls-3.6.8, each linked advisory under https://mbed-tls.readthedocs.io/en/latest/security-advisories/):
+  - CVE-2026-115490 (a TLS 1.3 client finishing a handshake without key material, high) needs a client configuration that permits both TLS 1.2 and 1.3; aulo sets the minimum and maximum to 1.3 on every configuration, which is the advisory's workaround.
+  - CVE-2026-93845 (p256-m side channel) needs the p256-m driver, which is off.
+  - The TLS 1.3 ticket leak (CVE-2026-115491) needs a valid ticket; aulo's server issues none. The rest concern TLS 1.2, renegotiation, CRLs, SAN matching, PKCS5/12 or EC J-PAKE, which aulo does not use, or local side channels (Spectre-PHT, AES table reads) that need an attacker's code on the same machine.
+  - So 3.6.7 is usable for T3.8; 3.6.8 replaces it once Conan Center publishes it (a version bump needs the creator's permission).
+
 ## Part 5. Conclusions and ideas to borrow (for a Rust voice computer-control agent)
 
 1. **Two-brain voice design.** Front: cheap full-duplex/realtime voice (GPT-Live 1, Gemini 3.8 Live, xAI Voice
