@@ -1,0 +1,5 @@
+package = aulo.grpc.nghttp2
+headers = nghttp2/nghttp2.h
+headerFilter = nghttp2/*
+# On Windows the header declares every function as imported from a DLL unless told the library is static.
+compilerOpts.mingw = -DNGHTTP2_STATICLIB

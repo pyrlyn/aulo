@@ -19,9 +19,9 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 | shellcheck | mise (`mise.toml` pins 0.11.0) | Checks `run:` scripts inside jactionlint | https://github.com/koalaman/shellcheck |
 | buf (1.73.0) | brew | Lints and builds the protos, `buf format`, breaking-change check (`proto/buf.yaml`) | https://github.com/bufbuild/buf |
 | mise | brew | Pins the JDK, just, jactionlint, hk, shellcheck, Python and the agent CLIs | https://github.com/jdx/mise |
-| conan (2.33.0) | mise (`mise.toml`) | Builds the static SQLite that kotlin-kit's `db-native` links into the Windows binaries (`kotlin-kit/db-native/conan.lock`) | https://github.com/conan-io/conan |
-| cmake (3.31.12) | mise (`mise.toml`) | Conan's build of SQLite for Windows | https://github.com/Kitware/CMake |
-| ninja (1.13.2) | mise (`mise.toml`) | CMake's generator for that build on a Windows host | https://github.com/ninja-build/ninja |
+| conan (2.33.0) | mise (`mise.toml`) | Installs the static C libraries: SQLite that kotlin-kit's `db-native` links into the Windows binaries (`kotlin-kit/db-native/conan.lock`), and the packages in the Conan table below (`aulo.conan` plugin, profiles in `conan/`) | https://github.com/conan-io/conan |
+| cmake (3.31.12) | mise (`mise.toml`) | Conan's builds of those libraries from source (every target but macOS) | https://github.com/Kitware/CMake |
+| ninja (1.13.2) | mise (`mise.toml`) | CMake's generator for those builds on a Windows host | https://github.com/ninja-build/ninja |
 | uv (0.13.9) | mise (`mise.toml`) | Installs conan for mise (a PyPI package) | https://github.com/astral-sh/uv |
 | protoc-gen-doc (v1.5.1) | buf remote plugin `buf.build/community/pseudomuto-doc` (`buf.gen.yaml`), nothing to install | Generates the Markdown gRPC API reference in `docs/api/` (`just api-docs`) | https://github.com/pseudomuto/protoc-gen-doc |
 
@@ -53,6 +53,16 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 | org.jetbrains.kotlin:kotlin-test | local (`commonTest`) | https://github.com/JetBrains/kotlin | Unit tests |
 | org.jetbrains.kotlin:kotlin-test-junit5 | local (`build-logic` tests) | https://github.com/JetBrains/kotlin | Tests of the module-graph rules on the JVM |
 | org.junit.platform:junit-platform-launcher | local (`build-logic` tests) | https://github.com/junit-team/junit-framework | Gradle 9 needs it on the test runtime classpath |
+
+## Conan
+
+Static libraries a module binds through cinterop: the version in its `conanfile.txt`, the recipe
+revision in its `conan.lock`. Conan Center's binary on macOS; built from the recipe with
+Kotlin/Native's own clang and sysroots for Linux and Windows (`research.md` 4.10).
+
+| Package | Where | Source | Why here |
+| --- | --- | --- | --- |
+| libnghttp2 (1.68.1) | local (`aulo-grpc/conanfile.txt`) | https://github.com/nghttp2/nghttp2 | HTTP/2 under aulo's gRPC transport on every target (spec §17 D11; MIT) |
 
 Native libraries used by the speech and audio modules (sherpa-onnx, whisper.cpp, libopus,
 and so on) are chosen and recorded here by the task that first wires each of them, including
