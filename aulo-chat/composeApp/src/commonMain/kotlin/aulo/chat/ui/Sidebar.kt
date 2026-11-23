@@ -266,7 +266,7 @@ private fun ChatRow(
                         RenameField(chat, actions)
                     } else {
                         Text(
-                            highlight(chat.title.ifBlank { "New chat" }, query),
+                            highlight(chatTitle(chat.title), query),
                             style = MaterialTheme.typography.titleSmall,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -277,7 +277,7 @@ private fun ChatRow(
                 }
                 if (selected || hovered || menuOpen) {
                     IconButton(onClick = { menuOpen = true }, modifier = Modifier.size(28.dp)) {
-                        Icon(ChatIcons.More, contentDescription = "Actions for ${chat.title}", modifier = Modifier.size(16.dp))
+                        Icon(ChatIcons.More, contentDescription = "Actions for ${chatTitle(chat.title)}", modifier = Modifier.size(16.dp))
                     }
                 } else {
                     Text(
@@ -449,7 +449,7 @@ private fun SectionHeader(text: String) {
 }
 
 @Composable
-private fun HitRow(hit: MessageHit, chatTitle: String?, query: String, nowMs: Long, onClick: () -> Unit) {
+private fun HitRow(hit: MessageHit, title: String?, query: String, nowMs: Long, onClick: () -> Unit) {
     val colors = LocalChatColors.current
     Surface(
         onClick = onClick,
@@ -461,7 +461,7 @@ private fun HitRow(hit: MessageHit, chatTitle: String?, query: String, nowMs: Lo
         Row(Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    chatTitle?.ifBlank { null } ?: "New chat",
+                    chatTitle(title),
                     style = MaterialTheme.typography.labelSmall,
                     color = colors.textMuted,
                     maxLines = 1,

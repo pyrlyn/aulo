@@ -71,7 +71,7 @@ fun ChatWindow(
     deleting?.let { chat ->
         ConfirmDialog(
             title = "Delete this chat?",
-            body = "“${chat.title.ifBlank { "New chat" }}” and its messages are deleted on the server and on this " +
+            body = "“${chatTitle(chat.title)}” and its messages are deleted on the server and on this " +
                 "device. This cannot be undone.",
             confirm = "Delete",
             onConfirm = { onConfirmDelete(chat) },
@@ -90,7 +90,7 @@ private fun ChatHeader(state: ChatUiState, actions: ChatActions, list: ChatListA
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
-            text = state.chat?.title?.ifBlank { null } ?: "New chat",
+            text = chatTitle(state.chat?.title),
             style = MaterialTheme.typography.titleMedium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

@@ -113,6 +113,9 @@ internal fun ChatBody(state: ChatUiState, actions: ChatActions, modifier: Modifi
     }
 }
 
+/** A chat gets its title from the server after the first answer; until then it is a new chat. */
+internal fun chatTitle(title: String?): String = title?.ifBlank { null } ?: "New chat"
+
 @Composable
 private fun TopBar(state: ChatUiState, actions: ChatActions) {
     val colors = LocalChatColors.current
@@ -124,7 +127,7 @@ private fun TopBar(state: ChatUiState, actions: ChatActions) {
         ) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    text = state.chat?.title?.ifBlank { null } ?: "New chat",
+                    text = chatTitle(state.chat?.title),
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
