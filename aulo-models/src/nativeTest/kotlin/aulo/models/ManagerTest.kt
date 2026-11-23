@@ -192,7 +192,10 @@ class ManagerTest {
     }
 
     @Test fun unknownAndUnsafeIdsAreRefused() {
-        assertEquals("unknown model `nope`", assertFailsWith<ModelException.UnknownModel> { runBlocking { manager.pull("nope", server) } }.message)
+        assertEquals(
+            "unknown model `nope`",
+            assertFailsWith<ModelException.UnknownModel> { runBlocking { manager.pull("nope", server) } }.message,
+        )
         for (id in listOf("../escape", "a/b", "", "UP", "x".repeat(100))) {
             val pull = assertFailsWith<ModelException.UnsafeName> { runBlocking { manager.pull(id, server) } }
             assertFalse(id.isNotEmpty() && id in pull.message.orEmpty(), "the id was echoed")
