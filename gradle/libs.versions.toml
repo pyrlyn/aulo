@@ -6,6 +6,11 @@ ktlint = "1.8.0"
 serialization = "1.13.0"
 # Must match the SQLDelight runtime pyrlyn.kit:db-sqldelight is built against.
 sqldelight = "2.4.1"
+coroutines = "1.11.0"
+# Protobuf messages and service interfaces for every target (spec §17 D10).
+wire = "7.2.2"
+# Sockets (TCP and Unix) under the gRPC transport (spec §17 D11).
+ktor = "3.6.1"
 
 [libraries]
 # build-logic puts these Gradle plugins on the classpath of every module.
@@ -13,9 +18,13 @@ kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", v
 ktlint-gradle-plugin = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlint-gradle" }
 kotlin-serialization-plugin = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
 sqldelight-gradle-plugin = { module = "app.cash.sqldelight:gradle-plugin", version.ref = "sqldelight" }
+wire-gradle-plugin = { module = "com.squareup.wire:wire-gradle-plugin", version.ref = "wire" }
 
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "serialization" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+wire-runtime = { module = "com.squareup.wire:wire-runtime", version.ref = "wire" }
+ktor-network = { module = "io.ktor:ktor-network", version.ref = "ktor" }
 
 [plugins]
 # build-logic formats itself with the same ktlint as the modules.
