@@ -20,7 +20,7 @@ import time
 USER = "aulo-spike"
 MARKER = "aulo-spike-marker"
 # Xvfb puts its socket here; the X server fixes the path, and the probe never creates files in it.
-X11_SOCKET_DIR = "/tmp/.X11-unix"  # NOSONAR(python:S5443) the X server's fixed socket directory
+X11_SOCKET_DIR = "/tmp/.X11-unix"  # NOSONAR: the X server fixes this socket directory
 
 
 def x11_socket(display: int) -> str:
