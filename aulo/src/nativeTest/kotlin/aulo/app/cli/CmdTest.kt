@@ -57,7 +57,14 @@ class CmdTest {
             val env =
                 (case["env"] as JsonObject?).orEmpty().mapValues { it.value.jsonPrimitive.content } +
                     ("AULO_HOME" to home.toString())
-            val args = case["args"]?.jsonArray?.map { it.jsonPrimitive.content }.orEmpty()
+            val args =
+                case["args"]
+                    ?.jsonArray
+                    ?.map {
+                        it.jsonPrimitive.content
+                            .replace("[HOME]", home.toString())
+                            .replace("[PROJECT]", project.toString())
+                    }.orEmpty()
             val log = mutableListOf<String>()
             val result =
                 when (val program = case["program"]?.jsonPrimitive?.content ?: "aulo") {

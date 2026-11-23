@@ -25,6 +25,12 @@ private val tree =
         // clap prints `<name> <version>`, so the licence line rides along to match `versionText`.
         version = "${BuildInfo.VERSION} (${BuildInfo.GIT_SHA})\nLicense: ${BuildInfo.LICENSE}"
         subcommandRequired = true
+        option("home") {
+            long = "home"
+            valueName = "DIR"
+            global = true
+            doc("The aulo home, ahead of AULO_HOME and ~/.aulo")
+        }
         subcommand("run") {
             doc("Run in the foreground until SIGINT or SIGTERM (Ctrl+C on Windows).")
             option("config") {
@@ -36,6 +42,19 @@ private val tree =
                 long = "listen"
                 valueName = "ADDR"
                 doc("TCP address for remote clients (host:port), overriding daemon.listen; needs TLS")
+            }
+        }
+        subcommand("service") {
+            doc("Run aulod at login: a launchd agent, a systemd user unit or a Task Scheduler task.")
+            subcommandRequired = true
+            subcommand("install") {
+                doc("Install and start the service for this home; a repeat changes nothing.")
+            }
+            subcommand("uninstall") {
+                doc("Stop and remove the service.")
+            }
+            subcommand("status") {
+                doc("Say whether the service is installed and running.")
             }
         }
     }
@@ -52,6 +71,7 @@ suspend fun runDaemonCli(
     secrets: (home: String, warn: (String) -> Unit) -> SecretStore,
     log: (String) -> Unit,
     stop: suspend () -> Unit,
+    services: ServiceHost = ServiceHost.os(env),
 ): Parsed.Exit {
     val matches =
         when (val parsed = parse(tree, args, settings)) {
@@ -60,8 +80,14 @@ suspend fun runDaemonCli(
         }
     // subcommandRequired makes clap's parser answer an empty command line itself.
     val run = matches.subcommand ?: error("no subcommand")
+    val home =
+        (run.matches.value("home") ?: auloHome(env))
+            ?: return failure("cannot find the aulo home: set AULO_HOME or HOME")
+    if (run.name == "service") {
+        val action = run.matches.subcommand ?: error("no service subcommand")
+        return runService(action.name, home, services)
+    }
     check(run.name == "run") { "unhandled subcommand ${run.name}" }
-    val home = auloHome(env) ?: return failure("cannot find the aulo home: set AULO_HOME or HOME")
     val overrides =
         run.matches.value("listen")?.let { listen ->
             JsonObject(mapOf("daemon" to JsonObject(mapOf("listen" to JsonPrimitive(listen)))))
