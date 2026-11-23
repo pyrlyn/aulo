@@ -8,7 +8,6 @@ import aulo.speech.LanguageSupport
 import aulo.speech.SpeechException
 import aulo.voice.SttRegistry
 import process.Command
-import process.currentExe
 
 /** Decoder threads per helper; past 4 Parakeet barely gets faster (spike T0.5). */
 const val SHERPA_THREADS = 4
@@ -100,16 +99,4 @@ fun SttRegistry.registerSherpa(
             HelperStt(engine.info, ProcessLink.spawn(command), options)
         }
     }
-}
-
-/**
- * The helper installed beside this executable, with the same extension (`.exe` on Windows, `.kexe` for a build
- * that has not been packaged); null when the OS will not say where this executable is.
- */
-fun sherpaHelperBesideThisExe(): String? {
-    val exe = currentExe() ?: return null
-    val cut = maxOf(exe.lastIndexOf('/'), exe.lastIndexOf('\\'))
-    val name = exe.substring(cut + 1)
-    val ext = name.substringAfterLast('.', "").let { if (it.isEmpty()) "" else ".$it" }
-    return exe.substring(0, cut + 1) + "aulo-speech-sherpa" + ext
 }
