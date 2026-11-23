@@ -19,7 +19,7 @@ Done when:
 
 Execution plan:
 
-1. Include `packages/kotlin-kit` as a Gradle included build, as ketch does (creator's choice). The build finds it in any ancestor `packages/` or through `KOTLIN_KIT_DIR` and `SHARED_SETTINGS_DIR`; CI checks out pyrlyn/packages at tag `0.0.5`. The TOML parser is `pyrlyn.kit:toml`; file reads go through `pyrlyn.kit:fs`.
+1. Include `packages/pyrlyn-kit` as a Gradle included build, as ketch does (creator's choice). The build finds it in any ancestor `packages/` or through `KOTLIN_KIT_DIR` and `SHARED_SETTINGS_DIR`; CI checks out pyrlyn/packages at tag `0.0.5`. The TOML parser is `pyrlyn.kit:toml`; file reads go through `pyrlyn.kit:fs`.
 2. New `:aulo-config` module, role `LIBRARY`. The model ports the earlier Rust crate (git history before #81): sections `daemon`, `providers` (endpoints, tiers), `voice` (listen, barge_in, stt, tts), `mcp.servers` (stdio or http, discriminated by `transport`), `plugins` and `policy`, with the same keys and defaults.
 3. Layers: defaults < `$AULO_HOME/config.toml` (else `~/.aulo`) < `<project>/.aulo.toml` < `AULO_<SECTION>__<KEY>` < caller overrides. Missing files are skipped. The environment is passed in as a map, so tests need no process state. Each layer is checked against the serial descriptors before the merge:
    - unknown keys, wrong types, bad enum values and minimums are reported with the layer's file or variable;

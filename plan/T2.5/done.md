@@ -2,7 +2,7 @@
 
 The `:aulo-config` module. PR: https://github.com/pyrlyn/aulo/pull/87 (stacked on #86).
 
-- `packages/kotlin-kit` is a Gradle included build, as the creator chose.
+- `packages/pyrlyn-kit` is a Gradle included build, as the creator chose.
   - Gradle finds it in the first ancestor `packages/` or through `KOTLIN_KIT_DIR` and `SHARED_SETTINGS_DIR`.
   - CI checks out pyrlyn/packages at 52e941b (tag 0.0.5).
   - `pyrlyn.kit:toml` parses TOML and `pyrlyn.kit:fs` reads files.

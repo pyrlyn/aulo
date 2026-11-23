@@ -24,7 +24,7 @@ Reading of the flags: `--config <FILE>` replaces `<home>/config.toml` and must e
 
 1. `aulo-config`: `LoadOptions.configFile`; a missing named file is a `ConfigException`.
 2. `aulo-server/Daemon.kt`: `runDaemon(home, config, secrets, log, stop)` — listeners first, then
-   the owner-only run directory, `kotlin-kit` `FileLock` on `run/aulod.lock` (a second instance
+   the owner-only run directory, `pyrlyn-kit` `FileLock` on `run/aulod.lock` (a second instance
    fails with `AlreadyRunningException`, naming the pid from `run/aulod.pid`), the pidfile, the
    store, the first token, `AuloServer` with `ChatService`; graceful shutdown, pidfile removed,
    lock released.

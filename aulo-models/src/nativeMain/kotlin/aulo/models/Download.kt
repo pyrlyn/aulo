@@ -40,7 +40,7 @@ internal data class Expected(
  * the final name never holds bytes that were not checked. A dropped connection or a cancelled coroutine keeps the
  * partial, and the next call resumes it with a `Range` request. [onBytes] receives the bytes this file has so far.
  *
- * kotlin-kit's append sink cannot fsync, so a power loss right after the rename may leave a short file under the
+ * pyrlyn-kit's append sink cannot fsync, so a power loss right after the rename may leave a short file under the
  * final name; [ModelManager] tells it apart by size and downloads it again.
  */
 internal suspend fun fetchVerified(

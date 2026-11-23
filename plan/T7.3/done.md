@@ -14,7 +14,7 @@ PR: https://github.com/pyrlyn/aulo/pull/110 (stacked on #107, T3.9).
     - only a verified file gets its final name.
   - `ModelManager` has `list` (installed by pinned size), `path`, `pull(id, http, onProgress)` and `remove`. Ids that are not plain names are refused without being echoed. One pull or removal per model runs at a time, through a `FileLock`.
 - `aulo models ls|pull <ID>|rm <ID>`, with progress on stderr: one line per file and per 5% of the model. `aulo` passes `KtorHttp(MODEL_HTTP_SETTINGS)`: 15 s to connect, 60 s socket idle, no total timeout.
-- Docs: an AGENTS.md bullet, `research.md` 4.14, toolchain rows for okio, `pyrlyn.kit:http` and `http-ktor`, and an idea for a durable append in kotlin-kit. `appendSink` cannot fsync, so a verified file is renamed without one; a short file left by a power loss is told apart by size and fetched again.
+- Docs: an AGENTS.md bullet, `research.md` 4.14, toolchain rows for okio, `pyrlyn.kit:http` and `http-ktor`, and an idea for a durable append in pyrlyn-kit. `appendSink` cannot fsync, so a verified file is renamed without one; a short file left by a power loss is told apart by size and fetched again.
 
 ## How it was checked
 

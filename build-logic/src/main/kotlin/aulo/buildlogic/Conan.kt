@@ -92,7 +92,7 @@ abstract class ConanInstallTask
 
         /**
          * Conan's home, a cache of this build alone. The user's `~/.conan2` may be in use by
-         * another Conan at the same moment (kotlin-kit's own install task, for one), which
+         * another Conan at the same moment (pyrlyn-kit's own install task, for one), which
          * [ConanLock] cannot see.
          */
         @get:Internal
