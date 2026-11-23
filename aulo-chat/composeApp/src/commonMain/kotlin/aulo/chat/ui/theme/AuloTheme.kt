@@ -1,26 +1,40 @@
 package aulo.chat.ui.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
+import aulo.chat.domain.Appearance
 
 val LocalChatColors = staticCompositionLocalOf<ChatColors> { error("AuloTheme is missing") }
 val LocalChatShapes = staticCompositionLocalOf<ChatShapes> { error("AuloTheme is missing") }
+val LocalUiPlatform = staticCompositionLocalOf { UiPlatform.Android }
 
-/**
- * Material 3 dressed in the platform's tokens. The app has one theme, the dark one: it is the
- * mode every screen of the mockups is drawn in.
- */
+/** Dark or light for the user's choice in Settings; System follows the operating system. */
 @Composable
-fun AuloTheme(platform: UiPlatform = remember { currentUiPlatform() }, content: @Composable () -> Unit) {
-    val tokens = remember(platform) { tokensFor(platform) }
+fun Appearance.isDark(): Boolean = when (this) {
+    Appearance.System -> isSystemInDarkTheme()
+    Appearance.Light -> false
+    Appearance.Dark -> true
+}
+
+/** Material 3 dressed in the platform's tokens, in the dark or the light mode of its kit page. */
+@Composable
+fun AuloTheme(
+    platform: UiPlatform = remember { currentUiPlatform() },
+    dark: Boolean = true,
+    content: @Composable () -> Unit,
+) {
+    val tokens = remember(platform, dark) { tokensFor(platform, dark) }
     val c = tokens.colors
-    val scheme = darkColorScheme(
+    // Roles the tokens do not name keep Material's defaults for the mode.
+    val scheme = (if (dark) darkColorScheme() else lightColorScheme()).copy(
         primary = c.accent,
         onPrimary = c.onAccent,
         primaryContainer = c.userBubble,
@@ -51,7 +65,11 @@ fun AuloTheme(platform: UiPlatform = remember { currentUiPlatform() }, content: 
         large = RoundedCornerShape(tokens.shapes.bubble),
         extraLarge = RoundedCornerShape(tokens.shapes.bubble),
     )
-    CompositionLocalProvider(LocalChatColors provides c, LocalChatShapes provides tokens.shapes) {
+    CompositionLocalProvider(
+        LocalChatColors provides c,
+        LocalChatShapes provides tokens.shapes,
+        LocalUiPlatform provides platform,
+    ) {
         MaterialTheme(colorScheme = scheme, shapes = shapes, content = content)
     }
 }
