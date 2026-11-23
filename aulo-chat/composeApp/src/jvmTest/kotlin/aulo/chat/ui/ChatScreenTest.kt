@@ -153,7 +153,8 @@ class ChatScreenTest {
 
     @Test
     fun `model output is shown as written, never as markup`() = runComposeUiTest {
-        val hostile = "[click](https://example.test) <b>bold</b> **stars** ‮evil"
+        // The bidi override is escaped: written literally it would reorder this line for a reader.
+        val hostile = "[click](https://example.test) <b>bold</b> **stars** \u202Eevil"
         val messages = listOf(M1, message("x", MessageRole.Assistant, hostile))
         setContent { AuloTheme(UiPlatform.Ios) { ChatScreen(state(messages = messages), ChatActions()) } }
         onNodeWithText(hostile).assertExists()
