@@ -16,6 +16,8 @@ kotlin {
         commonMain.dependencies {
             api(project(":aulo-speech"))
             implementation(libs.jetbrains.markdown)
+            // AudioRing's writer waits for room on a coroutine, not a thread.
+            implementation(libs.kotlinx.coroutines.core)
         }
         commonTest.dependencies {
             implementation(project(":aulo-testkit"))
