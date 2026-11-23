@@ -2,7 +2,7 @@
 status: in progress
 priority: P0
 complexity: 3
-readiness: 10%
+readiness: 100%
 agent: Claude Code / claude-opus-5-5
 ---
 
@@ -26,9 +26,10 @@ Kotlin API is JNI for Android and the JVM), so the harness binds the C API with 
 
 1. Conan: sherpa-onnx is in neither Conan Center nor vcpkg. A recipe in `conan/recipes/sherpa-onnx`
    packages the official prebuilt release archives, checked against pinned SHA-256s (static libraries
-   on macOS and Linux, the DLL build on Windows, since the static Windows archives are MSVC C++).
+   on macOS; shared ones on Linux, whose static archives need a newer libstdc++ than Kotlin/Native's
+   sysroot; the DLL build on Windows, since the static Windows archives are MSVC C++).
    `ConanInstallTask` exports the repository's recipes before installing; `conan { cinterop() }` lets
-   a `.def` file list several static libraries.
+   a `.def` file name the libraries per platform.
 2. Harness: a throwaway `spike-sherpa` module (not committed; its source is kept in
    `docs/spikes/sherpa-onnx/`) links the binding into one executable with `stt`, `vad`, `kws` and
    `tts` subcommands.

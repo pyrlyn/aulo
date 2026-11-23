@@ -1,69 +1,168 @@
-# Spike T0.5: sherpa-onnx on macOS arm64
+# Spike T0.5: sherpa-onnx from Kotlin/Native
 
-Verdict: **GO** for sherpa-onnx as the default local speech backend, espeak-ng is GPL-3.0 and is statically linked (R1); the creator accepted the GPL (spec §17 D9).
+Verdict: **GO** for sherpa-onnx 2.0.3 as the default local backend for speech-to-text (Parakeet TDT v3),
+VAD (Silero) and keyword spotting. **Conditional** for Kokoro TTS: since 2.0.0 sherpa-onnx has no
+phonemizer, and with the shipped lexicons Kokoro silently drops 1.5–6.2% of English words (R6). Kokoro
+needs a phonemizer outside sherpa-onnx before it can be the default voice; which one is the creator's call.
 
-Checked 2026-10-07. Scratch project (not in the repo): `/private/tmp/claude-501/-Users-listepo-GitHub-listepo/565734e4-fe95-469c-8f24-2a200fc4f56b/scratchpad/t0.5`.
+Checked 2026-11-23. This pass replaces the one of 2026-10-07, which used sherpa-onnx 1.13.8 through the
+Rust crate. The harness source is in [`sherpa-onnx/`](sherpa-onnx/); it was built as a throwaway Gradle
+module and is not part of the build.
 
 ## Setup
 
 | Item | Value |
 | --- | --- |
-| Machine | Apple M3 Max (`sysctl -n machdep.cpu.brand_string`), 64 GiB RAM (`hw.memsize` = 68719476736), macOS 27.0.1 |
-| Toolchain | rustc 1.99.0 (b940084d7 2026-09-28) via `mise exec rust@1.99.0 --` |
-| Crate | `sherpa-onnx` =1.13.8, Apache-2.0, published 2026-09-11, default feature `static`; depends on `sherpa-onnx-sys` =1.13.8 ([crates.io API](https://crates.io/api/v1/crates/sherpa-onnx), checked 2026-10-07). 1.13.8 is the latest on crates.io. |
-| Native lib | `sherpa-onnx-v1.13.8-osx-arm64-static-lib.tar.bz2` (21 MB), downloaded by `sherpa-onnx-sys/build.rs` from the official GitHub release at build time ([build.rs in crate 1.13.8](https://crates.io/api/v1/crates/sherpa-onnx-sys/1.13.8/download), [release v1.13.8, 2026-09-10](https://github.com/k2-fsa/sherpa-onnx/releases/tag/v1.13.8)). `SHERPA_ONNX_ARCHIVE_DIR` / `SHERPA_ONNX_LIB_DIR` allow an offline build (same build.rs). |
-| Harness | One small binary (`spike`) written against the crate API, following the official examples `nemo_parakeet.rs`, `keyword_spotter.rs`, `kokoro_tts_zh_en.rs`, `silero_vad_remove_silence.rs` ([rust-api-examples @ v1.13.8](https://github.com/k2-fsa/sherpa-onnx/tree/v1.13.8/rust-api-examples/examples)). |
-| Test audio | English and Russian WAVs from macOS `say` (Samantha, Milena) converted with `afconvert` to 16 kHz mono 16-bit; plus Kokoro output resampled to 16 kHz. All timings are wall clock on an otherwise idle machine, CPU provider, 4 threads unless stated. |
+| Machine | Apple M3 Max (12 performance + 4 efficiency cores, `sysctl hw.perflevel0/1.physicalcpu`), 64 GiB, macOS 27.0.1 |
+| Linux | Colima 8-CPU aarch64 VM on the same machine, `ubuntu:24.04` (glibc 2.39) containers; x86_64 under emulation |
+| Toolchain | Kotlin/Native 2.4.21, Conan 2.33.0 (both pinned in the repository) |
+| sherpa-onnx | v2.0.3, published 2026-11-22, the latest release ([release](https://github.com/k2-fsa/sherpa-onnx/releases/tag/v2.0.3), GitHub API checked 2026-11-23). Apache-2.0 ([LICENSE @ v2.0.3](https://github.com/k2-fsa/sherpa-onnx/blob/v2.0.3/LICENSE)). In neither Conan Center nor vcpkg. |
+| Binding | The C API (`sherpa-onnx/c-api/c-api.h` @ v2.0.3) through cinterop. The official Kotlin API is JNI (Android and the JVM), which Kotlin/Native cannot use. |
+| Package | Local Conan recipe `conan/recipes/sherpa-onnx`: downloads the official prebuilt archive of the host platform and checks its pinned SHA-256 (`conandata.yml`). |
+| Test audio | FLEURS dev sets, `en_us` (394 clips, 62.8 min) and `ru_ru` (356 clips, 64.7 min), converted to 16 kHz 16-bit PCM with `afconvert` ([google/fleurs](https://huggingface.co/datasets/google/fleurs) at commit `70bb2e84`, CC-BY-4.0, HF API checked 2026-11-23); the official KWS test clips. All timings are wall clock, CPU provider, 4 threads unless stated. |
 
-## Models (all from the official k2-fsa release pages, github.com/k2-fsa/sherpa-onnx/releases/download/...)
+### Which archive each platform links
 
-| Role | Asset (release tag) | Archive | On disk | SHA-256 of archive | Licence |
+| Platform | Archive (v2.0.3) | Size | How it links | Shipped next to the binary |
+| --- | --- | --- | --- | --- |
+| macOS arm64 | `osx-arm64-static-lib` | 22.1 MB | 13 static libraries + libc++ + Foundation | nothing |
+| Linux x86_64 | `linux-x64-shared-lib` | 10.1 MB | `-lsherpa-onnx-c-api`, RPATH `$ORIGIN` | `libsherpa-onnx-c-api.so` 5.8 MB, `libonnxruntime.so` 27.0 MB |
+| Linux arm64 | `linux-aarch64-shared-cpu-lib` | 12.8 MB | the same | 5.2 MB + 34.6 MB |
+| Windows x86_64 | `win-x64-shared-MT-Release-lib` | 8.6 MB | import library `sherpa-onnx-c-api.lib` (lld, mingw) | `sherpa-onnx-c-api.dll`, `onnxruntime.dll`, `onnxruntime_providers_shared.dll` |
+
+The Linux static archives do not link: they need a newer libstdc++ (`std::filesystem`, `std::pmr`,
+`__throw_bad_array_new_length`) than Kotlin/Native's GCC 8 sysroot has. The shared ones need only
+GLIBC 2.17 and GLIBCXX 3.4.19 (`objdump -T`). The Windows static archives are MSVC C++ objects, which a
+mingw link cannot take; the MT build links the C runtime statically, so no Visual C++ redistributable is
+needed. macOS and Linux checksums match the release's `checksum.txt`; it lists no Windows archive, so that
+one was hashed here.
+
+## Models
+
+All from the k2-fsa release pages (`github.com/k2-fsa/sherpa-onnx/releases/download/<tag>/<asset>`);
+digests from the GitHub API, checked 2026-11-23.
+
+| Role | Asset (tag) | Archive | On disk | SHA-256 | Licence |
 | --- | --- | --- | --- | --- | --- |
-| VAD | `silero_vad_v5.onnx` (asr-models) | 2.3 MB | 2.2 MiB | `6b99cbfd...c274396` (file itself) | MIT ([silero-vad LICENSE](https://github.com/snakers4/silero-vad/blob/master/LICENSE), latest tag v6.2.3 2026-09-23; sherpa ships v4 and v5 only) |
-| STT | `sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8.tar.bz2` (asr-models) | 487 MB | 640 MiB | `5793d0fd...eb16bf` | CC-BY-4.0 (attribution required) ([nvidia/parakeet-tdt-0.6b-v3 card](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3), last modified 2026-08-05; 25 languages incl. en, ru) |
-| KWS | `sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz2` (kws-models); English only | 17.6 MB | 19 MiB | `f170013b...9b6561a` | Apache-2.0 (stated in the README inside the archive) |
-| TTS | `kokoro-multi-lang-v1_0.tar.bz2` (tts-models), fp32 | 350 MB | 394 MiB (model.onnx 325 MB) | `c5f7e2d2...ea3298` | Apache-2.0 ([hexgrad/Kokoro-82M card](https://huggingface.co/hexgrad/Kokoro-82M), 2025-04-10) |
-| TTS | `kokoro-int8-multi-lang-v1_0.tar.bz2`, int8 | 132 MB | 186 MiB (model.int8.onnx 114 MB) | `4c3052ab...a247e4e` | Apache-2.0 |
-| TTS | `kokoro-int8-multi-lang-v1_1.tar.bz2` (v1.1 is the zh+en model, [README in archive](https://huggingface.co/hexgrad/Kokoro-82M-v1.1-zh)) | 147 MB | 206 MiB | `a1e94694...cafc6` | Apache-2.0 (LICENSE file in archive) |
+| VAD | `silero_vad_v5.onnx` (asr-models) | 2.3 MB | 2.2 MiB | `6b99cbfd…c274396` | MIT ([silero-vad](https://github.com/snakers4/silero-vad/blob/master/LICENSE)) |
+| STT | `sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8.tar.bz2` (asr-models, updated 2026-11-07) | 487 MB | 643 MiB | `1495e91b…72b14b0f9` | CC-BY-4.0, attribution required ([model card](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3)) |
+| STT | `sherpa-onnx-moonshine-base-en-quantized-2026-02-27.tar.bz2` (asr-models) | 111 MB | 135 MiB | `43232c1d…c0e891` | MIT (`LICENSE` in the archive) |
+| KWS | `sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz2` (kws-models), English | 17.6 MB | 19 MiB | `f170013b…af9b6561a` | Apache-2.0 (README in the archive) |
+| TTS | `kokoro-multi-lang-v1_0.tar.bz2` (tts-models, updated 2026-10-26) | 350 MB | 394 MiB | `60703707…0e0f7a4` | Apache-2.0 ([model card](https://huggingface.co/hexgrad/Kokoro-82M)); the archive still carries `espeak-ng-data` (GPL-3.0), which 2.x never reads |
 
-Asset sizes are from `gh release view <tag> -R k2-fsa/sherpa-onnx` (checked 2026-10-07). Parakeet TDT v3 and Kokoro v1.0 were both available as official sherpa-onnx assets, so nothing was substituted.
+Full digests: Parakeet `1495e91b59d7fc53ddca91f3431758ec99f8fa253fdb0e1e851be0f72b14b0f9`, Moonshine
+`43232c1d13013d37317163baec3135bd771a186a4356f28c889bab453bb0e891`, KWS
+`f170013b4716e41b62b9bfd809687c207cef798ef9bc6534d524e17af9b6561a`, Kokoro
+`60703707bc05ccd48d60e1eb723f38b07d6e474795a0b6a588d7220400e0f7a4` (was `c5f7e2d2…` on 2026-10-07: the
+asset was re-uploaded), Silero `6b99cbfd39246b6706f98ec13c7c50c6b299181f2474fa05cbc8046acc274396`.
 
 ## Results
 
+### Build
+
 | Measurement | Result |
 | --- | --- |
-| Cold release build (`rm -rf target`, registry cached, includes the 21 MB native-lib download) | 16.0 s wall (20.1 s on the very first build with a cold registry). No C++ compilation: the static libs are prebuilt. |
-| Release binary (all of VAD+STT+KWS+TTS linked, default profile) | 27.8 MB; 19.6 MB after `strip`. Dynamic deps: only libc++, libSystem, Foundation, CoreFoundation. |
-| Native lib unpacked in `target/` | 112 MB (not shipped; linked statically) |
-| Silero VAD, RTF | 0.003 (18 s clip in 56 ms, 1 thread). On a 10 s clip of speech/1 s silence/speech it returned 3 segments at the right places. Peak RSS 45-55 MB. |
-| Parakeet TDT v3 int8, STT RTF, 4 threads | 0.07 on 18 s en and 17 s ru clips (about 1.3 s each), 0.07-0.08 on 3-4 s clips (0.2-0.3 s). Model load 0.8 s. |
-| Same, 2 threads / 1 thread | RTF 0.13 / 0.25 |
-| STT peak RSS (max resident set size) | 1.21 GB (3.8 s clip) to 1.42 GB (18 s clip), 4 threads |
-| STT output | en: correct on the 18 s clip, with punctuation and casing. ru (macOS Milena input): 3 small errors in 17 s (e.g. "леса прыгай"); the Kokoro-generated ru, es, fr and en clips round-tripped with no errors. This is TTS audio, not human speech, so it is not a WER measurement. |
-| Kokoro fp32, 4 threads, RTF | 0.23 (en), 0.20-0.23 (es, fr), 0.23 (ru), 0.27 (1.6 s clip). Load 0.6 s. |
-| Kokoro fp32, 2 threads / 1 thread, RTF | 0.41 / 0.78 |
-| Kokoro int8, 4 threads, RTF | 0.65 (about 3x slower than fp32 on this CPU) |
-| Kokoro time to first audio (first `generate_with_config` callback, fp32, 4 threads) | 0.24-0.30 s when the text starts with a short sentence ("Sure."), 0.43-0.46 s for a first sentence of about 1.5 s of audio, 0.55-0.64 s for a 2-3 s single sentence. The callback fires per sentence, not per audio chunk: a long first sentence delays first audio. |
-| Kokoro peak RSS | fp32 0.85-0.88 GB, int8 0.64 GB |
-| KWS (zipformer 3.3M, int8 joiner) | RTF 0.015, load 0.25 s, peak RSS about 57 MB |
-| KWS fires on a test phrase | Yes. Built-in keywords: "Alexa, play some music." fired `ALEXA` (macOS voice and Kokoro); Kokoro "Hey Siri, what is the weather like today?" fired `HEY SIRI`; macOS-voice "Hey Siri" did **not** fire at thresholds 0.25/1.0, 0.1/2.0 and 0.05/3.0. No false fires on 3 negative clips (2 s English sentence, Russian sentence, Spanish sentence). Custom keyword `HEY_AULO` with hand-written BPE tokens fired on the Kokoro and macOS clips only for the variant `▁HE Y ▁A LO` with boost 3.0 and threshold 0.01. Official test clip + official `test_keywords.txt`: detected `LOVELY CHILD` and `FOREVER`. |
-| CoreML provider (`provider = "coreml"`) | No measurable change in STT or TTS timing; not verified whether the CoreML EP is compiled into the prebuilt lib. |
+| Cold build of the harness, macOS (module cleaned, package removed from the Conan cache, Gradle daemon warm) | 27 s, including the archive download and checksum |
+| macOS executable, all four engines | 28.8 MB; 20.1 MB stripped. No sherpa or onnxruntime library to ship. |
+| Linux executables | 1.2 MB each, plus the two shared libraries above |
+| Windows executable | 1.2 MB, plus the three DLLs. Linked, not run: there is no Windows host here. |
+| Conan package size | macOS 97 MB (static libraries), Linux x86_64 32 MB, Linux arm64 38 MB, Windows 23 MB |
 
-Not measured: all four engines resident in one process (the sum of the peaks above is roughly 2.4 GB, an upper bound), streaming transducer STT, quality judged by ear.
+### Speech-to-text
+
+WER with a plain normalizer (NFKC, lower case, ё→е, punctuation removed; `wer.py` in the harness
+directory). FLEURS writes numbers as digits and both models say them as words, so the WER without the
+utterances that contain digits is given too.
+
+| Model | Set | WER | WER, no digits | RTF | Load | Peak RSS |
+| --- | --- | --- | --- | --- | --- | --- |
+| Parakeet TDT v3 int8 | en, 394 clips | **7.84%** | 5.88% | 0.071 | 0.81 s | 1.51 GB |
+| Parakeet TDT v3 int8 | ru, 356 clips | **7.75%** | 6.02% | 0.070 | 0.82 s | 1.79 GB |
+| Moonshine base en, quantized | en, 394 clips | 13.09% | 10.58% | 0.017 | 0.31 s | 0.57 GB |
+| Same, without its 12 empty outputs | en, 382 clips | 10.27% | 8.02% | | | |
+
+- Parakeet threads (one 18 s clip): 4 → RTF 0.070, 2 → 0.130, 1 → 0.250; RSS 1.38–1.49 GB.
+- Moonshine returned an empty transcript for 12 of 394 clips (6–29 s long), every time; Parakeet
+  transcribed them correctly.
+- Linux arm64 in the VM, same five clips, same text as macOS: **RTF 0.030 against 0.073 on macOS**.
+  The prebuilt macOS static library is 2.4 times slower than the Linux arm64 shared one on the same
+  silicon; the cause is not known (R4).
+- Linux x86_64 under emulation produced the same text and VAD segments (timings meaningless).
+
+### VAD, keyword spotting, TTS
+
+| Measurement | Result |
+| --- | --- |
+| Silero VAD v5, 24 s clip, 1 thread | RTF 0.0027, load 0.04 s, peak RSS 53 MB. 3 segments (3.16–5.86, 6.55–10.34, 14.46–20.74 s) on a clip of two utterances: the first split at a 0.7 s pause (minimum silence 0.25 s). Identical on Linux arm64 and x86_64. |
+| KWS zipformer 3.3M | RTF 0.0135, load 0.25 s, peak RSS 108 MB. Official clips with `test_keywords.txt`: `LIGHT UP`, `LOVELY CHILD`, `FOREVER`, all correct. |
+| KWS false accepts | **0** over all FLEURS dev clips, en and ru (2.09 h), with the 9 keywords of the bundled `keywords.txt`, threshold 0.25, score 1.0 |
+| Kokoro v1.0 fp32, RTF | 4 threads 0.23, 2 threads 0.41, 1 thread 0.78; load 0.61–0.65 s; peak RSS 0.69–0.77 GB |
+| Kokoro time to first audio, 4 threads | 0.42–0.43 s when the text has more than one sentence; the whole utterance (1.1 s for 4.5 s of audio) when it is one sentence; 0.26 s for "Hello." |
+| Kokoro words dropped | see R6 |
 
 ## Findings
 
-- Kokoro does **not** support Russian. Its language list is American/British English, Japanese, Mandarin, Spanish, French, Hindi, Italian, Brazilian Portuguese ([VOICES.md](https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md), checked 2026-10-07). Setting `lang = "ru"` with an English voice produced audio that Parakeet transcribed back correctly, but naturalness is unjudged and unsupported by the model authors. Russian TTS needs another engine (a Piper/VITS Russian voice, or Silero).
-- `kokoro-multi-lang-v1_0` is the real multi-language bundle; `v1_1` is zh+en only. Speaker ids used: 3 = `af_heart`, 28 = `ef_dora` (es), 30 = `ff_siwis` (fr) ([generate_voices_bin.py @ v1.13.8](https://github.com/k2-fsa/sherpa-onnx/blob/v1.13.8/scripts/kokoro/v1.0/generate_voices_bin.py)).
-- Parakeet TDT v3 is an offline (non-streaming) model; live use means VAD segmentation plus decoding each segment (the crate ships `parakeet_tdt_simulate_streaming_microphone.rs`). End of speech to text for a 3 s utterance is about 0.2 s here.
-- A bad model/config pair aborts the whole process (C++ exception, see R5), not a Rust `Err`.
+- **Kokoro in 2.x needs its own phonemizer.** 2.0.0 removed espeak-ng and piper-phonemize
+  ([CHANGELOG @ v2.0.3](https://github.com/k2-fsa/sherpa-onnx/blob/v2.0.3/CHANGELOG.md), #4055); `lang`
+  and `data_dir` are ignored with a warning. Text goes through a lexicon, and a word missing from it is
+  skipped with a log line, not spoken. The alternative is pre-phonemized input
+  (`SherpaOnnxGenerationConfig.phoneme_codepoints`, documented in `c-api.h` @ v2.0.3).
+- **2.0.0 makes failures visible to the caller**: `SherpaOnnxCreate*` catch C++ exceptions and return
+  NULL (#4044). Errors during decoding are still not covered: with a wrong sample rate onnxruntime
+  logged a broadcast error and went on, and a harness bug that fed garbage made one process grow to
+  18–33 GB RSS.
+- The C API is complete enough for all four engines from Kotlin/Native; the harness is 305 lines.
+- Parakeet TDT v3 is offline (non-streaming): live use is VAD segments decoded one by one.
 
-## Risks for T5.x / T6.x
+## Risks for T7.4 and the TTS tasks
 
-- **R1 (licence, decided: GPL accepted, spec §17 D9):** the prebuilt static lib contains `libespeak-ng.a` and `libpiper_phonemize.a`, and the final binary exports `espeak_*` symbols (`nm -gU`). espeak-ng is GPL-3.0 ([repo licence, checked 2026-10-07](https://github.com/espeak-ng/espeak-ng)); sherpa-onnx's own build pulls a fork of it ([cmake/espeak-ng-for-piper.cmake @ v1.13.8](https://github.com/k2-fsa/sherpa-onnx/blob/v1.13.8/cmake/espeak-ng-for-piper.cmake)). AGENTS.md says GPL code only runs as a separate plugin process, so linking this crate into `aulod` conflicts with that rule. The options were a separate process, a source build without espeak, or accepting the GPL; the creator accepted the GPL.
-- **R2 (build):** `build.rs` downloads a 21 MB archive from GitHub at build time. CI and reproducible/offline builds must set `SHERPA_ONNX_ARCHIVE_DIR` or vendor the archive, and pin its checksum (`build.rs` in 1.13.8 contains no checksum or digest verification).
-- **R3 (memory/latency):** Parakeet needs about 1.4 GB RSS and 640 MiB on disk; Kokoro fp32 about 0.9 GB. Ship fp32 Kokoro (int8 is slower on Apple silicon). Keep the first sentence of a reply short to get time-to-first-audio under 0.3 s; use at least 4 threads (1 thread gives Kokoro RTF 0.78 and STT 0.25).
-- **R4 (languages):** Russian STT works (Parakeet v3), Russian TTS does not exist in Kokoro; the aulo default voice stack for ru needs a second TTS engine behind the same trait.
-- **R5 (KWS and robustness):** the `-mobile` gigaspeech KWS bundle crashes in onnxruntime (`/downsample/Reshape_1`, input `{17,1,128}` vs requested `{8,2,1,128}`) and the Rust process aborts with "Rust cannot catch foreign exceptions"; the non-mobile bundle works. Wrap sherpa calls in a child process or a catch boundary, since a bad model aborts the daemon (rule: a broken engine is skipped, never fatal). KWS is English only; wake-word accuracy depends on per-keyword boost/threshold tuning and on BPE tokenization of the custom phrase (tokenize with the official tooling, not by hand), and was tested only on synthetic voices, so false-accept/false-reject rates are unknown.
-- **R6 (attribution):** Parakeet is CC-BY-4.0; ship the attribution with the model download or docs.
-- **R7 (maintenance):** the crate is released about every 2-4 weeks (1.13.4 to 1.13.8 between 2026-07-08 and 2026-09-11), and its version is pinned to `sherpa-onnx-sys`; pin `=1.13.x` and bump with creator approval.
+- **R1 (process isolation; decided):** sherpa-onnx runs in a separate helper process,
+  `aulo-speech-sherpa`, talking to `aulod` over a pipe (creator's decision for T7.4). A crash or a
+  runaway allocation then costs one engine, which is skipped (the fail-open rule); the helper should run
+  under a memory limit.
+- **R2 (shipping on Linux and Windows):** the Linux and Windows builds are not self-contained. Packaging
+  must put the two `.so` files (33–40 MB) or the three DLLs next to the helper. Linux needs glibc ≥ 2.17.
+  The Windows binary has not been run anywhere yet; T7.4's CI should run `version` on a Windows runner.
+- **R3 (build):** archives come from GitHub at build time and are checked against pinned SHA-256s. Any
+  edit to the recipe changes its revision; the lock of every module that requires it must then be
+  recreated (delete it first: `conan lock create` reads an existing lock next to `conanfile.txt`).
+- **R4 (macOS speed):** RTF 0.07 on macOS against 0.03 for Linux arm64 on the same machine. Worth one
+  check in T7.4 (the macOS shared-library archive, thread placement on performance cores); 0.07 is
+  already well inside real time.
+- **R5 (Moonshine):** about 3% of English clips give an empty transcript. Parakeet stays the default;
+  Moonshine is a fallback for low memory (0.57 GB against 1.5–1.8 GB) only after that is understood.
+- **R6 (Kokoro words dropped):** share of FLEURS en dev words (8,154) missing from the lexicon, all of
+  which Kokoro would skip:
+
+  | Lexicon | Entries | Missing words |
+  | --- | --- | --- |
+  | `lexicon-us-en.txt` in `kokoro-multi-lang-v1_0` | 178,401 | 6.21% (plurals and verb forms: `countries`, `students`, `opened`) |
+  | `lexicon-en-us.txt`, tts-models release, 2026-10-13, `sha256:8b67ae54…` | 167,982 | 2.72% (also `or`, `her`, `seem`) |
+  | both together | 297,426 | 1.52% (names, possessives) |
+
+  A Parakeet round trip confirms the gaps: "I opened the settings" came back as "I the settings".
+  Options for the TTS tasks: espeak-ng as a separate phonemizer process feeding `phoneme_codepoints`
+  (GPL code in its own process is allowed by AGENTS.md), another grapheme-to-phoneme model, or a merged
+  lexicon with a fallback. This touches spec §17 D9, which accepted espeak-ng because sherpa-onnx linked
+  it; 2.x links nothing GPL. The decision is the creator's.
+- **R7 (languages, unchanged):** Kokoro has no Russian voice; Russian TTS needs another engine.
+  Parakeet is CC-BY-4.0: ship the attribution with the model.
+- **R8 (maintenance):** four releases between 2026-10-23 (2.0.0) and 2026-11-22 (2.0.3), GitHub API. The recipe pins
+  2.0.3; bumps need the creator's approval.
+
+## WER threshold for T7.4
+
+Proposed: on a fixed set of FLEURS dev clips per language, Parakeet TDT v3 int8 through
+`aulo-speech-sherpa` must reach **WER ≤ 10% for en and for ru** with the normalizer above (measured 7.84%
+and 7.75%, so about two points of margin for a smaller set). Moonshine, if wired, ≤ 15% for en counting
+empty outputs as errors. The threshold awaits the creator's confirmation.
+
+## Reproduce
+
+1. Add the files in [`sherpa-onnx/`](sherpa-onnx/) as a module (`Main.kt` under
+   `src/nativeMain/kotlin/spike/`, `sherpa.def` under `src/nativeInterop/cinterop/`), include it in
+   `settings.gradle.kts`, and create its lock with the command in AGENTS.md.
+2. `./gradlew :<module>:linkSpikeReleaseExecutable<Target>`.
+3. `sherpa-spike.kexe stt parakeet <model dir> 4 @<list of wavs>`; then
+   `python3 -I wer.py <fleurs dev.tsv> <output tsv>`. Also `vad`, `kws` and `tts`; run the binary with
+   no arguments for usage.

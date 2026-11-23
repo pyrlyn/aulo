@@ -1,0 +1,8 @@
+headers = sherpa-onnx/c-api/c-api.h
+headerFilter = sherpa-onnx/c-api/*
+package = sherpa
+linkerOpts.osx = -lsherpa-onnx-c-api -lsherpa-onnx-core -lkaldi-decoder-core -lsherpa-onnx-kaldifst-core \
+    -lsherpa-onnx-fstfar -lsherpa-onnx-fst -lkaldi-native-fbank-core -lkaldi-native-io-core -lkaldi-hmm-gmm-core \
+    -lssentencepiece_core -lkissfft-float -lutf8proc -lonnxruntime -lc++ -framework Foundation
+linkerOpts.linux = -lsherpa-onnx-c-api -rpath $ORIGIN
+linkerOpts.mingw = -lsherpa-onnx-c-api
