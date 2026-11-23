@@ -1,0 +1,3 @@
+# Tools only this client needs, on top of the JDK the repository's own mise.toml pins.
+[tools]
+"aqua:yonaskolb/XcodeGen" = "2.48.0"
