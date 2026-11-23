@@ -48,6 +48,21 @@ class LoadTest {
     }
 
     @Test
+    fun aNamedConfigFileReplacesTheHomeOneAndMustExist() {
+        write(homeFile, "[policy]\napproval_timeout_secs = 30\n")
+        val named = Path(tmp.path, "other.toml").toString()
+        write(named, "[voice]\nlisten = \"wake-word\"\n")
+        val loaded = loadConfig(LoadOptions(home = home, configFile = named))
+        assertEquals(ListenMode.WAKE_WORD, loaded.config.voice.listen)
+        assertEquals(Config().policy.approvalTimeoutSecs, loaded.config.policy.approvalTimeoutSecs, "the home file is not read")
+        assertEquals(Origin.File(named), loaded.provenance["voice.listen"])
+
+        val missing = Path(tmp.path, "missing.toml").toString()
+        val e = assertFailsWith<ConfigException> { loadConfig(LoadOptions(home = home, configFile = missing)) }
+        assertEquals("$missing: no such file", e.message)
+    }
+
+    @Test
     fun layersApplyInOrderAndRecordWhereEachValueCameFrom() {
         write(homeFile, "[voice]\nlisten = \"wake-word\"\n[policy]\napproval_timeout_secs = 30\ndeny = [\"shell(rm *)\"]\n")
         write(projectFile, "[policy]\napproval_timeout_secs = 10\n")
