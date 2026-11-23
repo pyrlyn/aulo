@@ -1,0 +1,3 @@
+# The daemon starts, listens on the local socket and stops at once.
+program = "aulod"
+args = ["run"]
