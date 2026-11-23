@@ -135,9 +135,9 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: pyrlyn/packages
-          # spawnPipes for the speech helpers (pyrlyn/packages#9, 0.0.5 plus one commit); repin to its merge
-          # commit once that PR lands.
-          ref: a3a8e3a15d3ca8917c0009ab65f521f562f37418 # 0.0.5+spawnPipes
+          # spawnPipes for the speech helpers (pyrlyn/packages#9) and HttpClient.streamPost for the OpenAI-compatible
+          # STT engine (pyrlyn/packages#10, stacked on #9); repin to their merge commit once both land.
+          ref: 303aa1f9e5cd7c326e9e419e1eced1580c3ebe59 # 0.0.5+spawnPipes+streamPost
           path: packages
           persist-credentials: false
 
