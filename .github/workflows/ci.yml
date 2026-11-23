@@ -153,6 +153,7 @@ jobs:
 
       - if: env.RUN == 'true'
         name: Cache the Kotlin/Native toolchain
+        id: konan
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.konan
@@ -161,6 +162,13 @@ jobs:
           # Kotlin/Native is downloaded; an older cache still holds the toolchain after a catalog
           # change that leaves the Kotlin version alone.
           restore-keys: konan-${{ runner.os }}-${{ runner.arch }}-
+
+      # Without a cached toolchain (a catalog change, or the cache was evicted), download it first:
+      # kotlin-kit's conan script reads konan.properties when Gradle creates its task, which fails
+      # on a runner that has never had this Kotlin/Native.
+      - if: env.RUN == 'true' && steps.konan.outputs.cache-hit != 'true'
+        name: Download the Kotlin/Native toolchain
+        run: ./gradlew :aulo-types:downloadKotlinNativeDistribution --console=plain
 
       # One Gradle invocation: each extra one re-resolves the build classpath, and Maven Central
       # answers GitHub's Linux runners with 429 often enough to fail a second pass.
