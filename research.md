@@ -555,6 +555,14 @@ Checked 2026-11-23. gRPC runs over HTTP/2; aulo needs it on all four targets (sp
 - **nghttp2's manual flow control.** With `nghttp2_option_set_no_auto_window_update`, window comes back only through `nghttp2_session_consume`. For a stream that is already gone it still updates the connection window, and closing a stream returns nothing on its own (https://github.com/nghttp2/nghttp2/blob/v1.68.1/lib/nghttp2_session.c, `nghttp2_session_consume`), so aulo-grpc consumes a closed stream's unread bytes itself.
 - **Shared native source sets.** With `kotlin.mpp.enableCInteropCommonization=true` (https://github.com/JetBrains/kotlin/blob/v2.4.21/libraries/tools/kotlin-gradle-plugin/src/common/kotlin/org/jetbrains/kotlin/gradle/plugin/PropertiesProvider.kt), `nativeMain` sees one commonized binding of every target. Compiling that metadata (`assemble`, IDE sync) therefore runs Conan for every target the host builds; a per-target compile runs only its own.
 
+### 4.15 Markdown parsing for speech (T7.15)
+
+The speakable-text normalizer in `aulo-voice` needs a CommonMark parser with GFM tables and strikethrough that runs on every Kotlin/Native target.
+
+- **org.jetbrains:markdown 0.7.18** (JetBrains, the parser behind IntelliJ's Markdown support). Apache-2.0; latest version on Maven Central, published 2026-10-15; native artifacts for `macosArm64`, `linuxX64`, `linuxArm64` and `mingwX64`, none with dependencies of their own. Sources: https://repo1.maven.org/maven2/org/jetbrains/markdown/0.7.18/markdown-0.7.18.pom and https://repo1.maven.org/maven2/org/jetbrains/markdown/maven-metadata.xml (checked 2026-11-23); https://github.com/JetBrains/markdown.
+- API in 0.7.18 (from its sources jar on Maven Central, checked 2026-11-23): `MarkdownParser(flavour, assertionsEnabled, cancellationToken)` and `buildMarkdownTreeFromString(CharSequence)`; the one-argument constructor and the `String` overload are deprecated. `GFMFlavourDescriptor` adds tables, strikethrough, autolinks, math, alerts and highlights. `EntityConverter.replaceEntities` escapes for HTML output (it turns `&` back into `&amp;`), so it cannot decode entities into plain text; `Entities.map` is the public name-to-code-point table.
+- Measured here (`SpeakableTest`, macOS debug build): parse time grows with the square of block-quote nesting depth — 4000 nested `>` take 0.8 s and 64 KiB of `>` take about 3.5 minutes — so the normalizer keeps at most 16 quote and list markers per line before parsing. Other hostile 64 KiB inputs (nested brackets, emphasis, backticks, `<`) parse in about 1 s.
+
 ## Part 5. Conclusions and ideas to borrow (for a Rust voice computer-control agent)
 
 1. **Two-brain voice design.** Front: cheap full-duplex/realtime voice (GPT-Live 1, Gemini 3.8 Live, xAI Voice
