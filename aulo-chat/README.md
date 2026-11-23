@@ -56,6 +56,12 @@ machine as the emulator sees it. For a real device give the machine's address:
 ./gradlew :androidApp:assembleDebug   # only build the APK: androidApp/build/outputs/apk/debug/
 ```
 
+`./gradlew :androidApp:assembleRelease` builds the release APK, shrunk and obfuscated by R8
+and unsigned (the project has no signing configuration). kotlinx-rpc finds its generated code
+by reflection and ships no shrinker rules, so `androidApp/proguard-rules.pro` keeps its
+runtime and the `aulo.v1` contract; no test runs the release build, so after changing
+kotlinx-rpc or the contract, run it once against the server.
+
 ### iOS
 
 Needs macOS on Apple Silicon and Xcode. The Xcode project is generated from

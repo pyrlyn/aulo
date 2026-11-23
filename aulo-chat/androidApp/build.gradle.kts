@@ -28,6 +28,15 @@ android {
         buildConfigField("String", "SERVER_HOST", "\"$serverHost\"")
         buildConfigField("int", "SERVER_PORT", serverPort)
     }
+    buildTypes {
+        release {
+            // What ships is shrunk and obfuscated. Most keep rules come with the libraries;
+            // proguard-rules.pro holds the ones kotlinx-rpc does not ship.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
     buildFeatures { buildConfig = true }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
