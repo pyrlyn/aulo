@@ -1,10 +1,10 @@
 # Tool pins for mise users (https://mise.jdx.dev/). The Kotlin/Native toolchain itself comes from
 # the Gradle wrapper and the Kotlin Gradle plugin; mise only provides the JDK that runs Gradle
-# and the repository lint tools. The Gradle wrapper lands with the first S2 workspace task.
+# and the repository lint tools.
 [tools]
 java = "temurin-21" # runs Gradle and the Kotlin/Native compiler
 python = "3.15.1" # runs scripts/sync-issues.py (stdlib only)
-just = "1.58.0" # justfile (api-docs and, later, Gradle wrappers)
+just = "1.58.0" # justfile (Gradle test, lint and build wrappers, api-docs)
 # Workflow lint (hk.pkl); CI lints through the pipeline workflow.
 "github:jdx/jactionlint" = "2.0.2" # the pre-push hook and local `mise x -- jactionlint`
 hk = "2.5.0" # runs jactionlint as a pre-push hook (hk.pkl); `mise x -- hk install --mise`

@@ -1,0 +1,10 @@
+# Versions for every module and for build-logic. Bump through Renovate or a reviewed PR.
+[versions]
+kotlin = "2.4.21"
+ktlint-gradle = "14.2.0"
+ktlint = "1.8.0"
+
+[libraries]
+# build-logic puts these Gradle plugins on the classpath of every module.
+kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+ktlint-gradle-plugin = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlint-gradle" }
