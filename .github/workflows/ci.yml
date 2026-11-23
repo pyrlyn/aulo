@@ -26,8 +26,9 @@ env:
   SHARED_SETTINGS_DIR: ${{ github.workspace }}/packages/shared-settings
 
 jobs:
-  # A pull request's commit subjects must be Conventional Commits (workspace rule). Pushes to
-  # main skip this: every commit there arrived through a pull request that passed it.
+  # A pull request's commit subjects follow the workspace rule: `<task id>: <title>` (T12.22: …)
+  # when the commit belongs to a task, a Conventional Commit otherwise. Pushes to main skip this:
+  # every commit there arrived through a pull request that passed it.
   commits:
     if: github.event_name == 'pull_request' && github.event.pull_request.draft != true
     runs-on: ubuntu-latest
@@ -50,7 +51,7 @@ jobs:
             || { echo "base branch $base not found" >&2; exit 1; }
           # Merge commits are skipped (git writes their subjects), and so are reverts, which
           # git writes in its own format. Every offender is listed before the step fails.
-          pattern='^(feat|fix|docs|ci|test|chore|style|refactor|perf|build)(\([a-z0-9._/-]+\))?!?: .+'
+          pattern='^(T[0-9]+(\.[0-9]+)*|(feat|fix|docs|ci|test|chore|style|refactor|perf|build)(\([a-z0-9._/-]+\))?!?): .+'
           bad=0
           for sha in $(git rev-list --no-merges --reverse "$base..HEAD"); do
             subject=$(git log -1 --format=%s "$sha")
@@ -58,7 +59,7 @@ jobs:
               "Revert "*) continue ;;
             esac
             if ! printf '%s\n' "$subject" | grep -Eq "$pattern"; then
-              echo "not a Conventional Commit: $sha $subject" >&2
+              echo "neither '<task id>: <title>' nor a Conventional Commit: $sha $subject" >&2
               bad=1
             fi
           done
@@ -156,6 +157,10 @@ jobs:
         with:
           path: ~/.konan
           key: konan-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('gradle/libs.versions.toml') }}
+          # kotlin-kit's conan script reads konan.properties when Gradle creates its task, before
+          # Kotlin/Native is downloaded; an older cache still holds the toolchain after a catalog
+          # change that leaves the Kotlin version alone.
+          restore-keys: konan-${{ runner.os }}-${{ runner.arch }}-
 
       # One Gradle invocation: each extra one re-resolves the build classpath, and Maven Central
       # answers GitHub's Linux runners with 429 often enough to fail a second pass.
@@ -168,7 +173,7 @@ jobs:
           # The aulo-grpc and aulo-server test binaries link nghttp2, which Conan builds on this
           # runner; the executables do not link it until aulod serves gRPC (T3.6).
           tasks=(":aulo:linkAuloReleaseExecutable$TASK" ":aulo:linkAulodReleaseExecutable$TASK")
-          tasks+=(":aulo-grpc:linkDebugTest$TASK" ":aulo-server:linkDebugTest$TASK")
+          tasks+=(":aulo-grpc:linkDebugTest$TASK" ":aulo-server:linkDebugTest$TASK" ":aulo-secrets:linkDebugTest$TASK")
           if [ "$SKIP_TESTS" = true ]; then
             echo "::notice title=SKIP_CI_TESTS::tests skipped by SKIP_CI_TESTS"
           else
@@ -177,7 +182,7 @@ jobs:
           # linuxArm64 is cross-linked here and run by the linux-arm64 job.
           if [ "$TARGET" = linuxX64 ]; then
             tasks+=(:aulo:linkAuloReleaseExecutableLinuxArm64 :aulo:linkAulodReleaseExecutableLinuxArm64 :aulo:linkDebugTestLinuxArm64)
-            tasks+=(:aulo-grpc:linkDebugTestLinuxArm64 :aulo-server:linkDebugTestLinuxArm64)
+            tasks+=(:aulo-grpc:linkDebugTestLinuxArm64 :aulo-server:linkDebugTestLinuxArm64 :aulo-secrets:linkDebugTestLinuxArm64)
           fi
           ./gradlew "${tasks[@]}" --console=plain
 

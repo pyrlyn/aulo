@@ -199,10 +199,11 @@ abstract class ConanExtension
         private val project: Project,
     ) {
         /**
-         * Binds the static library [staticLibrary] of the Conan package [pkg] on every native target
-         * as the cinterop [name], described by `src/nativeInterop/cinterop/<name>.def`.
+         * Binds the static libraries [staticLibraries] of the Conan package [pkg] on every native
+         * target as the cinterop [name], described by `src/nativeInterop/cinterop/<name>.def`. List
+         * a library before the ones it uses, as the linker reads them in that order.
          *
-         * Without [staticLibrary] nothing is embedded in the binding: the package's `lib` directory
+         * With no [staticLibraries] nothing is embedded in the binding: the package's `lib` directory
          * goes on the linker path of the target's binaries, and the `.def` file names the libraries
          * with `-l` in a per-platform `linkerOpts`. That suits a package of many libraries, or of
          * shared ones, whose set differs by platform.
@@ -210,7 +211,7 @@ abstract class ConanExtension
         fun cinterop(
             name: String,
             pkg: String,
-            staticLibrary: String? = null,
+            vararg staticLibraries: String,
         ) {
             project.extensions.getByType<KotlinMultiplatformExtension>().targets.withType<KotlinNativeTarget>().configureEach {
                 val install = project.tasks.named<ConanInstallTask>(conanInstallTaskName(this.name))
@@ -224,9 +225,13 @@ abstract class ConanExtension
                     compilations.getByName("main").cinterops.create(name) {
                         definitionFile.set(project.layout.projectDirectory.file("src/nativeInterop/cinterop/$name.def"))
                         includeDirs(root.resolve("include"))
-                        if (staticLibrary != null) extraOpts("-libraryPath", root.resolve("lib").path, "-staticLibrary", staticLibrary)
+                        if (staticLibraries.isNotEmpty()) {
+                            extraOpts(
+                                listOf("-libraryPath", root.resolve("lib").path) + staticLibraries.flatMap { listOf("-staticLibrary", it) },
+                            )
+                        }
                     }
-                if (staticLibrary == null) binaries.all { linkerOpts("-L${root.resolve("lib").path}") }
+                if (staticLibraries.isEmpty()) binaries.all { linkerOpts("-L${root.resolve("lib").path}") }
                 project.tasks.named(interop.interopProcessingTaskName) {
                     // The options above carry paths only: this makes the binding wait for Conan and
                     // rebuild when Conan installs something else.

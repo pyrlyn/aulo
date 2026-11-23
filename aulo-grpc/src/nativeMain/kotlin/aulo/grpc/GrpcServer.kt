@@ -3,6 +3,7 @@ package aulo.grpc
 import io.ktor.network.selector.SelectorManager
 import io.ktor.network.sockets.InetSocketAddress
 import io.ktor.network.sockets.ServerSocket
+import io.ktor.network.sockets.Socket
 import io.ktor.network.sockets.SocketAddress
 import io.ktor.network.sockets.UnixSocketAddress
 import io.ktor.network.sockets.aSocket
@@ -14,7 +15,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.job
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -31,7 +34,8 @@ private val ACCEPT_BACKOFF = 100.milliseconds
 
 /**
  * A gRPC server: [handlers] by method path (`/package.Service/Method`), served on every endpoint
- * passed to [bind]. It knows no aulo service; aulo-server supplies the handlers.
+ * passed to [bind], over TLS where one is given. It knows no aulo service; aulo-server supplies
+ * the handlers.
  */
 class GrpcServer(
     handlers: Map<String, ServerHandler>,
@@ -43,11 +47,19 @@ class GrpcServer(
     private val selector = SelectorManager(Dispatchers.Default)
     private val mutex = Mutex()
     private val listeners = ArrayList<Pair<ServerSocket, Endpoint>>()
-    private val connections = HashMap<ServerConnection, Job>()
+
+    // By the coroutine serving each; null while its TLS handshake runs.
+    private val connections = HashMap<Job, ServerConnection?>()
     private var closing = false
 
-    /** Starts listening on [endpoint]; returns it with the port a TCP port 0 was given. */
-    suspend fun bind(endpoint: Endpoint): Endpoint {
+    /**
+     * Starts listening on [endpoint], with [tls] on every connection when given; returns the
+     * endpoint with the port a TCP port 0 was given.
+     */
+    suspend fun bind(
+        endpoint: Endpoint,
+        tls: TlsServer? = null,
+    ): Endpoint {
         val listener = aSocket(selector).tcp().bind(endpoint.address())
         val bound =
             when (endpoint) {
@@ -61,7 +73,7 @@ class GrpcServer(
             }
             listeners += listener to bound
         }
-        scope.launch { accept(listener) }
+        scope.launch { accept(listener, bound, tls) }
         return bound
     }
 
@@ -79,13 +91,17 @@ class GrpcServer(
             listener.close()
             if (endpoint is Endpoint.Unix) SystemFileSystem.delete(Path(endpoint.path), mustExist = false)
         }
-        open.keys.forEach { it.goAway() }
-        withTimeoutOrNull(grace) { open.values.joinAll() }
+        open.values.forEach { it?.goAway() }
+        withTimeoutOrNull(grace) { open.keys.joinAll() }
         job.cancelAndJoin()
         selector.close()
     }
 
-    private suspend fun accept(listener: ServerSocket) {
+    private suspend fun accept(
+        listener: ServerSocket,
+        endpoint: Endpoint,
+        tls: TlsServer?,
+    ) {
         while (true) {
             val socket =
                 try {
@@ -100,8 +116,8 @@ class GrpcServer(
             val admitted =
                 mutex.withLock {
                     if (closing || connections.size >= limits.maxConnections) return@withLock false
-                    val connection = ServerConnection(socket, limits, job, handlers)
-                    connections[connection] = scope.launch { serve(connection) }
+                    // serve() takes the lock before it touches the map, so the entry is there first.
+                    connections[scope.launch { serve(socket, endpoint, tls) }] = null
                     true
                 }
             // Over the cap the peer gets a closed socket before any of its bytes are read.
@@ -109,15 +125,28 @@ class GrpcServer(
         }
     }
 
-    private suspend fun serve(connection: ServerConnection) {
+    private suspend fun serve(
+        socket: Socket,
+        endpoint: Endpoint,
+        tls: TlsServer?,
+    ) {
+        val self = currentCoroutineContext().job
         try {
+            val raw = SocketStream(socket)
+            // A failed handshake has closed the socket already.
+            val stream = if (tls == null) raw else withTimeoutOrNull(limits.handshakeTimeout) { TlsStream.accept(raw, tls) } ?: return
+            val connection =
+                mutex.withLock {
+                    if (closing) return@withLock null
+                    ServerConnection(stream, endpoint, limits, job, handlers).also { connections[self] = it }
+                } ?: return stream.close()
             connection.run()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            // A peer that breaks the protocol or drops the socket ends only its own connection.
+            // A peer that breaks the protocol, fails TLS or drops the socket ends only its own connection.
         } finally {
-            withContext(NonCancellable) { mutex.withLock { connections.remove(connection) } }
+            withContext(NonCancellable) { mutex.withLock { connections.remove(self) } }
         }
     }
 }

@@ -1,0 +1,13 @@
+CREATE TABLE api_tokens (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    scope TEXT NOT NULL,
+    hash TEXT NOT NULL UNIQUE,
+    created_at INTEGER NOT NULL
+);
+
+insert:
+INSERT INTO api_tokens (id, name, scope, hash, created_at) VALUES (?, ?, ?, ?, ?);
+
+all:
+SELECT * FROM api_tokens ORDER BY id;

@@ -1,5 +1,8 @@
 package aulo.grpc
 
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+
 /**
  * Caps on what a peer may send. Every peer is untrusted, a local client included, so each cap
  * holds on every listener.
@@ -13,12 +16,15 @@ data class GrpcLimits(
     val maxConcurrentStreams: Int = 100,
     /** Connections a server holds at once; one more is closed as soon as it is accepted. */
     val maxConnections: Int = 64,
+    /** How long a TLS handshake may take; a connection still in it counts against [maxConnections]. */
+    val handshakeTimeout: Duration = 10.seconds,
 ) {
     init {
         require(maxMessageBytes > 0) { "maxMessageBytes must be positive" }
         require(maxHeaderListBytes > 0) { "maxHeaderListBytes must be positive" }
         require(maxConcurrentStreams > 0) { "maxConcurrentStreams must be positive" }
         require(maxConnections > 0) { "maxConnections must be positive" }
+        require(handshakeTimeout.isPositive()) { "handshakeTimeout must be positive" }
     }
 }
 

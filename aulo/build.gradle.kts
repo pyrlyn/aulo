@@ -50,6 +50,11 @@ val generateBuildInfo =
     }
 
 kotlin {
+    // aulod's SIGINT and SIGTERM handler; Windows has console control handlers instead.
+    targets
+        .withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>()
+        .matching { it.konanTarget.family != org.jetbrains.kotlin.konan.target.Family.MINGW }
+        .configureEach { compilations.getByName("main").cinterops.create("signals") }
     targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().configureEach {
         binaries {
             executable("aulo") {
@@ -69,13 +74,30 @@ kotlin {
         }
         nativeMain.dependencies {
             implementation(project(":aulo-config"))
+            implementation(project(":aulo-models"))
+            implementation(project(":aulo-secrets"))
+            implementation(project(":aulo-server"))
+            implementation(project(":aulo-store"))
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.serialization.json)
             implementation("pyrlyn.kit:cli")
             implementation("pyrlyn.kit:fs")
+            implementation("pyrlyn.kit:http-ktor")
             implementation("pyrlyn.kit:process")
         }
         nativeTest.dependencies {
             implementation("pyrlyn.kit:toml")
         }
+    }
+}
+
+// AulodProcessTest runs the linked aulod of the target under test.
+kotlin.targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().configureEach {
+    val aulod = binaries.getExecutable("aulod", org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType.DEBUG)
+    val testName = "${name}Test"
+    tasks.withType<org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest>().matching { it.name == testName }.configureEach {
+        dependsOn(aulod.linkTaskProvider)
+        environment("AULOD_BIN", aulod.outputFile.path)
     }
 }
 

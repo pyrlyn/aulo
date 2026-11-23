@@ -1,0 +1,5 @@
+# A file of the wrong size does not count: only verified files reach their final name.
+args = ["models", "ls"]
+
+[home]
+"models/parakeet-tdt-0.6b-v3-int8/tokens.txt" = "not the pinned size"

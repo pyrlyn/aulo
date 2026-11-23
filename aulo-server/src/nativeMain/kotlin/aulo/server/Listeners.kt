@@ -8,11 +8,13 @@ class ListenerConfigException(
     message: String,
 ) : Exception(message)
 
-/** A TCP listener for remote clients and the TLS files it must serve with (spec §11). */
+/**
+ * A TCP listener for remote clients; it always serves TLS (spec §11): [tls] names the files, or
+ * is null for aulod's own self-signed certificate ([SelfSignedTls]).
+ */
 data class RemoteListener(
     val endpoint: Endpoint.Tcp,
-    val tlsCert: String,
-    val tlsKey: String,
+    val tls: TlsFiles?,
 )
 
 /** Where aulod listens: always the owner-only local socket, and TCP when `daemon.listen` is set. */
@@ -21,7 +23,10 @@ data class Listeners(
     val remote: RemoteListener? = null,
 ) {
     companion object {
-        /** The socket file in the aulo home directory. */
+        /** The owner-only directory in the aulo home that holds the socket. */
+        const val RUN_DIR = "run"
+
+        /** The socket file in [RUN_DIR]. */
         const val SOCKET_NAME = "aulod.sock"
 
         // sun_path is 104 bytes on macOS and 108 on Linux and Windows, with the terminating NUL.
@@ -32,7 +37,7 @@ data class Listeners(
             home: String,
         ): Listeners {
             val separator = if ('\\' in home && '/' !in home) "\\" else "/"
-            val socket = home.trimEnd('/', '\\') + separator + SOCKET_NAME
+            val socket = home.trimEnd('/', '\\') + separator + RUN_DIR + separator + SOCKET_NAME
             if (socket.encodeToByteArray().size > MAX_SOCKET_PATH_BYTES) {
                 throw ListenerConfigException(
                     "the socket path $socket is longer than $MAX_SOCKET_PATH_BYTES bytes; set AULO_HOME to a shorter directory",
@@ -40,10 +45,21 @@ data class Listeners(
             }
             val listen = config.listen ?: return Listeners(Endpoint.Unix(socket))
             val endpoint = parseListen(listen)
-            // TLS is required on every TCP listener, loopback included (spec §11, §13).
-            val cert = config.tlsCert ?: throw ListenerConfigException("daemon.listen needs daemon.tls_cert: TLS is required on TCP")
-            val key = config.tlsKey ?: throw ListenerConfigException("daemon.listen needs daemon.tls_key: TLS is required on TCP")
-            return Listeners(Endpoint.Unix(socket), RemoteListener(endpoint, cert, key))
+            // TLS is served on every TCP listener, loopback included (spec §11, §13); without
+            // files of its own the listener uses aulod's self-signed certificate.
+            val cert = config.tlsCert
+            val key = config.tlsKey
+            val files =
+                when {
+                    cert != null && key != null -> TlsFiles(cert, key)
+
+                    cert == null && key == null -> null
+
+                    else -> throw ListenerConfigException(
+                        "daemon.tls_cert and daemon.tls_key go together: set both, or neither for a self-signed certificate",
+                    )
+                }
+            return Listeners(Endpoint.Unix(socket), RemoteListener(endpoint, files))
         }
 
         /** `host:port` or `[ipv6]:port`, port 1 to 65535. */
