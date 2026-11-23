@@ -1,0 +1,12 @@
+Run aulod at login: a launchd agent, a systemd user unit or a Task Scheduler task
+
+Usage: aulod service [OPTIONS] <COMMAND>
+
+Commands:
+  install    Install and start the service for this home; a repeat changes nothing
+  uninstall  Stop and remove the service
+  status     Say whether the service is installed and running
+
+Options:
+      --home <DIR>  The aulo home, ahead of AULO_HOME and ~/.aulo
+  -h, --help        Print help

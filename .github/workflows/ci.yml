@@ -156,6 +156,10 @@ jobs:
         with:
           path: ~/.konan
           key: konan-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('gradle/libs.versions.toml') }}
+          # kotlin-kit's conan script reads konan.properties when Gradle creates its task, before
+          # Kotlin/Native is downloaded; an older cache still holds the toolchain after a catalog
+          # change that leaves the Kotlin version alone.
+          restore-keys: konan-${{ runner.os }}-${{ runner.arch }}-
 
       # One Gradle invocation: each extra one re-resolves the build classpath, and Maven Central
       # answers GitHub's Linux runners with 429 often enough to fail a second pass.
@@ -168,7 +172,7 @@ jobs:
           # The aulo-grpc and aulo-server test binaries link nghttp2, which Conan builds on this
           # runner; the executables do not link it until aulod serves gRPC (T3.6).
           tasks=(":aulo:linkAuloReleaseExecutable$TASK" ":aulo:linkAulodReleaseExecutable$TASK")
-          tasks+=(":aulo-grpc:linkDebugTest$TASK" ":aulo-server:linkDebugTest$TASK")
+          tasks+=(":aulo-grpc:linkDebugTest$TASK" ":aulo-server:linkDebugTest$TASK" ":aulo-secrets:linkDebugTest$TASK")
           if [ "$SKIP_TESTS" = true ]; then
             echo "::notice title=SKIP_CI_TESTS::tests skipped by SKIP_CI_TESTS"
           else
@@ -177,7 +181,7 @@ jobs:
           # linuxArm64 is cross-linked here and run by the linux-arm64 job.
           if [ "$TARGET" = linuxX64 ]; then
             tasks+=(:aulo:linkAuloReleaseExecutableLinuxArm64 :aulo:linkAulodReleaseExecutableLinuxArm64 :aulo:linkDebugTestLinuxArm64)
-            tasks+=(:aulo-grpc:linkDebugTestLinuxArm64 :aulo-server:linkDebugTestLinuxArm64)
+            tasks+=(:aulo-grpc:linkDebugTestLinuxArm64 :aulo-server:linkDebugTestLinuxArm64 :aulo-secrets:linkDebugTestLinuxArm64)
           fi
           ./gradlew "${tasks[@]}" --console=plain
 

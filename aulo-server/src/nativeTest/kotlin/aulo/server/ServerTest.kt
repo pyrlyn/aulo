@@ -6,7 +6,14 @@ import aulo.grpc.GrpcClient
 import aulo.grpc.GrpcException
 import aulo.grpc.ServerHandler
 import aulo.grpc.StatusCode
+import aulo.secrets.FileSecretStore
+import aulo.store.Store
+import aulo.store.databasePath
 import fs.TempDir
+import fs.createDir
+import fs.mode
+import fs.setMode
+import fs.symlink
 import io.grpc.health.v1.HealthCheckRequest
 import io.grpc.health.v1.HealthCheckResponse
 import io.grpc.health.v1.HealthCheckResponse.ServingStatus
@@ -21,11 +28,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
 import okio.ByteString
 import platform.posix.getenv
 import process.Command
 import process.ExitStatus
 import process.runBounded
+import kotlin.experimental.ExperimentalNativeApi
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -36,6 +46,9 @@ import kotlin.time.Duration.Companion.seconds
 
 private const val CHECK = "/grpc.health.v1.Health/Check"
 private const val REFLECT = "/grpc.reflection.v1.ServerReflection/ServerReflectionInfo"
+
+@OptIn(ExperimentalNativeApi::class)
+private val posix = Platform.osFamily != OsFamily.WINDOWS
 
 private val echo = ServerHandler { call -> while (true) call.send(call.receive() ?: break) }
 
@@ -122,15 +135,130 @@ class ServerTest {
     fun built_in_methods_cannot_be_replaced() {
         assertFailsWith<IllegalArgumentException> { AuloServer(mapOf(CHECK to echo)) }
     }
+}
+
+class LocalSocketTest {
+    @Test
+    fun the_socket_directory_is_0700_and_the_socket_0600() =
+        serving { client, socket ->
+            assertEquals(ServingStatus.SERVING, client.check(""))
+            if (!posix) return@serving
+            assertEquals(0b111_000_000, mode(Path(socket.path).parent!!)!! and 0b111_111_111)
+            assertEquals(0b110_000_000, mode(Path(socket.path))!! and 0b111_111_111)
+        }
 
     @Test
-    fun a_tcp_listener_is_refused_until_tls_is_supported() =
+    fun a_loose_or_linked_socket_directory_is_refused() =
+        transport {
+            if (!posix) return@transport
+            TempDir.create("aulo-server").use { home ->
+                val run = Path(home.path, Listeners.RUN_DIR)
+                createDir(run)
+                setMode(run, 0b111_101_101)
+                val server = AuloServer(emptyMap())
+                val loose = assertFailsWith<ListenerConfigException> { server.start(Listeners.from(DaemonConfig(), home.path.toString())) }
+                assertContains(loose.message!!, "chmod 700")
+                SystemFileSystem.delete(run)
+                createDir(Path(home.path, "elsewhere"))
+                setMode(Path(home.path, "elsewhere"), 0b111_000_000)
+                symlink(Path(home.path, "elsewhere"), run)
+                assertFailsWith<ListenerConfigException> { server.start(Listeners.from(DaemonConfig(), home.path.toString())) }
+                server.shutdown(1.seconds)
+            }
+        }
+}
+
+class AuthTest {
+    @Test
+    fun tcp_needs_a_known_bearer_token_and_the_local_socket_does_not() =
         transport {
             TempDir.create("aulo-server").use { home ->
-                val config = DaemonConfig(listen = "127.0.0.1:7878", tlsCert = "c.pem", tlsKey = "k.pem")
-                val server = AuloServer(emptyMap())
-                assertFailsWith<ListenerConfigException> { server.start(Listeners.from(config, home.path.toString())) }
+                val token = BearerTokens.generate()
+                val server = AuloServer(mapOf("/test.Echo/Echo" to echo), tokenHashes = listOf(BearerTokens.hash(token)))
+                val tcp = server.bind(Endpoint.Tcp("127.0.0.1", 0))
+                val local = server.start(Listeners.from(DaemonConfig(), home.path.toString())).single()
+                val remote = GrpcClient.connect(tcp)
+                val owner = GrpcClient.connect(local)
+                try {
+                    // The owner on the local socket needs no token.
+                    assertEquals(ServingStatus.SERVING, owner.check(""))
+
+                    val refused =
+                        listOf(
+                            emptyList(),
+                            listOf("authorization" to "Bearer ${BearerTokens.generate()}"),
+                            listOf("authorization" to token),
+                            listOf("authorization" to "Basic $token"),
+                            listOf("authorization" to "Bearer "),
+                            listOf("authorization" to "Bearer $token x"),
+                            listOf("authorization" to "Bearer $token", "authorization" to "Bearer $token"),
+                            listOf("authorization" to "Bearer $token" + "x".repeat(BearerTokens.MAX_HEADER_CHARS)),
+                        )
+                    for ((case, metadata) in refused.withIndex()) {
+                        val e = assertFailsWith<GrpcException>("case $case") { remote.check("", metadata) }
+                        assertEquals(StatusCode.UNAUTHENTICATED, e.status.code, "case $case")
+                        assertEquals("a valid bearer token is required", e.status.message)
+                    }
+                    // Built-in services are guarded too, and so is a stream before its first message.
+                    assertStatus(StatusCode.UNAUTHENTICATED) {
+                        remote.unary("/test.Echo/Echo", byteArrayOf(1))
+                    }
+
+                    assertEquals(ServingStatus.SERVING, remote.check("", listOf("authorization" to "Bearer $token")))
+                    assertEquals(ServingStatus.SERVING, remote.check("", listOf("authorization" to "bearer $token")))
+                    val echoed = remote.unary("/test.Echo/Echo", byteArrayOf(7), listOf("authorization" to "Bearer $token"))
+                    assertEquals(listOf<Byte>(7), echoed.toList())
+                } finally {
+                    remote.close()
+                    owner.close()
+                    server.shutdown(1.seconds)
+                }
+            }
+        }
+
+    @Test
+    fun without_tokens_tcp_refuses_every_call() =
+        transport {
+            val server = AuloServer(emptyMap())
+            val client = GrpcClient.connect(server.bind(Endpoint.Tcp("127.0.0.1", 0)))
+            try {
+                assertStatus(StatusCode.UNAUTHENTICATED) {
+                    client.check("", listOf("authorization" to "Bearer ${BearerTokens.generate()}"))
+                }
+            } finally {
+                client.close()
                 server.shutdown(1.seconds)
+            }
+        }
+
+    @Test
+    fun tokens_are_random_prefixed_and_url_safe() {
+        val tokens = List(32) { BearerTokens.generate() }
+        assertEquals(tokens.size, tokens.toSet().size)
+        for (token in tokens) {
+            assertTrue(token.startsWith(BearerTokens.PREFIX), token)
+            assertEquals(BearerTokens.PREFIX.length + 43, token.length, token)
+            assertTrue(token.all { it.isLetterOrDigit() || it == '-' || it == '_' }, token)
+        }
+        assertEquals(
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+            BearerTokens.hash("abc"),
+        )
+    }
+
+    @Test
+    fun the_first_token_is_made_once_and_only_its_hash_is_stored() =
+        TempDir.create("aulo-server").use { home ->
+            Store.open(databasePath(home.path).toString()).use { store ->
+                val secrets = FileSecretStore(Path(home.path, "secrets").toString())
+                val first = ensureFirstToken(store, secrets)
+                val token = secrets.load(FIRST_TOKEN)!!
+                assertEquals(listOf(BearerTokens.hash(token)), first)
+                assertEquals(first, ensureFirstToken(store, secrets))
+                assertEquals(token, secrets.load(FIRST_TOKEN))
+                val stored = store.listApiTokens().single()
+                assertEquals(ADMIN_SCOPE, stored.scope)
+                assertTrue(stored.toString().contains(token).not(), "the store never holds the token")
             }
         }
 }
@@ -168,13 +296,13 @@ class GrpcurlTest {
 class ListenersTest {
     @Test
     fun the_default_is_the_local_socket_in_the_home_directory() {
-        assertEquals(Listeners(Endpoint.Unix("/home/me/.aulo/aulod.sock")), Listeners.from(DaemonConfig(), "/home/me/.aulo/"))
-        assertEquals(Endpoint.Unix("C:\\Users\\me\\.aulo\\aulod.sock"), Listeners.from(DaemonConfig(), "C:\\Users\\me\\.aulo").local)
+        assertEquals(Listeners(Endpoint.Unix("/home/me/.aulo/run/aulod.sock")), Listeners.from(DaemonConfig(), "/home/me/.aulo/"))
+        assertEquals(Endpoint.Unix("C:\\Users\\me\\.aulo\\run\\aulod.sock"), Listeners.from(DaemonConfig(), "C:\\Users\\me\\.aulo").local)
     }
 
     @Test
     fun a_socket_path_over_the_platform_limit_is_refused() {
-        val home = "/" + "d".repeat(Listeners.MAX_SOCKET_PATH_BYTES - "/aulod.sock".length - 1)
+        val home = "/" + "d".repeat(Listeners.MAX_SOCKET_PATH_BYTES - "/run/aulod.sock".length - 1)
         assertEquals(
             Listeners.MAX_SOCKET_PATH_BYTES,
             Listeners
@@ -185,12 +313,16 @@ class ListenersTest {
     }
 
     @Test
-    fun listen_needs_both_tls_files() {
-        val e = assertFailsWith<ListenerConfigException> { Listeners.from(DaemonConfig(listen = "127.0.0.1:7878"), "/h") }
-        assertContains(e.message!!, "tls_cert")
-        assertFailsWith<ListenerConfigException> { Listeners.from(DaemonConfig(listen = "127.0.0.1:7878", tlsCert = "c"), "/h") }
+    fun listen_takes_both_tls_files_or_neither() {
+        val e = assertFailsWith<ListenerConfigException> { Listeners.from(DaemonConfig(listen = "127.0.0.1:7878", tlsCert = "c"), "/h") }
+        assertEquals("daemon.tls_cert and daemon.tls_key go together: set both, or neither for a self-signed certificate", e.message)
+        assertFailsWith<ListenerConfigException> { Listeners.from(DaemonConfig(listen = "127.0.0.1:7878", tlsKey = "k"), "/h") }
         val remote = Listeners.from(DaemonConfig(listen = "[::1]:7878", tlsCert = "c", tlsKey = "k"), "/h").remote
-        assertEquals(RemoteListener(Endpoint.Tcp("::1", 7878), "c", "k"), remote)
+        assertEquals(RemoteListener(Endpoint.Tcp("::1", 7878), TlsFiles("c", "k")), remote)
+        assertEquals(
+            RemoteListener(Endpoint.Tcp("127.0.0.1", 7878), null),
+            Listeners.from(DaemonConfig(listen = "127.0.0.1:7878"), "/h").remote,
+        )
     }
 
     @Test
@@ -218,7 +350,7 @@ class ListenersTest {
     }
 }
 
-private fun transport(block: suspend CoroutineScope.() -> Unit) = runBlocking { withTimeout(60.seconds) { block() } }
+internal fun transport(block: suspend CoroutineScope.() -> Unit) = runBlocking { withTimeout(60.seconds) { block() } }
 
 /** An [AuloServer] with one extra service, on the local socket from the default config. */
 private fun serving(block: suspend (GrpcClient, Endpoint.Unix) -> Unit) =
@@ -236,8 +368,10 @@ private fun serving(block: suspend (GrpcClient, Endpoint.Unix) -> Unit) =
         }
     }
 
-private suspend fun GrpcClient.check(service: String): ServingStatus =
-    HealthCheckResponse.ADAPTER.decode(unary(CHECK, HealthCheckRequest(service = service).encode())).status
+internal suspend fun GrpcClient.check(
+    service: String,
+    metadata: List<Pair<String, String>> = emptyList(),
+): ServingStatus = HealthCheckResponse.ADAPTER.decode(unary(CHECK, HealthCheckRequest(service = service).encode(), metadata)).status
 
 /** The file names in a FileDescriptorResponse: field 1 of each FileDescriptorProto. */
 private fun ServerReflectionResponse.files(): List<String> = file_descriptor_response!!.file_descriptor_proto.map { it.fileName() }
@@ -248,7 +382,7 @@ private fun ByteString.fileName(): String {
     return substring(2, 2 + this[1].toInt()).utf8()
 }
 
-private inline fun assertStatus(
+internal inline fun assertStatus(
     code: StatusCode,
     message: String? = null,
     block: () -> Unit,

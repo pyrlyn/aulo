@@ -46,10 +46,18 @@ kotlin {
             api(project(":aulo-grpc"))
             implementation(project(":aulo-config"))
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.crypto.rand)
+            implementation(project(":aulo-types"))
+        }
+        nativeMain.dependencies {
+            // The owner-only socket directory and where the first token is kept; its hash is stored.
+            implementation(project(":aulo-secrets"))
+            implementation(project(":aulo-store"))
+            // The run directory, its lock and the pidfile.
+            implementation("pyrlyn.kit:fs")
         }
         nativeTest.dependencies {
-            // Temporary home directories for the local socket; grpcurl as a child process.
-            implementation("pyrlyn.kit:fs")
+            // grpcurl as a child process.
             implementation("pyrlyn.kit:process")
         }
     }

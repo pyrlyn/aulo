@@ -24,6 +24,7 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 | ninja (1.13.2) | mise (`mise.toml`) | CMake's generator for those builds on a Windows host | https://github.com/ninja-build/ninja |
 | uv (0.13.9) | mise (`mise.toml`) | Installs conan for mise (a PyPI package) | https://github.com/astral-sh/uv |
 | grpcurl (1.9.4) | mise, on demand (`mise x aqua:fullstorydev/grpcurl@1.9.4`) | Optional: `AULO_GRPCURL` makes the aulo-server tests list services and call health with it | https://github.com/fullstorydev/grpcurl |
+| libsecret-1 | system package on Linux (`libsecret-1-0` on Debian and Ubuntu); optional | `:aulo-secrets` opens it with `dlopen` at run time to keep tokens in the Secret Service; nothing links it (LGPL-2.1-or-later); without it secrets go to 0600 files | https://gitlab.gnome.org/GNOME/libsecret |
 | protoc-gen-doc (v1.5.1) | buf remote plugin `buf.build/community/pseudomuto-doc` (`buf.gen.yaml`), nothing to install | Generates the Markdown gRPC API reference in `docs/api/` (`just api-docs`) | https://github.com/pseudomuto/protoc-gen-doc |
 
 ## Gradle
@@ -40,6 +41,8 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 | pyrlyn.kit:fs | local (included build `packages/kotlin-kit`, pyrlyn/packages 0.0.5 in CI) | https://github.com/pyrlyn/packages/tree/main/kotlin-kit/fs | Reading config files (missing is empty), atomic writes, rotating log files, temporary directories in tests |
 | pyrlyn.kit:cli | local (included build `packages/kotlin-kit`, pyrlyn/packages 0.0.5 in CI) | https://github.com/pyrlyn/packages/tree/main/kotlin-kit/cli | `aulo` command tree, help and errors with clap semantics |
 | pyrlyn.kit:process | local (included build `packages/kotlin-kit`, pyrlyn/packages 0.0.5 in CI) | https://github.com/pyrlyn/packages/tree/main/kotlin-kit/process | The process environment for the config env layer |
+| pyrlyn.kit:http | local (included build `packages/kotlin-kit`, pyrlyn/packages 0.0.5 in CI) | https://github.com/pyrlyn/packages/tree/main/kotlin-kit/http | Engine-neutral streaming HTTP client interface for model downloads (`aulo-models`) |
+| pyrlyn.kit:http-ktor | local (included build `packages/kotlin-kit`, pyrlyn/packages 0.0.5 in CI) | https://github.com/pyrlyn/packages/tree/main/kotlin-kit/http-ktor | Its Ktor adapter (Darwin, Curl and WinHttp engines), wired in `aulo` |
 | app.cash.sqldelight:gradle-plugin (2.4.1) | local (`build-logic`) | https://github.com/sqldelight/sqldelight | Typed SQLite queries in `aulo-store`, checked against the schema at build time |
 | app.cash.sqldelight:runtime (2.4.1) | local (via `pyrlyn.kit:db-sqldelight`) | https://github.com/sqldelight/sqldelight | Runtime of the generated queries |
 | pyrlyn.kit:db-sqldelight | local (included build `packages/kotlin-kit`, pyrlyn/packages 0.0.5 in CI) | https://github.com/pyrlyn/packages/tree/main/kotlin-kit/db-sqldelight | Runs SQLDelight's generated queries on a kit `db` connection (`aulo-store`) |
@@ -50,11 +53,12 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 | com.squareup.wire:wire-gradle-plugin (7.2.2) | local (`build-logic`) | https://github.com/square/wire | Generates `aulo-proto` from `proto/aulo/v1` with its own proto parser, so no `protoc` (spec §17 D10; Apache-2.0) |
 | com.squareup.wire:wire-schema (7.2.2) | local (`build-logic`) | https://github.com/square/wire | Wire's schema API and descriptor encoder for `GrpcTables`, the handler that writes the gRPC method tables and reflection descriptors (Apache-2.0) |
 | com.squareup.wire:wire-runtime (7.2.2) | local (`aulo-proto`) | https://github.com/square/wire | Runtime of the generated messages: `Message`, `ProtoAdapter`, `Service` (Apache-2.0) |
-| com.squareup.okio:okio (3.18.2) | local (via `wire-runtime`) | https://github.com/square/okio | Byte strings and buffers of the Wire runtime (Apache-2.0) |
+| com.squareup.okio:okio (3.18.2) | local (`aulo-models`; via `wire-runtime`) | https://github.com/square/okio | Byte strings and buffers of the Wire runtime; streaming SHA-256 of model downloads (Apache-2.0) |
 | org.jetbrains.kotlinx:kotlinx-coroutines-core (1.11.0) | local (`aulo-proto`, `aulo-grpc`) | https://github.com/Kotlin/kotlinx.coroutines | `suspend` service methods and the channels of streaming RPCs; the version kotlin-kit uses (Apache-2.0) |
 | io.ktor:ktor-network (3.6.1) | local (`aulo-grpc`) | https://github.com/ktorio/ktor | TCP and Unix sockets under the gRPC transport on every target; HTTP/2 itself is nghttp2 (spec §17 D11; Apache-2.0) |
 | io.ktor:ktor-io, io.ktor:ktor-utils (3.6.1) | local (via `ktor-network`) | https://github.com/ktorio/ktor | The socket byte channels (Apache-2.0) |
 | org.jetbrains.kotlinx:kotlinx-io-core | local (via `ktor-io`) | https://github.com/Kotlin/kotlinx-io | Removes a Unix socket file when the gRPC server shuts down (Apache-2.0) |
+| org.kotlincrypto.random:crypto-rand (0.6.0) | local (`aulo-server`) | https://github.com/KotlinCrypto/random | The OS's random bytes (`getrandom`, `CCRandomGenerateBytes`, `BCryptGenRandom`) for bearer tokens on every target (Apache-2.0) |
 | org.jetbrains.kotlin:kotlin-test | local (`commonTest`) | https://github.com/JetBrains/kotlin | Unit tests |
 | org.jetbrains.kotlin:kotlin-test-junit5 | local (`build-logic` tests) | https://github.com/JetBrains/kotlin | Tests of the module-graph rules on the JVM |
 | org.junit.platform:junit-platform-launcher | local (`build-logic` tests) | https://github.com/junit-team/junit-framework | Gradle 9 needs it on the test runtime classpath |
@@ -68,6 +72,7 @@ Kotlin/Native's own clang and sysroots for Linux and Windows (`research.md` 4.10
 | Package | Where | Source | Why here |
 | --- | --- | --- | --- |
 | libnghttp2 (1.68.1) | local (`aulo-grpc/conanfile.txt`) | https://github.com/nghttp2/nghttp2 | HTTP/2 under aulo's gRPC transport on every target (spec §17 D11; MIT) |
+| mbedtls (3.6.7) | local (`aulo-grpc/conanfile.txt`) | https://github.com/Mbed-TLS/mbedtls | TLS 1.3 for TCP listeners and clients, self-signed certificates (T3.8; Apache-2.0 OR GPL-2.0-or-later, taken as Apache-2.0) |
 
 Native libraries used by the speech and audio modules (sherpa-onnx, whisper.cpp, libopus,
 and so on) are chosen and recorded here by the task that first wires each of them, including

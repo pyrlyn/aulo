@@ -1,0 +1,17 @@
+Check that a remote aulod answers with the pinned certificate
+
+A TLS handshake that accepts only the certificate with --pin, then a health check with the bearer
+token from AULO_TOKEN when it is set. Nothing is saved.
+
+Usage: aulo connect --pin <SHA256> <ADDR>
+
+Arguments:
+  <ADDR>
+          The aulod's daemon.listen address: host:port or [ipv6]:port
+
+Options:
+      --pin <SHA256>
+          The certificate's SHA-256, as aulod logs it at start; colons optional
+
+  -h, --help
+          Print help (see a summary with '-h')
