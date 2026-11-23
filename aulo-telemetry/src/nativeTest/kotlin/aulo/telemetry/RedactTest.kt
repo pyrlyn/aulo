@@ -59,6 +59,13 @@ class RedactTest {
     }
 
     @Test
+    fun urlUserinfoIsMasked() {
+        assertEquals("https://$REDACTED@host/v1", Redact.scrubText("https://bob:hunter2@host/v1"))
+        assertEquals("http://host:80/path@x", Redact.scrubText("http://host:80/path@x"))
+        assertEquals("http://host/v1?api_key=$REDACTED", Redact.scrubText("http://host/v1?api_key=abcdef"))
+    }
+
+    @Test
     fun scrubbingIsIdempotent() {
         val once = Redact.scrubText("password=hunter2 Bearer abcdef0123456789")
         assertEquals(once, Redact.scrubText(once))
