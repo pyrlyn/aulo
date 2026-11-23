@@ -44,6 +44,7 @@ class Store private constructor(
     private val grants = database.grantsQueries
     private val audit = database.auditQueries
     private val messageSearch = database.messageSearchQueries
+    private val apiTokens = database.apiTokensQueries
 
     internal lateinit var migrator: Migrator
         private set
@@ -292,6 +293,19 @@ class Store private constructor(
 
     /** Returns false when no grant has that id. */
     fun revokeGrant(id: String): Boolean = io("cannot revoke grant") { grants.delete(id).value > 0 }
+
+    /** Records a token by its [hash]; a hash already stored fails, since two tokens never share one. */
+    fun putApiToken(
+        name: String,
+        scope: String,
+        hash: String,
+    ): ApiToken =
+        io("cannot record token") {
+            ApiToken(nextId(), name, scope, hash, now()).also { apiTokens.insert(it.id, name, scope, hash, it.createdAt) }
+        }
+
+    /** Every token, oldest first. */
+    fun listApiTokens(): List<ApiToken> = io("cannot list tokens") { apiTokens.all(::ApiToken).executeAsList() }
 
     /**
      * Appends one audit row. A [prevHash] already used by another row fails: two writers that
