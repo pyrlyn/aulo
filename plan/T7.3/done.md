@@ -1,6 +1,6 @@
 # T7.3. Done
 
-PR: stacked on #107 (T3.9), branch `t7.3-models`.
+PR: https://github.com/pyrlyn/aulo/pull/110 (stacked on #107, T3.9).
 
 ## What was done
 
