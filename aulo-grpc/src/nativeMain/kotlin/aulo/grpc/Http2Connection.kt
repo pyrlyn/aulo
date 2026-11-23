@@ -48,13 +48,6 @@ import aulo.grpc.nghttp2.nghttp2_submit_trailer
 import cnames.structs.nghttp2_option
 import cnames.structs.nghttp2_session
 import cnames.structs.nghttp2_session_callbacks
-import io.ktor.network.sockets.Socket
-import io.ktor.network.sockets.openReadChannel
-import io.ktor.network.sockets.openWriteChannel
-import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.ByteWriteChannel
-import io.ktor.utils.io.readAvailable
-import io.ktor.utils.io.writeFully
 import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.COpaquePointer
 import kotlinx.cinterop.CPointer
@@ -86,12 +79,14 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.withContext
 import platform.posix.memcpy
 
 /** A header list in nghttp2's terms: lowercase names, in order, repeats allowed. */
@@ -109,7 +104,7 @@ private const val CONNECTION_WINDOW = 16 shl 20
 /** Buffered response bytes per stream before a sender waits for the peer to read. */
 private const val SEND_HIGH_WATER = 64 * 1024
 
-private const val READ_CHUNK = 16 * 1024
+internal const val READ_CHUNK = 16 * 1024
 
 /** Reads in flight between the socket and the loop; the socket waits beyond that. */
 private const val READ_AHEAD = 4
@@ -200,13 +195,13 @@ internal class Outbound {
 }
 
 /**
- * One HTTP/2 connection over nghttp2. A single loop coroutine owns the session: it feeds socket
- * bytes in, runs the commands other coroutines [post], and writes what nghttp2 produces. nghttp2
+ * One HTTP/2 connection over nghttp2. A single loop coroutine owns the session: it feeds
+ * [stream] bytes in, runs the commands other coroutines [post], and writes what nghttp2 produces. nghttp2
  * is never touched outside that loop, so it needs no lock.
  */
 @OptIn(ExperimentalForeignApi::class)
 internal abstract class Http2Connection(
-    private val socket: Socket,
+    private val stream: ByteStream,
     protected val limits: GrpcLimits,
     parent: Job?,
     server: Boolean,
@@ -244,13 +239,11 @@ internal abstract class Http2Connection(
 
     /** Serves the connection until either side ends it. */
     suspend fun run() {
-        val input = socket.openReadChannel()
-        val output = socket.openWriteChannel(autoFlush = false)
         val incoming = Channel<ByteArray>(READ_AHEAD)
-        val reader = scope.launch { readLoop(input, incoming) }
+        val reader = scope.launch { readLoop(incoming) }
         try {
             start()
-            flush(output)
+            flush()
             while (wantsIo()) {
                 val ok =
                     select {
@@ -262,10 +255,10 @@ internal abstract class Http2Connection(
                     }
                 // A protocol error still leaves a GOAWAY for the peer; send it if the socket lets us.
                 if (!ok) {
-                    runCatching { flush(output) }
+                    runCatching { flush() }
                     break
                 }
-                flush(output)
+                flush()
             }
         } finally {
             closing = true
@@ -275,9 +268,10 @@ internal abstract class Http2Connection(
                 val command = commands.tryReceive().getOrNull() ?: break
                 runCatching { command() }
             }
-            reader.cancel()
             scope.cancel()
-            socket.close()
+            // A TLS stream frees its state on close, so the reader must be out of it first.
+            withContext(NonCancellable) { reader.join() }
+            stream.close()
             nghttp2_session_del(session)
             ref.dispose()
         }
@@ -444,7 +438,7 @@ internal abstract class Http2Connection(
         return rv >= 0
     }
 
-    private suspend fun flush(output: ByteWriteChannel) {
+    private suspend fun flush() {
         while (true) {
             val chunk =
                 memScoped {
@@ -453,26 +447,23 @@ internal abstract class Http2Connection(
                     check(n >= 0) { "nghttp2: ${nghttp2_strerror(n.toInt())?.toKString()}" }
                     if (n == 0L) null else checkNotNull(data.value).reinterpret<ByteVar>().readBytes(n.toInt())
                 } ?: break
-            output.writeFully(chunk, 0, chunk.size)
+            stream.write(chunk)
         }
-        output.flush()
+        stream.flush()
     }
 
-    private suspend fun readLoop(
-        input: ByteReadChannel,
-        incoming: SendChannel<ByteArray>,
-    ) {
+    private suspend fun readLoop(incoming: SendChannel<ByteArray>) {
         val buf = ByteArray(READ_CHUNK)
         try {
             while (true) {
-                val n = input.readAvailable(buf, 0, buf.size)
+                val n = stream.read(buf)
                 if (n < 0) break
                 if (n > 0) incoming.send(buf.copyOf(n))
             }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            // A reset socket ends the connection the same way a clean close does.
+            // A reset socket or a TLS alert ends the connection the same way a clean close does.
         } finally {
             incoming.close()
         }
