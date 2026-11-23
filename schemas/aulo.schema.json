@@ -17,11 +17,11 @@
           "type": "string"
         },
         "tls_cert": {
-          "description": "Certificate for `listen`. TLS is required whenever `listen` is set.",
+          "description": "PEM certificate chain for `listen`; a relative path is in the aulo home. `listen` always serves TLS: with neither this nor `tls_key` set, aulod makes a self-signed certificate once and logs its SHA-256 to pin.",
           "type": "string"
         },
         "tls_key": {
-          "description": "Private key for `tls_cert`.",
+          "description": "PEM private key for `tls_cert`; set both or neither.",
           "type": "string"
         }
       },

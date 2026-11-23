@@ -1,0 +1,3 @@
+# --home wins over AULO_HOME, which the fixture runner always sets.
+program = "aulod"
+args = ["run", "--home", "[HOME]/other"]

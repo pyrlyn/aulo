@@ -165,14 +165,16 @@ abstract class ConanExtension
         private val project: Project,
     ) {
         /**
-         * Binds the static library [staticLibrary] of the Conan package [pkg] on every native target
-         * as the cinterop [name], described by `src/nativeInterop/cinterop/<name>.def`.
+         * Binds the static libraries [staticLibraries] of the Conan package [pkg] on every native
+         * target as the cinterop [name], described by `src/nativeInterop/cinterop/<name>.def`. List
+         * a library before the ones it uses, as the linker reads them in that order.
          */
         fun cinterop(
             name: String,
             pkg: String,
-            staticLibrary: String,
+            vararg staticLibraries: String,
         ) {
+            require(staticLibraries.isNotEmpty()) { "cinterop $name links no library" }
             project.extensions.getByType<KotlinMultiplatformExtension>().targets.withType<KotlinNativeTarget>().configureEach {
                 val install = project.tasks.named<ConanInstallTask>(conanInstallTaskName(this.name))
                 val root =
@@ -185,7 +187,9 @@ abstract class ConanExtension
                     compilations.getByName("main").cinterops.create(name) {
                         definitionFile.set(project.layout.projectDirectory.file("src/nativeInterop/cinterop/$name.def"))
                         includeDirs(root.resolve("include"))
-                        extraOpts("-libraryPath", root.resolve("lib").path, "-staticLibrary", staticLibrary)
+                        extraOpts(
+                            listOf("-libraryPath", root.resolve("lib").path) + staticLibraries.flatMap { listOf("-staticLibrary", it) },
+                        )
                     }
                 project.tasks.named(interop.interopProcessingTaskName) {
                     // The options above carry paths only: this makes the binding wait for Conan and

@@ -1,0 +1,11 @@
+Run in the foreground until SIGINT or SIGTERM (Ctrl+C on Windows)
+
+Usage: aulod run [OPTIONS]
+
+Options:
+      --config <FILE>  Read this file instead of <home>/config.toml; the home itself stays where it
+                       is
+      --listen <ADDR>  TCP address for remote clients (host:port), overriding daemon.listen; needs
+                       TLS
+      --home <DIR>     The aulo home, ahead of AULO_HOME and ~/.aulo
+  -h, --help           Print help

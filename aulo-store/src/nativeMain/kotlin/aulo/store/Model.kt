@@ -99,3 +99,12 @@ data class AuditRow(
     val payload: String,
     val createdAt: Long,
 )
+
+/** A bearer token as stored: [hash] is the lowercase hex SHA-256 of the token, never the token. */
+data class ApiToken(
+    val id: String,
+    val name: String,
+    val scope: String,
+    val hash: String,
+    val createdAt: Long,
+)
