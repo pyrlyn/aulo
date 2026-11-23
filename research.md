@@ -558,6 +558,17 @@ Checked 2026-11-23. gRPC runs over HTTP/2; aulo needs it on all four targets (sp
 - **grpcurl 1.9.4 and reflection v1.** grpcurl 1.9.4 lists services, describes a service and calls health against a server that serves only `grpc.reflection.v1` (aulo-server's `GrpcurlTest`, macOS arm64, 2026-11-23; release https://github.com/fullstorydev/grpcurl/releases/tag/v1.9.4).
 - **Shared native source sets.** With `kotlin.mpp.enableCInteropCommonization=true` (https://github.com/JetBrains/kotlin/blob/v2.4.21/libraries/tools/kotlin-gradle-plugin/src/common/kotlin/org/jetbrains/kotlin/gradle/plugin/PropertiesProvider.kt), `nativeMain` sees one commonized binding of every target. Compiling that metadata (`assemble`, IDE sync) therefore runs Conan for every target the host builds; a per-target compile runs only its own.
 
+### 4.11 Token storage and randomness (T3.4)
+
+Checked 2026-11-23. aulod keeps its first API token in the OS keychain and only the token's hash in `aulo.db`; tokens come from the OS's random source.
+
+- **Random bytes.** kotlin-kit has no CSPRNG (its `fs` and `process` modules, pyrlyn/packages 0.0.5). `org.kotlincrypto.random:crypto-rand` 0.6.0 (https://github.com/KotlinCrypto/random, Apache-2.0: https://github.com/KotlinCrypto/random/blob/0.6.0/LICENSE; artifacts for all four aulo targets at https://repo1.maven.org/maven2/org/kotlincrypto/random/) reads `getrandom(2)` (with a `/dev/urandom` fallback) on Linux, `CCRandomGenerateBytes` on Apple, and `BCryptGenRandom` with the system-preferred RNG on Windows (`library/crypto-rand/src/{linuxAndroidMain,darwinMain,mingwMain}` at the 0.6.0 tag).
+- **macOS.** Keychain Services generic passwords: `SecItemAdd`, `SecItemUpdate`, `SecItemCopyMatching`, `SecItemDelete` (https://developer.apple.com/documentation/security/keychain-services), from Kotlin/Native's `platform.Security`.
+- **Windows.** Credential Manager: `CredWriteW`, `CredReadW`, `CredDeleteW`, `CredFree` in `wincred.h`, `advapi32` (https://learn.microsoft.com/en-us/windows/win32/api/wincred/). Kotlin/Native's `platform.windows` (2.4.21) leaves `wincred.h` out, so `:aulo-secrets` binds it with its own cinterop.
+- **Linux.** The Secret Service through libsecret (https://gitlab.gnome.org/GNOME/libsecret; LGPL-2.1-or-later, `COPYING` in the repository; API https://gnome.pages.gitlab.gnome.org/libsecret/). The `*v_sync` password functions take a `SecretSchema` and a `GHashTable` of attributes; they carry no `Since:` tag in `libsecret/secret-password.c` (main branch), so they predate the 0.19 additions there. libsecret and glib are LGPL, so the creator chose `dlopen` of the system library over linking it (T3.4). Neither header is in Kotlin/Native's Linux sysroot, so the few ABI types are declared in `aulo-secrets/src/nativeInterop/cinterop/libsecret.def`.
+  - Checked against a real Secret Service: Ubuntu 24.04 arm64 in Colima, `libsecret-1-0` and `gnome-keyring` from the Ubuntu archive, under `dbus-run-session` with an unlocked keyring; the round-trip test passed with no fallback (2026-11-23).
+  - Conan Center has a `libsecret` recipe (0.20.x and 0.21.x, listed 2026-11-23, https://conan.io/center/recipes/libsecret); not used, since it would link LGPL code into aulo.
+
 ## Part 5. Conclusions and ideas to borrow (for a Rust voice computer-control agent)
 
 1. **Two-brain voice design.** Front: cheap full-duplex/realtime voice (GPT-Live 1, Gemini 3.8 Live, xAI Voice
