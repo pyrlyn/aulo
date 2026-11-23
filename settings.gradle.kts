@@ -38,6 +38,7 @@ include(
     ":aulo-types",
     ":aulo-speech",
     ":aulo-testkit",
+    ":aulo-voice",
     ":aulo-telemetry",
     ":aulo-config",
     ":aulo-store",
