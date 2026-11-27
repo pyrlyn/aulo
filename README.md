@@ -1,7 +1,7 @@
 > [!NOTE]
 > This project is under active development. We need "testing volunteers": try it and report what breaks.
 
-# aulo
+<h1><picture><source media="(prefers-color-scheme: dark)" srcset="brand/logo-dark.svg"><img src="brand/logo.svg" width="32" height="32" alt="" align="absmiddle"></picture> aulo</h1>
 
 A local-first voice agent that controls your computer.
 
