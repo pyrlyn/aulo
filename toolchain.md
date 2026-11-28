@@ -13,6 +13,7 @@ the planned stack is in `spec.md` and `research.md` Part 4. The implementation i
 | Kotlin/Native (2.4.21) | Kotlin Gradle plugin (`gradle/libs.versions.toml`), downloads its own toolchain | Compiles the `aulo` and `aulod` executables for macOS arm64, Linux x86_64/aarch64 and Windows x86_64 | https://github.com/JetBrains/kotlin |
 | Android SDK (platform 37.1, build tools) | Android Studio or `sdkmanager`; found through `ANDROID_HOME` | Builds the `aulo-chat` Android app | https://developer.android.com/studio |
 | Xcode | Mac App Store | Builds the `aulo-chat` iOS app and links its Kotlin framework | https://developer.apple.com/xcode/ |
+| AVFAudio (AVSpeechSynthesizer) | ships with macOS; Kotlin/Native's platform libraries bind it | The macOS system voices in the `aulo-speech-system` helper (T7.10) | https://developer.apple.com/documentation/avfaudio/avspeechsynthesizer |
 | XcodeGen (2.48.0) | mise (`aulo-chat/mise.toml`, `aqua:yonaskolb/XcodeGen`) | Generates `aulo-chat/iosApp/iosApp.xcodeproj` from `project.yml`, so no Xcode project is kept in git | https://github.com/yonaskolb/XcodeGen |
 | python3 | system / mise (`mise.toml`) | Runs `scripts/sync-issues.py` (stdlib only) | https://github.com/python/cpython |
 | gh | brew / mise | Creates labels, milestones and issues from `plan/` | https://github.com/cli/cli |

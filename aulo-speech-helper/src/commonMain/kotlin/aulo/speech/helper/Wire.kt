@@ -31,21 +31,30 @@ enum class FrameType(
 ) {
     // aulod to the helper.
 
-    /** Starts utterance `seq`; the payload is the BCP 47 language hint, empty to detect. */
+    /** Starts utterance `seq` of an STT helper; the payload is the BCP 47 language hint, empty to detect. */
     BEGIN(1, AuloEvent.Transcript.MAX_LANGUAGE_BYTES),
 
-    /** Mono 16 kHz samples of utterance `seq`, little-endian `f32`. */
+    /**
+     * Mono samples of utterance or reply `seq`, little-endian `f32`: 16 kHz from aulod to an STT
+     * helper, the voice's rate from a TTS helper to aulod. Both ways.
+     */
     AUDIO(2, MAX_AUDIO_SAMPLES * FLOAT_BYTES),
 
-    /** No more audio for utterance `seq`; a [FINAL] follows. */
+    /** No more input for `seq`: an STT helper answers [FINAL], a TTS helper [END] once its audio is out. */
     FINISH(3, 0),
 
-    /** Drop utterance `seq` and its audio; nothing follows. */
+    /** Drop `seq` and everything queued for it; nothing more follows for it. */
     CANCEL(4, 0),
+
+    /** Starts reply `seq` of a TTS helper; the payload is the rate and the voice ([writeSpeak]). */
+    SPEAK(5, SPEAK_MAX_BYTES),
+
+    /** Text of reply `seq`, usually one sentence. */
+    TEXT(6, AuloEvent.Transcript.MAX_TEXT_BYTES),
 
     // The helper to aulod.
 
-    /** The model is loaded; `seq` is 0. */
+    /** The model is loaded, or a TTS helper's [VOICE] list is complete; `seq` is 0. */
     READY(16, 0),
 
     /** The newest partial transcript of utterance `seq`. */
@@ -56,6 +65,12 @@ enum class FrameType(
 
     /** Utterance `seq` failed, or the helper cannot start when `seq` is 0; the payload says why. */
     ERROR(19, MAX_ERROR_DETAIL_BYTES),
+
+    /** One voice a TTS helper offers, sent before [READY]; `seq` is 0 ([writeVoice]). */
+    VOICE(20, VOICE_MAX_BYTES),
+
+    /** All audio of reply `seq` was sent. */
+    END(21, 0),
     ;
 
     companion object {
@@ -152,10 +167,33 @@ fun BufferedSink.writeText(
 internal fun String.utf8Prefix(maxBytes: Int): ByteArray {
     val bytes = encodeToByteArray()
     if (bytes.size <= maxBytes) return bytes
-    var end = maxBytes
+    return bytes.copyOf(bytes.utf8Cut(0, maxBytes))
+}
+
+/** The text in pieces of at most [maxBytes] of UTF-8 each, cut on character boundaries. */
+internal fun String.utf8Chunks(maxBytes: Int): List<String> {
+    val bytes = encodeToByteArray()
+    val chunks = mutableListOf<String>()
+    var from = 0
+    while (from < bytes.size) {
+        val end = bytes.utf8Cut(from, maxBytes)
+        chunks += bytes.decodeToString(from, end)
+        from = end
+    }
+    return chunks
+}
+
+/** Where a piece of at most [maxBytes] that starts at [from] ends without splitting a character. */
+private fun ByteArray.utf8Cut(
+    from: Int,
+    maxBytes: Int,
+): Int {
+    require(maxBytes >= 4) { "a piece must hold any character" }
+    var end = from + maxBytes
+    if (end >= size) return size
     // Back off continuation bytes (10xxxxxx) so the cut never splits a character.
-    while (end > 0 && (bytes[end].toInt() and 0xC0) == 0x80) end--
-    return bytes.copyOf(end)
+    while (end > from && (this[end].toInt() and 0xC0) == 0x80) end--
+    return end
 }
 
 private val EMPTY = ByteArray(0)

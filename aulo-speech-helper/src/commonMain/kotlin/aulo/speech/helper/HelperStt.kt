@@ -12,16 +12,8 @@ import aulo.speech.SttPoll
 import aulo.speech.Transcript
 import aulo.types.TranscriptKind
 import aulo.types.TurnId
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
 import okio.BufferedSink
 import okio.BufferedSource
-import okio.IOException
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.AtomicReference
@@ -63,9 +55,6 @@ data class HelperOptions(
     }
 }
 
-/** Where closed engines stop their helpers, off the caller's thread. */
-private val releaser = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
 /** Begin, cancel and finish of a few utterances at most can wait behind a full audio queue. */
 private const val CONTROL_SLOTS = 16
 
@@ -81,7 +70,7 @@ private const val CONTROL_SLOTS = 16
  */
 class HelperStt(
     override val info: EngineInfo,
-    private val link: HelperLink,
+    link: HelperLink,
     private val options: HelperOptions = HelperOptions(),
 ) : SttEngine {
     init {
@@ -118,16 +107,13 @@ class HelperStt(
 
     private enum class Phase { IDLE, OPEN, FINISHED, DONE }
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val queue = Channel<Out>(options.queueFrames + CONTROL_SLOTS)
     private val queuedAudio = AtomicInt(0)
 
     /** The utterance results belong to; the reader drops everything else. */
     private val current = AtomicInt(0)
     private val latest = AtomicReference<Result?>(null)
-    private val failure = AtomicReference<SpeechException?>(null)
     private val ready = AtomicBoolean(false)
-    private val closed = AtomicBoolean(false)
+    private val pipe = HelperPipe<Out>(link, options.queueFrames + CONTROL_SLOTS, ready::load, ::write)
 
     // The caller's thread only.
     private var seq = 0
@@ -138,8 +124,7 @@ class HelperStt(
     private var finishedAt: TimeMark? = null
 
     init {
-        scope.launch { readLoop() }
-        scope.launch { writeLoop() }
+        pipe.start(::readLoop)
     }
 
     /** True once the helper loaded its model. */
@@ -175,7 +160,7 @@ class HelperStt(
         }
         val samples = FloatArray(frame.size)
         frame.copyInto(samples)
-        if (queue.trySend(Audio(seq, samples)).isFailure) {
+        if (!pipe.offer(Audio(seq, samples))) {
             queuedAudio.decrementAndFetch()
             return frame.length
         }
@@ -206,7 +191,7 @@ class HelperStt(
         }
         val since = finishedAt
         if (phase == Phase.FINISHED && since != null && since.elapsedNow() > options.finalTimeout) {
-            fail(SpeechException.Failed("no transcript within ${options.finalTimeout}"))
+            pipe.fail(SpeechException.Failed("no transcript within ${options.finalTimeout}"))
             close()
             checkHealthy()
         }
@@ -226,90 +211,42 @@ class HelperStt(
         finishedAt = null
     }
 
-    override fun close() {
-        if (!closed.compareAndSet(expectedValue = false, newValue = true)) return
-        queue.close()
-        scope.cancel()
-        // Stopping a process waits for it to be reaped, and close may come from poll, which never waits.
-        releaser.launch { link.close() }
-    }
+    override fun close() = pipe.close()
 
-    private fun send(message: Out) {
-        if (queue.trySend(message).isFailure) {
-            fail(SpeechException.Failed("helper is not reading its input"))
-            close()
-            checkHealthy()
-        }
-    }
+    private fun send(message: Out) = pipe.send(message)
 
-    private fun checkHealthy() {
-        failure.load()?.let { throw it }
-        if (closed.load()) throw SpeechException.Unavailable("engine is closed")
-    }
+    private fun checkHealthy() = pipe.checkHealthy()
 
-    private fun fail(error: SpeechException) {
-        failure.compareAndSet(null, error)
-    }
+    private fun readLoop(input: BufferedSource) {
+        while (true) {
+            val frame = input.readFrame() ?: return
+            when (frame.type) {
+                FrameType.READY -> {
+                    ready.store(true)
+                }
 
-    private fun readLoop() {
-        try {
-            while (true) {
-                val frame = link.input.readFrame() ?: break
-                when (frame.type) {
-                    FrameType.READY -> {
-                        ready.store(true)
-                    }
+                FrameType.PARTIAL, FrameType.FINAL -> {
+                    if (frame.seq == current.load()) latest.store(Result(frame.seq, frame.type == FrameType.FINAL, frame.text))
+                }
 
-                    FrameType.PARTIAL, FrameType.FINAL -> {
-                        if (frame.seq == current.load()) latest.store(Result(frame.seq, frame.type == FrameType.FINAL, frame.text))
-                    }
+                FrameType.ERROR -> {
+                    // Before READY the helper could not load its model; after it, decoding broke.
+                    val error =
+                        if (frame.seq == 0) SpeechException.Unavailable(frame.text) else SpeechException.Failed(frame.text)
+                    pipe.fail(error)
+                }
 
-                    FrameType.ERROR -> {
-                        // Before READY the helper could not load its model; after it, decoding broke.
-                        val error =
-                            if (frame.seq == 0) SpeechException.Unavailable(frame.text) else SpeechException.Failed(frame.text)
-                        fail(error)
-                    }
-
-                    else -> {
-                        throw WireException("${frame.type.name} is not a helper reply")
-                    }
+                else -> {
+                    throw WireException("${frame.type.name} is not a helper reply")
                 }
             }
-            fail(exited("exited"))
-        } catch (e: WireException) {
-            fail(SpeechException.Failed("helper broke the protocol: ${e.message}"))
-        } catch (e: IOException) {
-            fail(exited("pipe failed (${e.message})"))
-        }
-        // The helper is gone or untrusted from here on; stop it and free its pipes.
-        close()
-    }
-
-    private fun exited(how: String): SpeechException {
-        val detail = "helper $how" + (link.exitDetail()?.let { ": $it" } ?: "")
-        return if (ready.load()) SpeechException.Failed(detail) else SpeechException.Unavailable(detail)
-    }
-
-    private suspend fun writeLoop() {
-        try {
-            for (first in queue) {
-                // Write what is queued, then flush once: one pipe write per burst, not per frame.
-                var message: Out? = first
-                while (message != null) {
-                    write(message)
-                    message = queue.tryReceive().getOrNull()
-                }
-                link.output.flush()
-            }
-        } catch (e: IOException) {
-            fail(exited("stopped reading (${e.message})"))
-            close()
         }
     }
 
-    private fun write(message: Out) {
-        val sink = link.output
+    private fun write(
+        sink: BufferedSink,
+        message: Out,
+    ) {
         when (message) {
             is Audio -> {
                 queuedAudio.decrementAndFetch()

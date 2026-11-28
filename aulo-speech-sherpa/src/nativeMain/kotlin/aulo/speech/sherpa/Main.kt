@@ -3,7 +3,10 @@
 package aulo.speech.sherpa
 
 import aulo.speech.helper.FrameType
+import aulo.speech.helper.StdinSource
+import aulo.speech.helper.StdoutSink
 import aulo.speech.helper.WireException
+import aulo.speech.helper.binaryStdio
 import aulo.speech.helper.serveStt
 import aulo.speech.helper.writeText
 import okio.buffer

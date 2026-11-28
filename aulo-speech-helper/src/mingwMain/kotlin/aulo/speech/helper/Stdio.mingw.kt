@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalForeignApi::class)
 
-package aulo.speech.sherpa
+package aulo.speech.helper
 
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
@@ -45,7 +45,7 @@ internal actual fun writeStdout(
     }
 }
 
-internal actual fun binaryStdio() {
+actual fun binaryStdio() {
     _setmode(STDIN, _O_BINARY)
     _setmode(STDOUT, _O_BINARY)
 }

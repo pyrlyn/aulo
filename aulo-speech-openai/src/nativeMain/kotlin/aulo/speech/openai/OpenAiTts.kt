@@ -11,6 +11,7 @@ import aulo.speech.TtsEngine
 import aulo.speech.TtsPoll
 import aulo.speech.TtsRequest
 import aulo.speech.Voice
+import aulo.voice.AudioRing
 import http.HttpBody
 import http.HttpClient
 import http.HttpRequest
@@ -31,6 +32,7 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.time.TimeMark
 
 private const val READ_CHUNK = 16 * 1024
+private const val PCM16_SCALE = 32768f
 
 /** Body types that carry raw PCM; a server that names none is taken at its word too. */
 private val PCM_TYPES = setOf("audio/pcm", "audio/l16", "audio/raw", "application/octet-stream")
@@ -65,7 +67,7 @@ class OpenAiTts internal constructor(
         ringSamples: Int,
     ) {
         val text = Channel<String>(Channel.UNLIMITED)
-        val ring = SampleRing(ringSamples)
+        val ring = AudioRing(ringSamples)
 
         /** Set by the worker once every sample of the reply is in the ring. */
         val done = AtomicBoolean(false)
@@ -143,8 +145,9 @@ class OpenAiTts internal constructor(
     }
 
     override fun cancel() {
-        // Only asks the worker to stop; it writes into its own ring, which nobody reads any more.
+        // Only asks the worker to stop; closing its ring drops anything it still writes.
         reply?.let {
+            it.ring.close()
             it.worker?.cancel()
             it.text.close()
         }
@@ -186,7 +189,7 @@ class OpenAiTts internal constructor(
         try {
             val pending = StringBuilder()
             val buf = ByteArray(READ_CHUNK)
-            val samples = ShortArray(READ_CHUNK / 2 + 1)
+            val samples = FloatArray(READ_CHUNK / 2 + 1)
             while (true) {
                 if (pending.isEmpty()) {
                     val text = reply.text.receiveCatching().getOrNull() ?: break
@@ -222,7 +225,7 @@ class OpenAiTts internal constructor(
         voice: String,
         rate: SpeechRate,
         buf: ByteArray,
-        samples: ShortArray,
+        samples: FloatArray,
     ) {
         val json =
             buildJsonObject {
@@ -258,7 +261,7 @@ class OpenAiTts internal constructor(
         reply: Reply,
         body: HttpBody,
         buf: ByteArray,
-        samples: ShortArray,
+        samples: FloatArray,
     ) {
         var total = 0L
         var carry = -1
@@ -284,14 +287,14 @@ class OpenAiTts internal constructor(
             if (i < n) carry = buf[i].toInt() and 0xff
             // Waiting for room is the speaker's pace, not the server stalling.
             reply.waiting.store(null)
-            reply.ring.write(samples, count)
+            if (!reply.ring.write(samples, 0, count)) return
         }
     }
 
     private fun pcm16(
         low: Int,
         high: Int,
-    ): Short = ((low and 0xff) or (high shl 8)).toShort()
+    ): Float = ((low and 0xff) or (high shl 8)).toShort() / PCM16_SCALE
 }
 
 /** Appends [next] to [pending] with a space between, unless one side already has one. */
